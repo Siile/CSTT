@@ -29,6 +29,8 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 	m_pGameType = "CSTT";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 
+	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 		
 	for (int i = 0; i < MAX_PICKUPS; i++)
 		m_apPickup[i] = NULL;
@@ -198,6 +200,9 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 	// create bomb if not created
 	if (!m_pBomb)
 	{
+		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating bomb entity");
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+		
 		CBomb *B = new CBomb(&GameServer()->m_World);
 		B->m_Pos = vec2(0, 0);
 		m_pBomb = B;
@@ -208,6 +213,9 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 	// bomb areas (blue flags)
 	if (Index == ENTITY_FLAGSTAND_BLUE && m_BombAreaCount < MAX_BOMBAREAS)
 	{
+		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating bomb area entity");
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+		
 		CFlag *F = new CFlag(&GameServer()->m_World, TEAM_BLUE);
 		F->m_StandPos = Pos;
 		F->m_Pos = Pos;
@@ -218,6 +226,7 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 	
 	
 	// pickup part of IGameController::OnEntity
+	/*
 	int Type = -1;
 	int SubType = 0;
 	bool Dropable = false;
@@ -232,7 +241,7 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 		Type = POWERUP_HEALTH;
 		SubType = 0;
 	}
-	
+	*/
 
 	// pickups & droppables
 	/*
@@ -488,8 +497,7 @@ int CGameControllerCSTT::CheckLose()
 	}
 	
 	/* console debugging
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "status: %d - %d", Red, Blue);
+	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "status: %d - %d", Red, Blue);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 	*/
 	
@@ -613,6 +621,9 @@ void CGameControllerCSTT::RoundWinLose()
 
 void CGameControllerCSTT::Restart()
 {
+	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Restarting game");
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+	
 	m_RoundTimeLimit = 0; // gamecontroller
 	m_ResetTime = true; // gamecontroller
 	

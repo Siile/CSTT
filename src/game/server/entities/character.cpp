@@ -1056,7 +1056,7 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 		m_aWeapon[CustomWeapon].m_Ready = false;
 		m_aWeapon[CustomWeapon].m_Ammo = aCustomWeapon[CustomWeapon].m_ClipSize;
 		
-		bool SkipAmmoFill = false;
+		//bool SkipAmmoFill = false;
 		
 		if (aCustomWeapon[CustomWeapon].m_Require >= 0)
 		{
@@ -1065,7 +1065,7 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 			// ammo
 			if (m_aWeapon[aCustomWeapon[CustomWeapon].m_Require].m_Got)
 			{
-				SkipAmmoFill = true;
+				//SkipAmmoFill = true;
 				m_aWeapon[CustomWeapon].m_AmmoReserved = m_aWeapon[aCustomWeapon[CustomWeapon].m_Require].m_AmmoReserved + m_aWeapon[aCustomWeapon[CustomWeapon].m_Require].m_Ammo;
 				
 				if (m_aWeapon[CustomWeapon].m_AmmoReserved > aCustomWeapon[CustomWeapon].m_MaxAmmo)
