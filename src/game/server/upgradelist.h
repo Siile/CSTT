@@ -92,6 +92,7 @@ enum CustomWeapons
 	NUM_CUSTOMWEAPONS
 };
 
+/*
 const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 {
 	120, // SWORD_KATANA,
@@ -110,6 +111,7 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	120, // GRENADE_DOOMLAUNCHER,
 	120, // GRENADE_GRENADE
 };
+*/
 
 enum ProjectileTypes
 {
