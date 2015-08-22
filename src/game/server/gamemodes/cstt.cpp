@@ -925,16 +925,7 @@ void CGameControllerCSTT::AutoBalance()
 	if (Red+Blue == 0)
 		return;
 	
-	// too many bots
-	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
-	{
-		if (RedBots > 1 && BlueBots > 1)
-		{
-			GameServer()->KickBot(BlueBotID);
-			GameServer()->KickBot(RedBotID);
-		}
-	}
-	
+
 	// not enough players
 	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
 	{
@@ -945,8 +936,21 @@ void CGameControllerCSTT::AutoBalance()
 	// add bots when needed, as many as needed
 	if (abs((Red+RedBots) - (Blue+BlueBots)) > 0)
 	{
-		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++);
+		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++)
 			GameServer()->AddBot();
+		
+		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Adding %d bots for balance", abs((Red+RedBots) - (Blue+BlueBots)));
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	}
+	
+	// too many bots
+	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
+	{
+		if (RedBots > 1 && BlueBots > 1)
+		{
+			GameServer()->KickBot(BlueBotID);
+			GameServer()->KickBot(RedBotID);
+		}
 	}
 }
 
@@ -985,13 +989,13 @@ void CGameControllerCSTT::Tick()
 		// first player join or new game
 		if (m_GameState == GAMESTATE_NEWGAME)
 		{
-			if (m_RoundTick == 100)
+			if (m_RoundTick == 60)
 				GameServer()->SendBroadcast("First round starting in 3...", -1);
-			if (m_RoundTick == 200)
+			if (m_RoundTick == 120)
 				GameServer()->SendBroadcast("First round starting in 2...", -1);
-			if (m_RoundTick == 300)
+			if (m_RoundTick == 180)
 				GameServer()->SendBroadcast("First round starting in 1...", -1);
-			if (m_RoundTick == 400)
+			if (m_RoundTick == 240)
 				StartCountdown();
 		}
 		else

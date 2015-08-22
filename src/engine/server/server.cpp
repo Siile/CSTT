@@ -1806,7 +1806,7 @@ void CServer::AddZombie(int ClientID)
 	char aName1[128];
 	char aName2[128];
 	
-	switch (rand() % 18)
+	switch (rand() % 19)
 	{
 		case 0: str_format(aName1, sizeof(aName1), "Ice"); break;
 		case 1: str_format(aName1, sizeof(aName1), "Fire"); break;
@@ -1815,7 +1815,7 @@ void CServer::AddZombie(int ClientID)
 		case 4: str_format(aName1, sizeof(aName1), "Kitty"); break;
 		case 5: str_format(aName1, sizeof(aName1), "Split"); break;
 		case 6: str_format(aName1, sizeof(aName1), "Banana"); break;
-		case 7: str_format(aName1, sizeof(aName1), "Glass"); break;
+		case 7: str_format(aName1, sizeof(aName1), "Terror"); break;
 		case 8: str_format(aName1, sizeof(aName1), "Snoop"); break;
 		case 9: str_format(aName1, sizeof(aName1), "Uncle"); break;
 		case 10: str_format(aName1, sizeof(aName1), "Rubber"); break;
@@ -1826,10 +1826,11 @@ void CServer::AddZombie(int ClientID)
 		case 15: str_format(aName1, sizeof(aName1), "Dumb"); break;
 		case 16: str_format(aName1, sizeof(aName1), "Horn"); break;
 		case 17: str_format(aName1, sizeof(aName1), "Korn"); break;
+		case 18: str_format(aName1, sizeof(aName1), "Tee"); break;
 		default: str_format(aName1, sizeof(aName1), "Stupid"); break;
 	}
 	
-	switch (rand() % 19)
+	switch (rand() % 20)
 	{
 		case 0: str_format(aName2, sizeof(aName2), "butt"); break;
 		case 1: str_format(aName2, sizeof(aName2), "face"); break;
@@ -1843,13 +1844,14 @@ void CServer::AddZombie(int ClientID)
 		case 9: str_format(aName2, sizeof(aName2), "duck"); break;
 		case 10: str_format(aName2, sizeof(aName2), "fart"); break;
 		case 11: str_format(aName2, sizeof(aName2), "moose"); break;
-		case 12: str_format(aName2, sizeof(aName2), "lime"); break;
+		case 12: str_format(aName2, sizeof(aName2), "magnet"); break;
 		case 13: str_format(aName2, sizeof(aName2), "pie"); break;
 		case 14: str_format(aName2, sizeof(aName2), "spice"); break;
 		case 15: str_format(aName2, sizeof(aName2), "berry"); break;
 		case 16: str_format(aName2, sizeof(aName2), "doge"); break;
 		case 17: str_format(aName2, sizeof(aName2), "banana"); break;
 		case 18: str_format(aName2, sizeof(aName2), "pepper"); break;
+		case 19: str_format(aName2, sizeof(aName2), "style"); break;
 		default: str_format(aName2, sizeof(aName2), "fruit"); break;
 	}
 	

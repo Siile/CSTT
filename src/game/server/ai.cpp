@@ -216,6 +216,72 @@ void CAI::ReceiveDamage()
 }
 
 
+
+int CAI::WeaponShootRange()
+{
+	int Weapon = Player()->GetCharacter()->m_ActiveCustomWeapon;
+	int Range = 40;
+		
+	if (Weapon >= 0 && Weapon < NUM_CUSTOMWEAPONS)
+		Range = BotAttackRange[Weapon];
+	
+	return Range;
+}
+
+
+
+void CAI::ShootAtClosestEnemy()
+{
+	CCharacter *pClosestCharacter = NULL;
+	int ClosestDistance = 0;
+	
+	// FIRST_BOT_ID, fix
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam())
+			continue;
+
+		CCharacter *pCharacter = pPlayer->GetCharacter();
+		if (!pCharacter)
+			continue;
+		
+		if (!pCharacter->IsAlive())
+			continue;
+			
+		int Distance = distance(pCharacter->m_Pos, m_LastPos);
+		if (Distance < 800 && 
+			!GameServer()->Collision()->FastIntersectLine(pCharacter->m_Pos, m_LastPos))
+			//!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
+		{
+			if (!pClosestCharacter || Distance < ClosestDistance)
+			{
+				pClosestCharacter = pCharacter;
+				ClosestDistance = Distance;
+				m_PlayerDirection = pCharacter->m_Pos - m_LastPos;
+				m_PlayerPos = pCharacter->m_Pos;
+			}
+		}
+	}
+	
+	if (pClosestCharacter && ClosestDistance < WeaponShootRange()*1.2f)
+	{
+		if (ClosestDistance < WeaponShootRange())
+			m_Attack = 1;
+		
+		m_Direction = vec2(m_PlayerDirection.x+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f), m_PlayerDirection.y+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f));
+	}
+	
+	// ammo check
+	if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
+		!Player()->GetCharacter()->HasAmmo())
+		Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
+}
+
+
 bool CAI::SeekClosestEnemy()
 {
 	CCharacter *pClosestCharacter = NULL;

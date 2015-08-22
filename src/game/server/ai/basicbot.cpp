@@ -74,104 +74,112 @@ void CAIBasicbot::DoBehavior()
 	
 	// if we see a player
 	if (m_PlayerSpotCount > 0)
-	{		
-		// release hook at random
-		if (frandom()*20 < 4)
-			m_Hook = 0;
-		
-		// ammo check
-		if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
-			!Player()->GetCharacter()->HasAmmo())
-			Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
-		
+	{
+		// angry face
 		if (m_PlayerSpotCount == 1)
 			Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 1200, 1200);
 
 		JumpIfPlayerIsAbove();
 		
-		int Weapon = Player()->GetCharacter()->m_ActiveCustomWeapon;
-		int Range = 100;
-		
-		if (Weapon >= 0 && Weapon < NUM_CUSTOMWEAPONS)
-			Range = BotAttackRange[Weapon];
-		
 		if (frandom()*20 < 3)
 			m_Jump = 1;
 		
-		if (m_PlayerDistance <= Range)
-			m_Attack = 1;
-		
-		if (m_PlayerDistance < 1000)
-			m_Direction = vec2(m_PlayerDirection.x+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f), m_PlayerDirection.y+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f));
-		
-		if (m_PlayerPos.x < m_Pos.x)
-			m_TargetPos.x = m_PlayerPos.x + Range/2*(0.75f+frandom()*0.5f);
-		else
-			m_TargetPos.x = m_PlayerPos.x - Range/2*(0.75f+frandom()*0.5f);
+		ShootAtClosestEnemy();
 
-		MoveTowardsTarget(100);
+		//MoveTowardsTarget(100);
+	}
+
+	
+	
+	// release hook at random
+	if (frandom()*10 < 3)
+		m_Hook = 0;
+	
+	
+	// main logic
+	if (Player()->GetTeam() == TEAM_RED)
+	{
+		// seek & protect the bomb
+		if (Bomb && Bomb->m_Status != BOMB_CARRYING)
+			m_TargetPos = Bomb->m_Pos;
+		else
+		if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
+			SeekBombArea();
+		else
+		if (SeekClosestEnemy())
+		{
+			m_TargetPos = m_PlayerPos;
+			
+			if (m_PlayerSpotCount > 0)
+			{
+				// distance to the player
+				if (m_PlayerPos.x < m_Pos.x)
+					m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				else
+					m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+			}
+		}
 	}
 	else
-	// we don't see a player
+	// blue team
 	{
-		// release hook at random
-		if (frandom()*10 < 2)
-			m_Hook = 0;
-	
-		if (Player()->GetTeam() == TEAM_RED)
-		{
-			if (Bomb && Bomb->m_Status != BOMB_CARRYING)
-				m_TargetPos = Bomb->m_Pos;
-			else
-			if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
-				SeekBombArea();
-			else
-			if (SeekClosestEnemy())
-				m_TargetPos = m_PlayerPos;
-		}
+		// horry to bomb
+		if (Bomb && Bomb->m_Status == BOMB_PLANTED)
+			m_TargetPos = Bomb->m_Pos;
 		else
 		{
-			if (Bomb && Bomb->m_Status == BOMB_PLANTED)
-				m_TargetPos = Bomb->m_Pos;
-			else
-			{
-				SeekBombArea();
+			// seek bomb area
+			SeekBombArea();
 				
-				if (distance(m_Pos, m_TargetPos) < 1800)
+			// ...unless we're near it
+			if (distance(m_Pos, m_TargetPos) < 1800)
+			{
+				if (SeekClosestEnemy())
 				{
-					if (SeekClosestEnemy())
 					{
 						m_TargetPos = m_PlayerPos;
+						
+						if (m_PlayerSpotCount > 0)
+						{
+							// distance to the player
+							if (m_PlayerPos.x < m_Pos.x)
+								m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+							else
+								m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+						}
 					}
 				}
 			}
 		}
+	}
 		
-		if (m_TargetTimer <= 0)
+		
+	// update waypoint
+	if (m_TargetTimer <= 0)
+	{
+		if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos))
 		{
-			if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos))
+			if (GameServer()->Collision()->m_GotVision)
 			{
-				if (GameServer()->Collision()->m_GotVision)
-				{
-					// we got waypoint to the target
-					m_WaypointPos = GameServer()->Collision()->m_VisionPos;
-					m_WaypointDir = m_WaypointPos - m_Pos;
-				}
+				// we got waypoint to the target
+				m_WaypointPos = GameServer()->Collision()->m_VisionPos;
+				m_WaypointDir = m_WaypointPos - m_Pos;
 			}
-			
-			//GameServer()->CreatePlayerSpawn(m_WaypointPos);
-			m_TargetTimer = 10;
 		}
-		else
-			m_TargetTimer--;
+		
+		//GameServer()->CreatePlayerSpawn(m_WaypointPos);
+		m_TargetTimer = 10;
+	}
+	else
+		m_TargetTimer--;
 				
-				
-		MoveTowardsWaypoint(40);
+
+	MoveTowardsWaypoint(40);
 		
 		
-		// hook moving
-		if (m_LastHook == 0)
-		{
+	// hook moving
+	if (m_LastHook == 0)
+	{
 		
 			//float Angle = atan2(Player()->GetCharacter()->GetVel().x, Player()->GetCharacter()->GetVel().y);
 			float Angle = atan2(m_WaypointDir.x, m_WaypointDir.y);
@@ -224,7 +232,6 @@ void CAIBasicbot::DoBehavior()
 			if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
 				m_Jump = 1;
 		}
-	}
 
 	Unstuck();
 	
@@ -260,7 +267,22 @@ void CAIBasicbot::DoBehavior()
 			}
 		}
 	}
-
+	
+	if (m_Hook != 0 && Player()->GetCharacter()->Hooking())
+	{
+		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
+		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
+		
+		if (distance(CorePos, HookPos) > 100)
+		{
+			if (HookPos > CorePos)
+				m_Move = -1;
+			if (HookPos > CorePos)
+				m_Move = 1;
+		}
+	}
+		
+		
 	if (LockMove != 0)
 		m_Move = LockMove;
 	

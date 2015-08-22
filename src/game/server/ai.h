@@ -63,6 +63,9 @@ protected:
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
 	
+	void ShootAtClosestEnemy();
+	int WeaponShootRange();
+	
 public:
 	CAI(class CGameContext *pGameServer, class CPlayer *pPlayer);
 	
