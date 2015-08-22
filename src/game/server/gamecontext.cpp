@@ -745,7 +745,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0 || strcmp(pMsg->m_pMessage, "/cmdlist") == 0 )
 			{
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.2");
+				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.21");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping");
 				SendChatTarget(ClientID, "For updates and more info, check www.ninslash.com");
