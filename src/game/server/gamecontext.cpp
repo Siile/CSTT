@@ -738,27 +738,53 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			bool SendToTeam = true;
+			bool SkipSending = false;
 			
 			pPlayer->m_LastChat = Server()->Tick();
 
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0 || strcmp(pMsg->m_pMessage, "/cmdlist") == 0 )
 			{
-				//SendChatTarget(ClientID, pMsg->m_pMessage);
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.1");
+				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.2");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping");
 				SendChatTarget(ClientID, "For updates and more info, check www.ninslash.com");
-				//SendToTeam = false;
+				SkipSending = true;
 			}
-			/*
+			
+			if ( strcmp(pMsg->m_pMessage, "/addbot") == 0 )
+			{
+				SendChatTarget(ClientID, "Adding bot...");
+				AddBot();
+				
+				SkipSending = true;
+			}		
+			
+			if ( strcmp(pMsg->m_pMessage, "/addbots") == 0 )
+			{
+				SendChatTarget(ClientID, "Adding bots...");
+				for (int i = 0; i < 16; i++)
+					AddBot();
+				
+				SkipSending = true;
+			}		
+			
+			if ( strcmp(pMsg->m_pMessage, "/kickbots") == 0 )
+			{
+				SendChatTarget(ClientID, "Kicking bots...");
+				KickBots();
+				
+				SkipSending = true;
+			}
+			
+			
+			/* disable shopping with chat commands
 			else
 			if ( strcmp(pMsg->m_pMessage, "/buy") == 0 || strcmp(pMsg->m_pMessage, "/shop") == 0 || strcmp(pMsg->m_pMessage, "/upg") == 0)
 			{
 				pPlayer->ListBuyableWeapons();
 				//SendToTeam = false;
 			}
-			*/
 			
 			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 			{
@@ -769,13 +795,19 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					break;
 				}
 			}
+			*/
 			
+			if (!SkipSending)
+			{
+				if (SendToTeam)
+					SendChat(ClientID, Team, pMsg->m_pMessage);
+				else
+					SendChatTarget(ClientID, pMsg->m_pMessage);
+			}
 			
-			
-			if (SendToTeam)
-				SendChat(ClientID, Team, pMsg->m_pMessage);
-			else
-				SendChatTarget(ClientID, pMsg->m_pMessage);
+			/*
+
+			*/
 			
 			
 			
@@ -1733,6 +1765,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			}
 		}
 	}
+	
 
 	//game.world.insert_entity(game.Controller);
 

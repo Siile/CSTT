@@ -5,6 +5,8 @@
 
 #include <game/generated/protocol.h>
 
+#include "entities/bomb.h"
+#include "entities/flag.h"
 #include "entities/pickup.h"
 #include "entities/character.h"
 #include "gamecontroller.h"
@@ -414,6 +416,18 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr, bool RequestAI)
 	pChr->GiveCustomWeapon(GUN_PISTOL);
 }
 
+CBomb *IGameController::GetBomb()
+{
+	return NULL;
+}
+
+CFlag *IGameController::GetClosestBombArea(vec2 Pos)
+{
+	return NULL;
+}
+
+
+
 bool IGameController::CanCharacterSpawn(int ClientID)
 {
 	return true;
@@ -486,6 +500,7 @@ void IGameController::Tick()
 		++m_RoundStartTick;
 
 	// do team-balancing
+	/*
 	if(IsTeamplay() && m_UnbalancedTick != -1 && Server()->Tick() > m_UnbalancedTick+g_Config.m_SvTeambalanceTime*Server()->TickSpeed()*60)
 	{
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Balancing teams");
@@ -539,6 +554,7 @@ void IGameController::Tick()
 		}
 		m_UnbalancedTick = -1;
 	}
+	*/
 
 	// check for inactive players
 	if(g_Config.m_SvInactiveKickTime > 0)

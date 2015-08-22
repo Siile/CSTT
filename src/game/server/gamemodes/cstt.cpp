@@ -289,7 +289,7 @@ void CGameControllerCSTT::CreateDroppables()
 	
 int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
 {
-	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
+	//IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
 	
 	int HadBomb = 0;
 	
@@ -310,16 +310,15 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 		B->m_pCarryingCharacter = 0;
 		B->m_Vel = vec2(0,0);
 
-		
-		if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
-		{
-			pKiller->m_Score++;
-			pKiller->m_Money += g_Config.m_SvKillMoney;
-		}
-		
-
 		HadBomb |= 1;
 	}
+	
+	if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
+	{
+		pKiller->m_Score++;
+		pKiller->m_Money += g_Config.m_SvKillMoney;
+	}
+		
 
 	if (WeaponID != WEAPON_GAME)
 		pVictim->GetPlayer()->m_ForceToSpectators = true;
@@ -337,6 +336,15 @@ void CGameControllerCSTT::OnCharacterSpawn(CCharacter *pChr, bool RequestAI)
 	if (RequestAI)
 		pChr->GetPlayer()->m_pAI = new CAIBasicbot(GameServer(), pChr->GetPlayer());
 }
+
+
+CBomb *CGameControllerCSTT::GetBomb()
+{
+	return m_pBomb;
+}
+
+
+
 
 bool CGameControllerCSTT::CanCharacterSpawn(int ClientID)
 {
@@ -868,9 +876,14 @@ CFlag *CGameControllerCSTT::GetClosestBombArea(vec2 Pos)
 void CGameControllerCSTT::AutoBalance()
 {
 	int Red = 0, Blue = 0;
+	int RedBots = 0, BlueBots = 0;
 	
 	// skip
-	return;
+	// return;
+	
+	int RedBotID = -1;
+	int BlueBotID = -1;
+	
 	
 	// count players
 	for (int i = 0; i < MAX_CLIENTS; i++)
@@ -887,19 +900,53 @@ void CGameControllerCSTT::AutoBalance()
 			continue;
 		
 		if (pPlayer->GetTeam() == TEAM_RED)
-			Red++;
+		{
+			if (!pPlayer->m_IsBot)
+				Red++;
+			else
+			{
+				RedBotID = i;
+				RedBots++;
+			}
+		}
 		
 		if (pPlayer->GetTeam() == TEAM_BLUE)
-			Blue++;
+		{
+			if (!pPlayer->m_IsBot)
+				Blue++;
+			else
+			{
+				BlueBotID = i;
+				BlueBots++;
+			}
+		}
+	}
+	
+	if (Red+Blue == 0)
+		return;
+	
+	// too many bots
+	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
+	{
+		if (RedBots > 1 && BlueBots > 1)
+		{
+			GameServer()->KickBot(BlueBotID);
+			GameServer()->KickBot(RedBotID);
+		}
+	}
+	
+	// not enough players
+	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
+	{
+		GameServer()->AddBot();
+		GameServer()->AddBot();
 	}
 	
 	// add bots when needed, as many as needed
-	if (abs(Red - Blue) > 0)
+	if (abs((Red+RedBots) - (Blue+BlueBots)) > 0)
 	{
-		for (int i = 0; i < abs(Red - Blue); i++);
-		{
+		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++);
 			GameServer()->AddBot();
-		}
 	}
 }
 
@@ -924,11 +971,14 @@ void CGameControllerCSTT::Tick()
 		
 		m_RoundTick = 0;
 		
+		/*
 		if (m_BroadcastTimer++ > 300)
 		{
 			m_BroadcastTimer = 0;
 			GameServer()->SendBroadcast("Waiting for second player...", -1);
-		}
+		}*/
+		if (CountPlayers() == 1)
+			AutoBalance();
 	}
 	else
 	{

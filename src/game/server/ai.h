@@ -6,11 +6,15 @@
 
 #include "ai_protocol.h"
 
+#define RAD 0.017453292519943295769236907684886f
+
 
 class CAI
 {
 	class CGameContext *m_pGameServer;
 	class CPlayer *m_pPlayer;
+	
+	int m_UnstuckCount;
 	
 protected:
 	
@@ -47,16 +51,17 @@ protected:
 	int m_PlayerSpotCount;
 	
 	vec2 m_TargetPos;
+	vec2 m_WaypointPos;
+	
 	int m_TargetTimer;
 	
 	bool MoveTowardsPlayer(int Dist = 0);
 	bool MoveTowardsTarget(int Dist = 0);
+	bool MoveTowardsWaypoint(int Dist = 0);
 	
 	void Unstuck();
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
-	
-	
 	
 public:
 	CAI(class CGameContext *pGameServer, class CPlayer *pPlayer);
@@ -67,15 +72,16 @@ public:
 	void Tick();
 	void UpdateInput(int *Data); // MAX_INPUT_SIZE
 	
-	bool SeekFlag();
-	bool SeekPlayer();
+	void SeekBombArea();
+	void SeekBomb();
+	
+	bool SeekClosestEnemy();
+	bool SeekClosestEnemyInSight();
 	void CheckAITiles();
 	
 	bool m_InputChanged;
 	
-	int m_Reward;
-	
-	virtual void OnCharacterSpawn(class CCharacter *pChr) = 0;
+	virtual void OnCharacterSpawn(class CCharacter *pChr);
 	
 	void Zzz(int Time);
 	void Stun(int Time);

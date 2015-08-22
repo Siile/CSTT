@@ -1,6 +1,9 @@
 #include <game/server/ai.h>
 #include <game/server/entities/character.h>
+#include <game/server/entities/bomb.h>
+#include <game/server/entities/flag.h>
 #include <game/server/player.h>
+#include <game/server/gamecontext.h>
 
 #include "basicbot.h"
 
@@ -8,18 +11,42 @@
 CAIBasicbot::CAIBasicbot(CGameContext *pGameServer, CPlayer *pPlayer)
 : CAI(pGameServer, pPlayer)
 {
-	// do smth
+	m_SkipMoveUpdate = 0;
 }
 
 
 void CAIBasicbot::OnCharacterSpawn(CCharacter *pChr)
 {
-	//pChr->SetCustomWeapon(RIFLE_BOTLASER);
-	pChr->SetHealth(100);
+	CAI::OnCharacterSpawn(pChr);
+	
+	int Weapon = HAMMER_BASIC;
+	
+	m_WaypointDir = vec2(0, 0);
+	
+	if (frandom()*10 < 3)
+		Weapon = GUN_PISTOL;
+	else if (frandom()*10 < 2)
+		Weapon = SWORD_KATANA;
+	else if (frandom()*10 < 3)
+		Weapon = RIFLE_ASSAULTRIFLE;
+	else if (frandom()*10 < 3)
+		Weapon = RIFLE_LASERRIFLE;
+	else if (frandom()*10 < 3)
+		Weapon = SHOTGUN_DOUBLEBARREL;
+	else if (frandom()*10 < 3)
+		Weapon = RIFLE_LIGHTNINGRIFLE;
+	else if (frandom()*10 < 3)
+		Weapon = RIFLE_DOOMRAY;
+	else if (frandom()*10 < 3)
+		Weapon = RIFLE_STORMRIFLE;
+
+	pChr->GiveCustomWeapon(Weapon);
+	pChr->SetCustomWeapon(Weapon);
+	
+	//pChr->SetHealth(100);
 	
 	str_copy(pChr->GetPlayer()->m_TeeInfos.m_SkinName, "bluestripe", 64);
-	
-	m_Reward = 15;
+
 }
 
 
@@ -29,70 +56,215 @@ void CAIBasicbot::DoBehavior()
 	m_Jump = 0;
 	m_Attack = 0;
 	
-	CheckAITiles();
-	SeekPlayer();
+	// using this later
+	CBomb *Bomb = GameServer()->m_pController->GetBomb();
 	
-	if (m_PlayerSpotCount == 0)	
-		m_Hook = 0;
+	int LockMove = 0;
 	
-	Unstuck();
-
-	// hook moving (sucks)
-	vec2 HookPos = m_Pos - vec2(0, 300);
-			
-	if (m_Move < 0)
-		HookPos.x -= 250;
-	else
-		HookPos.x += 250;
-			
-				
-	// hook if something in sight
-	if (GameServer()->Collision()->IntersectLine(m_Pos, HookPos, NULL, NULL) && 
-		m_LastHook == 0 && m_PlayerSpotCount == 0 && frandom()*10 < 4)
+	if (!Player()->GetCharacter()->Hooking())
 	{
-		m_Hook = 1;
-		m_Direction = HookPos - m_Pos;
-		if (Player()->GetCharacter()->IsGrounded())
-			m_Jump = 1;
+		if (m_Hook == 1)
+			m_Hook = 0;
 	}
 	else
-		HeadToMovingDirection();
+		LockMove = m_Move;
 	
+	HeadToMovingDirection();
+	SeekClosestEnemyInSight();
 	
+	// if we see a player
 	if (m_PlayerSpotCount > 0)
-	{
-		m_TargetTimer = 0;
-	
-		// on first time standstill and look stupid
+	{		
+		// release hook at random
+		if (frandom()*20 < 4)
+			m_Hook = 0;
+		
+		// ammo check
+		if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
+			!Player()->GetCharacter()->HasAmmo())
+			Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
+		
 		if (m_PlayerSpotCount == 1)
-		{
-			m_Move = 0;
-			m_Direction = m_PlayerDirection;
-			m_TargetPos = m_PlayerPos;
-			m_Jump = 0;
-
 			Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 1200, 1200);
-			m_ReactionTime = 40;
-			return;
-		}
 
-
-		if (m_PlayerPos.x < m_Pos.x)
-			m_TargetPos.x = m_PlayerPos.x + 600;
-		else
-			m_TargetPos.x = m_PlayerPos.x - 600;
+		JumpIfPlayerIsAbove();
 		
-		MoveTowardsTarget(140);
+		int Weapon = Player()->GetCharacter()->m_ActiveCustomWeapon;
+		int Range = 100;
 		
-		if (m_PlayerDistance < 700)
+		if (Weapon >= 0 && Weapon < NUM_CUSTOMWEAPONS)
+			Range = BotAttackRange[Weapon];
+		
+		if (frandom()*20 < 3)
+			m_Jump = 1;
+		
+		if (m_PlayerDistance <= Range)
 			m_Attack = 1;
 		
-		
 		if (m_PlayerDistance < 1000)
-			m_Direction = m_PlayerDirection;
+			m_Direction = vec2(m_PlayerDirection.x+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f), m_PlayerDirection.y+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f));
+		
+		if (m_PlayerPos.x < m_Pos.x)
+			m_TargetPos.x = m_PlayerPos.x + Range/2*(0.75f+frandom()*0.5f);
+		else
+			m_TargetPos.x = m_PlayerPos.x - Range/2*(0.75f+frandom()*0.5f);
+
+		MoveTowardsTarget(100);
+	}
+	else
+	// we don't see a player
+	{
+		// release hook at random
+		if (frandom()*10 < 2)
+			m_Hook = 0;
+	
+		if (Player()->GetTeam() == TEAM_RED)
+		{
+			if (Bomb && Bomb->m_Status != BOMB_CARRYING)
+				m_TargetPos = Bomb->m_Pos;
+			else
+			if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
+				SeekBombArea();
+			else
+			if (SeekClosestEnemy())
+				m_TargetPos = m_PlayerPos;
+		}
+		else
+		{
+			if (Bomb && Bomb->m_Status == BOMB_PLANTED)
+				m_TargetPos = Bomb->m_Pos;
+			else
+			{
+				SeekBombArea();
+				
+				if (distance(m_Pos, m_TargetPos) < 1800)
+				{
+					if (SeekClosestEnemy())
+					{
+						m_TargetPos = m_PlayerPos;
+					}
+				}
+			}
+		}
+		
+		if (m_TargetTimer <= 0)
+		{
+			if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos))
+			{
+				if (GameServer()->Collision()->m_GotVision)
+				{
+					// we got waypoint to the target
+					m_WaypointPos = GameServer()->Collision()->m_VisionPos;
+					m_WaypointDir = m_WaypointPos - m_Pos;
+				}
+			}
+			
+			//GameServer()->CreatePlayerSpawn(m_WaypointPos);
+			m_TargetTimer = 10;
+		}
+		else
+			m_TargetTimer--;
+				
+				
+		MoveTowardsWaypoint(40);
+		
+		
+		// hook moving
+		if (m_LastHook == 0)
+		{
+		
+			//float Angle = atan2(Player()->GetCharacter()->GetVel().x, Player()->GetCharacter()->GetVel().y);
+			float Angle = atan2(m_WaypointDir.x, m_WaypointDir.y);
+			
+			//if (frandom()*10 < 4)
+			//	Angle = 180*RAD;
+			
+			float MaxDist = 0;
+			vec2 FinalHookPos = vec2(0, 0);
+		
+			for (int i = -3; i < 4; i++)
+			{
+				float a = Angle + i*0.025f;
+				
+				//if (a < 90*RAD || a > 270*RAD)
+				//	continue;
+				
+				vec2 HookPos = m_Pos + vec2(sin(a)*380, cos(a)*380);
+
+				// hook if something in sight
+				if (GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL) && m_LastHook == 0)
+				{
+					float Dist = distance(m_Pos, HookPos);
+					if (Dist > 100 && Dist > MaxDist)
+					{
+						MaxDist = Dist;
+						FinalHookPos = HookPos;
+					}
+				}
+			}
+			
+			if (MaxDist > 0)
+			{
+				if (GameServer()->m_World.FindEntities(FinalHookPos, CCharacter::ms_PhysSize, NULL, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER) == 0)
+				{
+					m_Hook = 1;
+					m_Direction = FinalHookPos - m_Pos;
+				}
+				
+				if (Player()->GetCharacter()->IsGrounded())
+					m_Jump = 1;
+			}
+			else
+				m_Hook = 0;
+		}
+		
+		// air jump
+		if (Player()->GetCharacter()->GetVel().y > 0 && m_TargetPos.y + 40 < m_Pos.y )
+		{
+			if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
+				m_Jump = 1;
+		}
 	}
 
+	Unstuck();
+	
+	if (Player()->GetCharacter()->IsGrounded() && frandom()*10 < 3)
+		m_Jump = 1;
+	
+	// go plant the bomb
+	if (Player()->GetTeam() == TEAM_RED)
+	{
+		if (Bomb && (Bomb->m_Status == BOMB_CARRYING || Bomb->m_Status == BOMB_PLANTING) && Player()->GetCharacter() == Bomb->m_pCarryingCharacter)
+		{
+			CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_Pos);
+	
+			if (BombArea && abs(BombArea->m_Pos.x-m_Pos.x) < 100 && abs(BombArea->m_Pos.y-m_Pos.y-50) < 100)
+			{
+				m_Move = 0;
+				m_Jump = 0;
+				m_Hook = 0;
+			}
+		}
+	}	
+	
+	// don't move if defusing the bomb
+	if (Player()->GetTeam() == TEAM_BLUE)
+	{
+		if (Bomb && Bomb->m_Status == BOMB_PLANTED)
+		{
+			if (abs(Bomb->m_Pos.x-m_Pos.x) < 100 && abs(Bomb->m_Pos.y-m_Pos.y-50) < 100)
+			{
+				m_Move = 0;
+				m_Jump = 0;
+				m_Hook = 0;
+			}
+		}
+	}
+
+	if (LockMove != 0)
+		m_Move = LockMove;
+	
 	// next reaction in
-	m_ReactionTime = 6 + frandom()*3;
+	m_ReactionTime = 4 + frandom()*4;
 	
 }

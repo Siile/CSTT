@@ -94,7 +94,7 @@ void CPickup::Tick()
 		switch (m_Type)
 		{
 			case POWERUP_HEALTH:
-				if(pChr->IncreaseHealth(20))
+				if(pChr->IncreaseHealth(10))
 				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
 					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;

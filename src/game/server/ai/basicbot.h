@@ -12,6 +12,9 @@ public:
 	void OnCharacterSpawn(class CCharacter *pChr);
 
 private:
+	int m_SkipMoveUpdate;
+	vec2 m_WaypointDir;
+	
 };
 
 #endif

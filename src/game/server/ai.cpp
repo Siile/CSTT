@@ -2,6 +2,7 @@
 
 #include "entities/character.h"
 #include "entities/flag.h"
+#include "entities/bomb.h"
 #include <game/server/player.h>
 #include "gamecontext.h"
 
@@ -10,7 +11,6 @@ CAI::CAI(CGameContext *pGameServer, CPlayer *pPlayer)
 {
 	m_pGameServer = pGameServer;
 	m_pPlayer = pPlayer;
-	m_Reward = 5;	
 	Reset();
 }
 
@@ -32,10 +32,24 @@ void CAI::Reset()
 	m_LastPos = vec2(-9000, -9000);
 	m_Direction = vec2(-1, 0);
 	
+	m_UnstuckCount = 0;
+	
+	m_TargetTimer = 0;
+	
 	m_PlayerPos = vec2(0, 0);
 	m_TargetPos = vec2(0, 0);
 	m_PlayerSpotTimer = 0;
 	m_PlayerSpotCount = 0;
+}
+
+
+void CAI::OnCharacterSpawn(class CCharacter *pChr)
+{
+	// testing
+	pChr->SetCustomWeapon(GUN_PISTOL);
+	//m_pWaypoint = GameServer()->m_pWaypoints->GetClosest(pChr->m_Pos);
+	
+	m_WaypointPos = vec2(0, 0);
 }
 
 
@@ -104,38 +118,39 @@ void CAI::HeadToMovingDirection()
 
 void CAI::Unstuck()
 {
-	if (abs(m_Pos.x - m_LastPos.x) < 14 && Player()->GetCharacter()->IsGrounded())
+	if (abs(m_Pos.x - m_LastPos.x) < 20)
 	{
-		if (frandom() * 10 < 3)
-			m_Move = -1;
-		if (frandom() * 10 < 3)
-			m_Move = 1;
-		if (frandom() * 10 < 3)
-			m_Jump = 1;
+		if (++m_UnstuckCount > 10)
+		{
+			if (frandom() * 10 < 5)
+				m_Move = -1;
+			else
+				m_Move = 1;
+			
+			if (frandom() * 10 < 4)
+				m_Jump = 1;
+		}
 	}
+	else
+		m_UnstuckCount = 0;
 }
 
 
 
-bool CAI::SeekFlag()
+void CAI::SeekBombArea()
 {
-	CFlag *apFlag[1];
-	//int Num = 
-	GameServer()->m_World.FindEntities(m_LastPos, 999999, (CEntity**)apFlag, 1, CGameWorld::ENTTYPE_FLAG);
+	CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_LastPos);
 	
-	if (apFlag[0])
-	{
-		if (abs(m_LastPos.x - apFlag[0]->m_Pos.x) < 200)
-			m_Move = 0;
-		else if (m_LastPos.x < apFlag[0]->m_Pos.x)
-			m_Move = 1;
-		else
-			m_Move = -1;
-		
-		return true;
-	}
+	if (BombArea)
+		m_TargetPos = BombArea->m_Pos;
+}
 	
-	return false;
+void CAI::SeekBomb()
+{
+	CBomb *Bomb = GameServer()->m_pController->GetBomb();
+	
+	if (Bomb)
+		m_TargetPos = Bomb->m_Pos;
 }
 
 
@@ -176,13 +191,32 @@ bool CAI::MoveTowardsTarget(int Dist)
 }
 
 
+bool CAI::MoveTowardsWaypoint(int Dist)
+{
+
+	if (distance(m_LastPos, m_WaypointPos) < Dist)
+	{
+		m_Move = 0;
+		return true;
+	}
+		
+	if (m_LastPos.x < m_WaypointPos.x)
+		m_Move = 1;
+		
+	if (m_LastPos.x > m_WaypointPos.x)
+		m_Move = -1;
+		
+	return false;
+}
+
+
 void CAI::ReceiveDamage()
 {
 	
 }
 
 
-bool CAI::SeekPlayer()
+bool CAI::SeekClosestEnemy()
 {
 	CCharacter *pClosestCharacter = NULL;
 	int ClosestDistance = 0;
@@ -192,6 +226,51 @@ bool CAI::SeekPlayer()
 	{
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if(!pPlayer)
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam())
+			continue;
+
+		CCharacter *pCharacter = pPlayer->GetCharacter();
+		if (!pCharacter)
+			continue;
+		
+		if (!pCharacter->IsAlive())
+			continue;
+			
+		int Distance = distance(pCharacter->m_Pos, m_LastPos);
+		if (!pClosestCharacter || Distance < ClosestDistance)
+		{
+			pClosestCharacter = pCharacter;
+			ClosestDistance = Distance;
+			m_PlayerDirection = pCharacter->m_Pos - m_LastPos;
+			m_PlayerPos = pCharacter->m_Pos;
+		}
+	}
+	
+	if (pClosestCharacter)
+	{
+		m_PlayerDistance = ClosestDistance;
+		return true;
+	}
+
+	return false;
+}
+
+
+bool CAI::SeekClosestEnemyInSight()
+{
+	CCharacter *pClosestCharacter = NULL;
+	int ClosestDistance = 0;
+	
+	// FIRST_BOT_ID, fix
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam())
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -203,7 +282,8 @@ bool CAI::SeekPlayer()
 			
 		int Distance = distance(pCharacter->m_Pos, m_LastPos);
 		if (Distance < 800 && 
-			!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
+			!GameServer()->Collision()->FastIntersectLine(pCharacter->m_Pos, m_LastPos))
+			//!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
 		{
 			if (!pClosestCharacter || Distance < ClosestDistance)
 			{
@@ -222,7 +302,6 @@ bool CAI::SeekPlayer()
 		return true;
 	}
 
-	
 	m_PlayerSpotCount = 0;
 	return false;
 }

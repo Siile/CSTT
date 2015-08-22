@@ -8,7 +8,7 @@
 class CLightning : public CEntity
 {
 public:
-	CLightning(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, float StepEnergy, int Owner, int Damage, int Num = 0);
+	CLightning(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, float StepEnergy, int Owner, int Damage, int MaxDesc, int Num = 0);
 
 	virtual void Reset();
 	virtual void Tick();
@@ -30,6 +30,7 @@ private:
 	int m_Owner;
 	int m_Damage;
 	int m_Num;
+	int m_MaxDesc;
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <game/server/gamecontext.h>
 #include "lightning.h"
 
-CLightning::CLightning(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, float StepEnergy, int Owner, int Damage, int Num)
+CLightning::CLightning(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, float StepEnergy, int Owner, int Damage, int MaxDesc, int Num)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER)
 {
 	m_Damage = Damage;
@@ -17,6 +17,7 @@ CLightning::CLightning(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float S
 	m_Dir = Direction;
 	m_Bounces = 0;
 	m_EvalTick = 0;
+	m_MaxDesc = MaxDesc;
 	GameWorld()->InsertEntity(this);
 	DoBounce();
 }
@@ -82,8 +83,8 @@ void CLightning::DoBounce()
 			m_Pos = To;
 			m_Energy -= m_StepEnergy;
 			
-			if (m_Num < 1)
-				new CLightning(GameWorld(), m_Pos, m_Dir, m_StartEnergy, m_StepEnergy, m_Owner, m_Damage, m_Num+1);
+			if (m_Num < m_MaxDesc)
+				new CLightning(GameWorld(), m_Pos, m_Dir, m_StartEnergy, m_StepEnergy, m_Owner, m_Damage, m_MaxDesc, m_Num+1);
 		}
 	}
 }

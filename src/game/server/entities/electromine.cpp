@@ -63,10 +63,10 @@ void CElectromine::Tick()
 		{
 			float Angle = frandom()*1 - frandom()*1;
 			Angle = (-90 + frandom()*25 - frandom()*25) * RAD;
-			new CLightning(GameWorld(), m_Pos+vec2(0, -12), vec2(cosf(Angle), sinf(Angle)), 50, 50, m_Owner, 1);
+			new CLightning(GameWorld(), m_Pos+vec2(0, -12), vec2(cosf(Angle), sinf(Angle)), 50, 50, m_Owner, 1, 1);
 			
 			Angle = frandom()*360 * RAD;
-			new CLightning(GameWorld(), m_Pos+vec2(frandom()*20-frandom()*20, -16 - frandom()*20), vec2(cosf(Angle), sinf(Angle)), 50, 50, m_Owner, 1);
+			new CLightning(GameWorld(), m_Pos+vec2(frandom()*20-frandom()*20, -16 - frandom()*20), vec2(cosf(Angle), sinf(Angle)), 50, 50, m_Owner, 1, 1);
 		}
 		
 		if (m_ElectroTimer++ > 30)

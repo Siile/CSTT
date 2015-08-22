@@ -72,7 +72,7 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
-	bool HookGrabbed();
+	bool Hooking();
 	
 	bool m_IsBot;
 	int m_HiddenHealth;
@@ -111,7 +111,7 @@ public:
 	// for pickup drops, easy access
 	bool HasAmmo()
 	{
-		if(m_aWeapon[m_ActiveCustomWeapon].m_Ammo > 0)
+		if(m_aWeapon[m_ActiveCustomWeapon].m_Ammo > 0 || m_aWeapon[m_ActiveCustomWeapon].m_AmmoReserved > 0)
 			return true;
 		
 		return false;
@@ -153,9 +153,10 @@ public:
 	
 	void Cry();
 	
-	
 	CCharacterCore GetCore(){ return m_Core; }
 	vec2 GetPosition(){ return m_Pos; }
+	
+	vec2 GetVel(){ return m_Core.m_Vel; }
 	
 	
 private:

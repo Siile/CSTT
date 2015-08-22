@@ -6,8 +6,6 @@
 
 
 #define MAX_GRENADES 5
- 
- 
 
 
 struct CWeapon
@@ -82,8 +80,9 @@ enum CustomWeapons
 	GUN_MAGNUM,
 	RIFLE_ASSAULTRIFLE,
 	RIFLE_HEAVYRIFLE,
-	RIFLE_LASERRIFLE,
 	RIFLE_LIGHTNINGRIFLE,
+	RIFLE_STORMRIFLE,
+	RIFLE_LASERRIFLE,
 	RIFLE_DOOMRAY,
 	GRENADE_GRENADELAUNCHER,
 	GRENADE_HEAVYLAUNCHER,
@@ -92,26 +91,27 @@ enum CustomWeapons
 	NUM_CUSTOMWEAPONS
 };
 
-/*
+
 const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 {
-	120, // SWORD_KATANA,
+	400, // SWORD_KATANA,
 	120, // HAMMER_BASIC,
-	120, // SHOTGUN_DOUBLEBARREL,
-	120, // SHOTGUN_COMBAT,
-	120, // GUN_PISTOL,
-	120, // GUN_MAGNUM,
-	120, // RIFLE_ASSAULTRIFLE,
-	120, // RIFLE_HEAVYRIFLE,
-	120, // RIFLE_LASERRIFLE,
-	120, // RIFLE_LIGHTNINGRIFLE,
-	120, // RIFLE_DOOMRAY,
-	120, // GRENADE_GRENADELAUNCHER,
-	120, // GRENADE_HEAVYLAUNCHER,
-	120, // GRENADE_DOOMLAUNCHER,
-	120, // GRENADE_GRENADE
+	400, // SHOTGUN_DOUBLEBARREL,
+	400, // SHOTGUN_COMBAT,
+	700, // GUN_PISTOL,
+	700, // GUN_MAGNUM,
+	700, // RIFLE_ASSAULTRIFLE,
+	700, // RIFLE_HEAVYRIFLE,
+	400, // RIFLE_LIGHTNINGRIFLE,
+	600, // RIFLE_STORMRIFLE,
+	700, // RIFLE_LASERRIFLE,
+	700, // RIFLE_DOOMRAY,
+	500, // GRENADE_GRENADELAUNCHER,
+	500, // GRENADE_HEAVYLAUNCHER,
+	500, // GRENADE_DOOMLAUNCHER,
+	500, // GRENADE_GRENADE
 };
-*/
+
 
 enum ProjectileTypes
 {
@@ -303,6 +303,46 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		17.0f // bullet knockback
 		),
 	CWeapon(
+		"Lightning rifle",
+		"/upg lightning",
+		WEAPON_RIFLE,
+		PROJTYPE_LIGHTNING,
+		SOUND_RIFLE_FIRE,
+		-1, // require
+		100, // cost
+		8, // damage
+		BIGBULLETSPREAD, // extra1
+		true, // autofire
+		1, // bullet spread
+		20, // clip size
+		20, // powerup size
+		100, // max ammo
+		0, // bullet life
+		125, // bullet reload time
+		1200, // clip reload time
+		0.0f // bullet knockback
+		),
+	CWeapon(
+		"Storm rifle",
+		"/upg storm",
+		WEAPON_RIFLE,
+		PROJTYPE_LIGHTNING,
+		SOUND_RIFLE_FIRE,
+		RIFLE_LIGHTNINGRIFLE, // require
+		100, // cost
+		8, // damage
+		ELECTRIC, // extra1
+		true, // autofire
+		1, // bullet spread
+		20, // clip size
+		20, // powerup size
+		100, // max ammo
+		0, // bullet life
+		125, // bullet reload time
+		1200, // clip reload time
+		0.0f // bullet knockback
+		),
+	CWeapon(
 		"Laser rifle",
 		"/buy laser",
 		WEAPON_RIFLE,
@@ -319,26 +359,6 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		100, // max ammo
 		0, // bullet life
 		350, // bullet reload time
-		1200, // clip reload time
-		0.0f // bullet knockback
-		),
-	CWeapon(
-		"Lightning rifle",
-		"/upg lightning",
-		WEAPON_RIFLE,
-		PROJTYPE_LIGHTNING,
-		SOUND_RIFLE_FIRE,
-		RIFLE_ASSAULTRIFLE, // require
-		100, // cost
-		8, // damage
-		BIGBULLETSPREAD, // extra1
-		true, // autofire
-		1, // bullet spread
-		20, // clip size
-		20, // powerup size
-		100, // max ammo
-		0, // bullet life
-		125, // bullet reload time
 		1200, // clip reload time
 		0.0f // bullet knockback
 		),
@@ -395,7 +415,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		4, // clip size
-		4, // powerup size
+		8, // powerup size
 		40, // max ammo
 		1.5f, // bullet life
 		330, // bullet reload time
@@ -415,7 +435,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		3, // clip size
-		3, // powerup size
+		6, // powerup size
 		30, // max ammo
 		1.5f, // bullet life
 		360, // bullet reload time

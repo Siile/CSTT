@@ -26,7 +26,7 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-
+	
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
 		int Index = m_pTiles[i].m_Index;
@@ -64,7 +64,162 @@ void CCollision::Init(class CLayers *pLayers)
 			m_pTiles[i].m_Index = 0;
 		}
 	}
+	
+	// for path finding
+	m_pChecked = new bool [m_Width*m_Height+1];
 }
+
+
+
+bool CCollision::FindPath(vec2 Start, vec2 End)
+{
+	ClearPath();
+	
+	m_StartX = clamp(int(Start.x)/32, 0, m_Width-1);
+	m_StartY = clamp(int(Start.y)/32, 0, m_Height-1);
+	
+	m_TargetX = clamp(int(End.x)/32, 0, m_Width-1);
+	m_TargetY = clamp(int(End.y)/32, 0, m_Height-1);
+	
+	return CheckPath(m_StartX, m_StartY);
+}
+
+
+enum Directions
+{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT
+};
+
+
+bool CCollision::CheckPath(int x, int y)
+{
+	if (x < 1 || y < 1 || x > m_Width-2 || y > m_Height-2)
+		return false;
+	
+	if (m_pChecked[y*m_Width+x])
+		return false;
+		
+	if (m_pTiles[y*m_Width+x].m_Index)
+		return false;
+		
+	m_pChecked[y*m_Width+x] = true;
+	
+	if (abs(x - m_TargetX) < 2 && abs(y - m_TargetY) < 2)
+		return true;
+	
+	if (abs(m_TargetX - x) < abs(m_TargetY - y))
+	{
+		// go up or down first
+		if (m_TargetY < y)
+		{
+			m_CheckOrder[0] = UP;
+			
+			if (m_TargetX < x)
+			{
+				m_CheckOrder[1] = LEFT;
+				m_CheckOrder[2] = RIGHT;
+			}
+			else
+			{
+				m_CheckOrder[1] = RIGHT;
+				m_CheckOrder[2] = LEFT;
+			}
+			
+			m_CheckOrder[3] = DOWN;
+		}
+		else
+		{
+			m_CheckOrder[0] = DOWN;
+			
+			if (m_TargetX < x)
+			{
+				m_CheckOrder[1] = LEFT;
+				m_CheckOrder[2] = RIGHT;
+			}
+			else
+			{
+				m_CheckOrder[1] = RIGHT;
+				m_CheckOrder[2] = LEFT;
+			}
+			
+			m_CheckOrder[3] = UP;
+		}
+	}
+	else
+	{
+		// go left or right first
+		if (m_TargetX < x)
+		{
+			m_CheckOrder[0] = LEFT;
+			
+			if (m_TargetY < y)
+			{
+				m_CheckOrder[1] = UP;
+				m_CheckOrder[2] = DOWN;
+			}
+			else
+			{
+				m_CheckOrder[1] = DOWN;
+				m_CheckOrder[2] = UP;
+			}
+			
+			m_CheckOrder[3] = RIGHT;
+		}
+		else
+		{
+			m_CheckOrder[0] = RIGHT;
+			
+			if (m_TargetY < y)
+			{
+				m_CheckOrder[1] = UP;
+				m_CheckOrder[2] = DOWN;
+			}
+			else
+			{
+				m_CheckOrder[1] = DOWN;
+				m_CheckOrder[2] = UP;
+			}
+			
+			m_CheckOrder[3] = LEFT;
+		}
+	}
+	
+	int AddX = 0;
+	int AddY = 0;
+	
+	for (int i = 0; i < 4; i++)
+	{
+		if (m_CheckOrder[i] == UP){ AddX = 0; AddY = -1; }
+		if (m_CheckOrder[i] == DOWN){ AddX = 0; AddY = 1; }
+		if (m_CheckOrder[i] == LEFT){ AddX = -1; AddY = 0; }
+		if (m_CheckOrder[i] == RIGHT){ AddX = 1; AddY = 0; }
+		
+		if (CheckPath(x+AddX, y+AddY))
+		{
+			if (!m_GotVision && !FastIntersectLine(vec2(m_StartX*32+16, m_StartY*32+16), vec2(x*32+16, y*32+16)))
+			{
+				m_GotVision = true;
+				m_VisionPos = vec2(x*32+16, y*32+16);
+			}
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+void CCollision::ClearPath()
+{
+	m_GotVision = false;
+	
+	for(int i = 0; i < m_Width*m_Height; i++)
+		m_pChecked[i] = false;
+}
+
 
 int CCollision::GetTile(int x, int y)
 {
@@ -78,6 +233,24 @@ bool CCollision::IsTileSolid(int x, int y)
 {
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
+
+
+
+int CCollision::FastIntersectLine(vec2 Pos0, vec2 Pos1)
+{
+	float Distance = distance(Pos0, Pos1) / 8.0f;
+	int End(Distance+1);
+
+	for(int i = 0; i < End; i++)
+	{
+		float a = i/Distance;
+		vec2 Pos = mix(Pos0, Pos1, a);
+		if(CheckPoint(Pos.x, Pos.y))
+			return GetCollisionAt(Pos.x, Pos.y);
+	}
+	return 0;
+}
+
 
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)

@@ -1793,19 +1793,77 @@ int main(int argc, const char **argv) // ignore_convention
 
 void CServer::AddZombie(int ClientID)
 {
-	/*
-	// ignore ClientID
-	ClientID = SnapNewID();
-	
-	if (ClientID < 0 || ClientID > MAX_CLIENTS)
-		return;
-	*/
-	
 	m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 	GameServer()->OnClientConnected(ClientID, true);
 	//GameServer()->OnClientEnter(i);
 	m_aClients[ClientID].m_State = CClient::STATE_INGAME;
 	m_aClients[ClientID].m_Bot = true;
 
+	// fake reserve a slot
 	m_NetServer.m_SlotTakenByBot[ClientID] = true;
+	
+	// generate a cool name for the bot
+	char aName1[128];
+	char aName2[128];
+	
+	switch (rand() % 18)
+	{
+		case 0: str_format(aName1, sizeof(aName1), "Ice"); break;
+		case 1: str_format(aName1, sizeof(aName1), "Fire"); break;
+		case 2: str_format(aName1, sizeof(aName1), "Wind"); break;
+		case 3: str_format(aName1, sizeof(aName1), "Doggy"); break;
+		case 4: str_format(aName1, sizeof(aName1), "Kitty"); break;
+		case 5: str_format(aName1, sizeof(aName1), "Split"); break;
+		case 6: str_format(aName1, sizeof(aName1), "Banana"); break;
+		case 7: str_format(aName1, sizeof(aName1), "Glass"); break;
+		case 8: str_format(aName1, sizeof(aName1), "Snoop"); break;
+		case 9: str_format(aName1, sizeof(aName1), "Uncle"); break;
+		case 10: str_format(aName1, sizeof(aName1), "Rubber"); break;
+		case 11: str_format(aName1, sizeof(aName1), "Afro"); break;
+		case 12: str_format(aName1, sizeof(aName1), "Red"); break;
+		case 13: str_format(aName1, sizeof(aName1), "Blue"); break;
+		case 14: str_format(aName1, sizeof(aName1), "Boss"); break;
+		case 15: str_format(aName1, sizeof(aName1), "Dumb"); break;
+		case 16: str_format(aName1, sizeof(aName1), "Horn"); break;
+		case 17: str_format(aName1, sizeof(aName1), "Korn"); break;
+		default: str_format(aName1, sizeof(aName1), "Stupid"); break;
+	}
+	
+	switch (rand() % 19)
+	{
+		case 0: str_format(aName2, sizeof(aName2), "butt"); break;
+		case 1: str_format(aName2, sizeof(aName2), "face"); break;
+		case 2: str_format(aName2, sizeof(aName2), "badger"); break;
+		case 3: str_format(aName2, sizeof(aName2), "man"); break;
+		case 4: str_format(aName2, sizeof(aName2), "dog"); break;
+		case 5: str_format(aName2, sizeof(aName2), "hound"); break;
+		case 6: str_format(aName2, sizeof(aName2), "panda"); break;
+		case 7: str_format(aName2, sizeof(aName2), "lard"); break;
+		case 8: str_format(aName2, sizeof(aName2), "tard"); break;
+		case 9: str_format(aName2, sizeof(aName2), "duck"); break;
+		case 10: str_format(aName2, sizeof(aName2), "fart"); break;
+		case 11: str_format(aName2, sizeof(aName2), "moose"); break;
+		case 12: str_format(aName2, sizeof(aName2), "lime"); break;
+		case 13: str_format(aName2, sizeof(aName2), "pie"); break;
+		case 14: str_format(aName2, sizeof(aName2), "spice"); break;
+		case 15: str_format(aName2, sizeof(aName2), "berry"); break;
+		case 16: str_format(aName2, sizeof(aName2), "doge"); break;
+		case 17: str_format(aName2, sizeof(aName2), "banana"); break;
+		case 18: str_format(aName2, sizeof(aName2), "pepper"); break;
+		default: str_format(aName2, sizeof(aName2), "fruit"); break;
+	}
+	
+	char aName[128];
+	str_format(aName, sizeof(aName), "%s%s", aName1, aName2);
+	
+	SetClientName(ClientID, aName);
+	SetClientClan(ClientID, "noob AI");
 }
+
+
+
+
+
+
+
+

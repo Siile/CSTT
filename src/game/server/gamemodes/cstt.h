@@ -67,7 +67,6 @@ private:
 	int m_BombDefuseTimer;
 	bool m_BombDefused;
 	
-	class CFlag *GetClosestBombArea(vec2 Pos);
 	
 	int m_BombCarrierTurn;
 	
@@ -113,6 +112,10 @@ public:
 	virtual bool OnEntity(int Index, vec2 Pos);
 	int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 	void OnCharacterSpawn(class CCharacter *pChr, bool RequestAI = false);
+	
+	class CBomb *GetBomb();
+	class CFlag *GetClosestBombArea(vec2 Pos);
+	
 	bool CanCharacterSpawn(int ClientID);
 };
 #endif

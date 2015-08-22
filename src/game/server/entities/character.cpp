@@ -57,9 +57,9 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_Armor = 0;
 }
 
-bool CCharacter::HookGrabbed()
+bool CCharacter::Hooking()
 {
-	if (m_Core.m_HookState == HOOK_GRABBED)
+	if (m_Core.m_HookState == HOOK_GRABBED || m_Core.m_HookState == HOOK_FLYING)
 		return true;
 		
 	return false;
@@ -372,7 +372,7 @@ void CCharacter::HandleNinja()
 			for (int i = 0; i < 9; i++)
 			{
 				float a = frandom()*360 * RAD;
-				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2);
+				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2, 1);
 			}
 		}
 	}
@@ -383,7 +383,7 @@ void CCharacter::HandleNinja()
 		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
 		{
 			float a = frandom()*360 * RAD;
-			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2);
+			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2, 1);
 		}
 		
 		// Set velocity
@@ -889,6 +889,11 @@ void CCharacter::FireWeapon()
 			//new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage);
 		*/
 		
+			int Desc = 1;
+			
+			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC)
+				Desc++;
+		
 			int ShotSpread = aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread / 2;
 
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread%2)
@@ -899,7 +904,7 @@ void CCharacter::FireWeapon()
 					float a = GetAngle(Direction);
 					a += Spreading[i+2];
 
-					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage);
+					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
 				}
 			}
 			else
@@ -910,7 +915,7 @@ void CCharacter::FireWeapon()
 					float a = GetAngle(Direction);
 					a += Spreading[i+3];
 					
-					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage);
+					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
 				}
 			}
 		} break;

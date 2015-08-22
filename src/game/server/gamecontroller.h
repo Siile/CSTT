@@ -136,6 +136,10 @@ public:
 
 	virtual bool CanCharacterSpawn(int ClientID);
 
+	virtual class CBomb *GetBomb();
+	virtual class CFlag *GetClosestBombArea(vec2 Pos);
+	
+	
 	virtual void OnPlayerInfoChange(class CPlayer *pP);
 
 	//
