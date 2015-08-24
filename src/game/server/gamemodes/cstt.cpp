@@ -522,8 +522,6 @@ int CGameControllerCSTT::CheckLose()
 			// big ass explosion
 			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_pBomb->m_Pos, m_pBomb->m_Owner, 0, 10, true /* superdamage */);
 			GameServer()->m_World.InsertEntity(S);
-			
-			GameServer()->CreateSoundGlobal(SOUND_GRENADE_EXPLODE, -1);
 							
 			m_pBomb->m_Hide = true;
 			
@@ -927,7 +925,7 @@ void CGameControllerCSTT::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
+	if ((Red+RedBots) < 4 && (Blue+BlueBots) < 4)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
@@ -944,7 +942,7 @@ void CGameControllerCSTT::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
+	if ((Red+RedBots) > 6 && (Blue+BlueBots) > 6)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{

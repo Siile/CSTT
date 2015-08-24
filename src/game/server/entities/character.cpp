@@ -1401,6 +1401,9 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	
+	if (Killer == m_pPlayer->GetCID() && Weapon == WEAPON_HAMMER)
+		SkipKillMessage = true;
+	
 	if (!SkipKillMessage)
 	{
 		int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
@@ -1412,12 +1415,15 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 		// send the kill message
-		CNetMsg_Sv_KillMsg Msg;
-		Msg.m_Killer = Killer;
-		Msg.m_Victim = m_pPlayer->GetCID();
-		Msg.m_Weapon = Weapon;
-		Msg.m_ModeSpecial = ModeSpecial;
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		if (Weapon != WEAPON_GAME)
+		{
+			CNetMsg_Sv_KillMsg Msg;
+			Msg.m_Killer = Killer;
+			Msg.m_Victim = m_pPlayer->GetCID();
+			Msg.m_Weapon = Weapon;
+			Msg.m_ModeSpecial = ModeSpecial;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		}
 	}
 
 	// a nice sound
@@ -1429,6 +1435,7 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 	m_Alive = false;
 	GameServer()->m_World.RemoveEntity(this);
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 }
 

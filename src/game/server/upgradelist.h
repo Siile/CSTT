@@ -257,7 +257,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		6, // clip size
 		12, // powerup size
 		60, // max ammo
-		0.4f, // bullet life
+		0.35f, // bullet life
 		160, // bullet reload time
 		700, // clip reload time
 		15.0f // bullet knockback
@@ -277,7 +277,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		20, // clip size
 		20, // powerup size
 		100, // max ammo
-		0.6f, // bullet life
+		0.45f, // bullet life
 		120, // bullet reload time
 		1200, // clip reload time
 		12.0f // bullet knockback
@@ -297,7 +297,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		20, // clip size
 		20, // powerup size
 		100, // max ammo
-		0.6f, // bullet life
+		0.45f, // bullet life
 		120, // bullet reload time
 		1200, // clip reload time
 		17.0f // bullet knockback
@@ -330,7 +330,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_RIFLE_FIRE,
 		RIFLE_LIGHTNINGRIFLE, // require
 		100, // cost
-		8, // damage
+		7, // damage
 		ELECTRIC, // extra1
 		true, // autofire
 		1, // bullet spread
@@ -350,15 +350,15 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_RIFLE_FIRE,
 		-1, // require
 		100, // cost
-		16, // damage
+		15, // damage
 		BULLETSPREAD, // extra1
 		true, // autofire
 		1, // bullet spread
-		10, // clip size
-		10, // powerup size
-		100, // max ammo
+		6, // clip size
+		6, // powerup size
+		60, // max ammo
 		0, // bullet life
-		350, // bullet reload time
+		250, // bullet reload time
 		1200, // clip reload time
 		0.0f // bullet knockback
 		),

@@ -1388,6 +1388,7 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 	
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were shuffled");
 
+	/*
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
@@ -1411,6 +1412,7 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 			}
 		}
 	}
+	*/
 
 	(void)pSelf->m_pController->CheckTeamBalance();
 }

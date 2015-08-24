@@ -28,17 +28,20 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_TeamChangeTick = Server()->Tick();
 	
 	m_Score = 0;
-	
 	m_Money = g_Config.m_SvStartMoney;
 	
 	m_CanShop = false;
-
+	GameServer()->ClearShopVotes(ClientID);
+	
 	m_IsBot = false;
 	m_pAI = NULL;
 	
-	m_WantedTeam = m_Team;
+	m_SpecChangeCount = 0;
 	
-	m_ForceToSpectators = false;
+	m_WantedTeam = m_Team;
+	//m_Team = TEAM_SPECTATORS;
+	
+	m_ForceToSpectators = true;
 	
 	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		m_aSavedWeapon[i] = false;
@@ -119,11 +122,19 @@ void CPlayer::Tick()
 	}
 	*/
 	
+	if (m_Team == TEAM_SPECTATORS)
+	{
+		if (++m_SpecChangeCount > 120)
+		{
+			
+		}
+	}
+	
 	if(!GameServer()->m_World.m_Paused)
 	{
 		if(!m_pCharacter && m_Team == TEAM_SPECTATORS && m_SpectatorID == SPEC_FREEVIEW)
 			m_ViewPos -= vec2(clamp(m_ViewPos.x-m_LatestActivity.m_TargetX, -500.0f, 500.0f), clamp(m_ViewPos.y-m_LatestActivity.m_TargetY, -400.0f, 400.0f));
-
+		
 		//if(!m_pCharacter && m_DieTick+Server()->TickSpeed()*3 <= Server()->Tick())
 		if(!m_pCharacter)
 			m_Spawning = true;
@@ -208,11 +219,18 @@ void CPlayer::Snap(int SnappingClient)
 	{
 		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
 		if(!pSpectatorInfo)
-			return;
+		{
+			// SPEC_FREEVIEW
 
-		pSpectatorInfo->m_SpectatorID = m_SpectatorID;
-		pSpectatorInfo->m_X = m_ViewPos.x;
-		pSpectatorInfo->m_Y = m_ViewPos.y;
+			//pSpectatorInfo->m_X = 0;
+			//pSpectatorInfo->m_Y = 0;
+		}
+		else
+		{
+			pSpectatorInfo->m_SpectatorID = m_SpectatorID;
+			pSpectatorInfo->m_X = m_ViewPos.x;
+			pSpectatorInfo->m_Y = m_ViewPos.y;
+		}
 	}
 }
 

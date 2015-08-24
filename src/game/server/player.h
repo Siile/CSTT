@@ -164,6 +164,8 @@ private:
 
 	void ForceToSpectators();
 	
+	int m_SpecChangeCount;
+	
 	//
 	bool m_Spawning;
 	int m_ClientID;

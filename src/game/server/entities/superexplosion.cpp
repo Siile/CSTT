@@ -33,6 +33,11 @@ void CSuperexplosion::Tick()
 	{
 		m_NextIn = 2;
 		
+		if (m_Superdamage)
+			GameServer()->CreateSoundGlobal(SOUND_GRENADE_EXPLODE, -1);
+		else
+			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_EXPLODE);
+		
 		if (m_Life == 0)
 			GameServer()->CreateExplosion(m_Pos, m_Player, m_Weapon, false, m_Superdamage);
 		else
