@@ -995,8 +995,8 @@ void CGameControllerCSTT::Tick()
 		// first player join or new game
 		if (m_GameState == GAMESTATE_NEWGAME)
 		{
-			if (m_RoundTick == 60)
-				GameServer()->SendBroadcast("First round starting in 3...", -1);
+			//if (m_RoundTick == 60)
+			//	GameServer()->SendBroadcast("First round starting in 3...", -1);
 			if (m_RoundTick == 120)
 				GameServer()->SendBroadcast("First round starting in 2...", -1);
 			if (m_RoundTick == 180)
@@ -1059,15 +1059,18 @@ void CGameControllerCSTT::Tick()
 
 	
 
-	
-	
-
-	// laser walls & releases
+	// laser walls & releases & warm welcome
 	for (int c = 0; c < MAX_CLIENTS; c++)
 	{
 		CPlayer *pPlayer = GameServer()->m_apPlayers[c];
 		if(!pPlayer)
 			continue;
+		
+		if (!pPlayer->m_Welcomed && !pPlayer->m_IsBot)
+		{
+			GameServer()->SendBroadcast("Welcome to Counter-Strike: Tee Time", pPlayer->GetCID());
+			pPlayer->m_Welcomed = true;
+		}
 		
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -1080,8 +1083,6 @@ void CGameControllerCSTT::Tick()
 		if (ForceNogo(pCharacter->m_Pos))
 			pCharacter->ForceNogo();
 	}
-	
-	
 	
 	
 	

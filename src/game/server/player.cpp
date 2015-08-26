@@ -48,6 +48,9 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	
 	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		m_aSavedWeapon[i] = false;
+	
+	// warm welcome awaits
+	m_Welcomed = false;
 }
 
 CPlayer::~CPlayer()

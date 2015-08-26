@@ -157,8 +157,14 @@ public:
 
 	int m_WantedTeam;
 	
+	// settings
 	bool m_EnableWeaponInfo;
 	bool m_EnableAutoSpectating;
+	
+	// warm welcome
+	bool m_Welcomed;
+	
+	
 	
 private:
 	CCharacter *m_pCharacter;
