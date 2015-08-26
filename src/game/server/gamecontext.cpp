@@ -41,6 +41,10 @@ void CGameContext::Construct(int Resetting)
 	m_NumVoteOptions = 0;
 	m_LockTeams = 0;
 	
+	m_aMostInterestingPlayer[0] = -1;
+	m_aMostInterestingPlayer[1] = -1;
+	
+	
 	m_FreezeCharacters = false;
 
 	if(Resetting==NO_RESET)
@@ -424,12 +428,146 @@ void CGameContext::SwapTeams()
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-			m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
+		if(m_apPlayers[i] && m_apPlayers[i]->m_WantedTeam != TEAM_SPECTATORS)
+			m_apPlayers[i]->SetWantedTeam(m_apPlayers[i]->m_WantedTeam^1, false);
+			//m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
 	}
 
 	(void)m_pController->CheckTeamBalance();
 }
+
+void CGameContext::UpdateSpectators()
+{
+		
+	bool Found[2] = {false, false};
+		
+	// check validity
+	for (int i = 0; i < 2; i++)
+	{
+		if (m_aMostInterestingPlayer[i] >= 0)
+		{
+			// player left or something
+			if (!m_apPlayers[m_aMostInterestingPlayer[i]])
+			{
+				m_aMostInterestingPlayer[i] = -1;
+			}
+			else
+			{
+				// player is a spectator
+				if (m_apPlayers[m_aMostInterestingPlayer[i]]->GetTeam() == TEAM_SPECTATORS)
+					m_aMostInterestingPlayer[i] = -1;
+			}
+		}
+	}
+
+
+	// find the most interesting player of both teams
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		// player and character exists
+		if (m_apPlayers[i] && m_apPlayers[i]->m_EnableAutoSpectating && m_apPlayers[i]->GetCharacter() && m_apPlayers[i]->GetCharacter()->IsAlive())
+		{
+			int Team = m_apPlayers[i]->GetTeam();
+			
+			// team is correct
+			if(Team == TEAM_RED || Team == TEAM_BLUE)
+			{
+				// most interesting player exists
+				
+				int Points = -1;
+				int Player = m_aMostInterestingPlayer[Team];
+				
+				if (Player >= 0)
+					if (m_apPlayers[Player] && m_apPlayers[Player]->GetCharacter())
+						Points = m_apPlayers[Player]->m_InterestPoints;
+					
+					
+				if (m_apPlayers[i]->m_InterestPoints > Points)
+				{
+					// works
+					//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "i = %d, team = %d", i, Team);
+					//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", aBuf);
+					
+					m_aMostInterestingPlayer[Team] = i;
+					Found[Team] = true;				
+				}
+				
+				
+				/*
+				if (m_aMostInterestingPlayer[Team] >= 0)
+				{
+					if (m_apPlayers[m_aMostInterestingPlayer[Team]]->GetCharacter() && m_apPlayers[i]->m_InterestPoints > m_apPlayers[m_aMostInterestingPlayer[Team]]->m_InterestPoints)
+					{
+						// found more interesting player
+						m_aMostInterestingPlayer[m_apPlayers[i]->GetTeam()] = i;
+						Found[m_apPlayers[i]->GetTeam()] = true;
+					}
+				}
+				else
+				if (m_apPlayers[i]->m_InterestPoints > 0)
+				{
+					m_aMostInterestingPlayer[Team] = i;
+					Found[Team] = true;
+				}
+				*/
+			}
+		}
+	}
+
+
+	// update the spectator views
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && !m_apPlayers[i]->m_IsBot)
+		{
+			if (!m_apPlayers[i]->m_LastSetSpectatorMode)
+				m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick() - Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime;
+			else
+			{
+				if (m_apPlayers[i]->m_LastSetSpectatorMode+Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime < Server()->Tick())	
+				{
+					int WantedPlayer = -1;
+						
+					int Team = m_apPlayers[i]->m_WantedTeam;
+						
+					// get the correct player
+					if (Team == TEAM_RED || Team == TEAM_BLUE)
+					{
+						WantedPlayer = m_aMostInterestingPlayer[Team];
+							
+						// update the view
+						if (WantedPlayer >= 0 && m_apPlayers[i]->m_SpectatorID != WantedPlayer && Found[Team])
+						{
+							m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick();
+							m_apPlayers[i]->m_SpectatorID = WantedPlayer;
+							Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", "Spectator id changed");
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
+	
+	/*
+			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
+
+			if(pPlayer->GetTeam() != TEAM_SPECTATORS || pPlayer->m_SpectatorID == pMsg->m_SpectatorID || ClientID == pMsg->m_SpectatorID ||
+				(g_Config.m_SvSpamprotection && pPlayer->m_LastSetSpectatorMode && pPlayer->m_LastSetSpectatorMode+Server()->TickSpeed()*3 > Server()->Tick()))
+				return;
+
+			pPlayer->m_LastSetSpectatorMode = Server()->Tick();
+			if(pMsg->m_SpectatorID != SPEC_FREEVIEW && (!m_apPlayers[pMsg->m_SpectatorID] || m_apPlayers[pMsg->m_SpectatorID]->GetTeam() == TEAM_SPECTATORS))
+				SendChatTarget(ClientID, "Invalid spectator id used");
+			else
+				pPlayer->m_SpectatorID = pMsg->m_SpectatorID;
+	*/
+}
+
+
+
+
 
 void CGameContext::OnTick()
 {
@@ -743,12 +881,43 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->m_LastChat = Server()->Tick();
 
 			// /help /weapon /smth
-			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0 || strcmp(pMsg->m_pMessage, "/cmdlist") == 0 )
+			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.21");
+				SendChatTarget(ClientID, "Counter-Strike: Tee Time 0.3");
 				SendChatTarget(ClientID, "");
-				SendChatTarget(ClientID, "Use voting system to do shopping");
-				SendChatTarget(ClientID, "For updates and more info, check www.ninslash.com");
+				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
+				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
+				SkipSending = true;
+			}
+			
+			// /help /weapon /smth
+			if (strcmp(pMsg->m_pMessage, "/cmdlist") == 0 || strcmp(pMsg->m_pMessage, "/cmd") == 0 || strcmp(pMsg->m_pMessage, "/commands") == 0)
+			{
+				SendChatTarget(ClientID, "Commands:");
+				SendChatTarget(ClientID, "/dwi - Disable / enable weapon info (Using: ...)");
+				SendChatTarget(ClientID, "/das - Disable / enable auto spectating");
+				SkipSending = true;
+			}
+			
+			if (strcmp(pMsg->m_pMessage, "/dwi") == 0)
+			{
+				pPlayer->m_EnableWeaponInfo = !pPlayer->m_EnableWeaponInfo;
+				if (pPlayer->m_EnableWeaponInfo)
+					SendChatTarget(ClientID, "Weapon info messages enabled");
+				else
+					SendChatTarget(ClientID, "Weapon info messages disabled");
+				
+				SkipSending = true;
+			}
+			
+			if (strcmp(pMsg->m_pMessage, "/das") == 0)
+			{
+				pPlayer->m_EnableAutoSpectating = !pPlayer->m_EnableAutoSpectating;
+				if (pPlayer->m_EnableAutoSpectating)
+					SendChatTarget(ClientID, "Auto spectating enabled");
+				else
+					SendChatTarget(ClientID, "Auto spectating disabled");
+				
 				SkipSending = true;
 			}
 			

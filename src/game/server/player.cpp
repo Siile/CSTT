@@ -33,10 +33,13 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_CanShop = false;
 	GameServer()->ClearShopVotes(ClientID);
 	
+	m_InterestPoints = 0;
+	
+	m_EnableWeaponInfo = true;
+	m_EnableAutoSpectating = true;
+	
 	m_IsBot = false;
 	m_pAI = NULL;
-	
-	m_SpecChangeCount = 0;
 	
 	m_WantedTeam = m_Team;
 	//m_Team = TEAM_SPECTATORS;
@@ -66,6 +69,7 @@ void CPlayer::NewRound()
 	m_Money = g_Config.m_SvStartMoney;
 	
 	DisableShopping();
+	m_InterestPoints = 0;
 }
 
 void CPlayer::DisableShopping()
@@ -114,21 +118,20 @@ void CPlayer::Tick()
 		ForceToSpectators();
 
 	
+	m_InterestPoints /= 1.02f;
+	
 	/*
-	if (m_Team != TEAM_SPECTATORS && (!GetCharacter() || (GetCharacter() && !GetCharacter()->IsAlive())))
+	if (m_InterestPoints > 0)
+		m_InterestPoints--;
+	else
 	{
-		m_WantedTeam = m_Team;
-		m_Team = TEAM_SPECTATORS;
+		//if (GetCharacter())
+		//	m_InterestPoints = int(frandom()*10);
 	}
 	*/
 	
-	if (m_Team == TEAM_SPECTATORS)
-	{
-		if (++m_SpecChangeCount > 120)
-		{
-			
-		}
-	}
+	
+
 	
 	if(!GameServer()->m_World.m_Paused)
 	{
@@ -365,11 +368,14 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 		return;
 
 	char aBuf[512];
+	
+	/* skip this
 	if(DoChatMsg)
 	{
 		str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));
 		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 	}
+	*/
 
 	KillCharacter();
 

@@ -390,7 +390,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GRENADE_FIRE,
 		-1, // require
 		100, // cost
-		5, // damage
+		10, // damage
 		0, // extra1
 		true, // autofire
 		1, // bullet spread
@@ -410,7 +410,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GRENADE_FIRE,
 		GRENADE_GRENADELAUNCHER, // require
 		100, // cost
-		6, // damage
+		12, // damage
 		MEGAROCKETS, // extra1
 		true, // autofire
 		1, // bullet spread
@@ -430,7 +430,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GRENADE_FIRE,
 		GRENADE_HEAVYLAUNCHER, // require
 		100, // cost
-		10, // damage
+		14, // damage
 		DOOMROCKETS, // extra1
 		true, // autofire
 		1, // bullet spread

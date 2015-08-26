@@ -293,6 +293,8 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	
 	int HadBomb = 0;
 	
+	pVictim->GetPlayer()->m_InterestPoints = 0;
+	
 	// drop pickup
 	if (pVictim->HasAmmo())
 		DropPickup(pVictim->m_Pos, POWERUP_ARMOR, 0);
@@ -317,6 +319,7 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	{
 		pKiller->m_Score++;
 		pKiller->m_Money += g_Config.m_SvKillMoney;
+		pKiller->m_InterestPoints += 60;
 	}
 		
 
@@ -567,7 +570,7 @@ void CGameControllerCSTT::RoundRewards(int WinningTeam)
 			pPlayer->m_Money += g_Config.m_SvLoseMoney;
 	}
 	
-	
+	//GameServer()->SwapTeams();
 }
 
 
@@ -591,6 +594,9 @@ void CGameControllerCSTT::EndTheShit()
 	EndRound();
 	m_GameState = GAMESTATE_NEWGAME;
 	m_NewGame = true;
+	
+	// if no map change?
+	GameServer()->SwapTeams();
 }
 
 
@@ -942,7 +948,7 @@ void CGameControllerCSTT::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 6 && (Blue+BlueBots) > 6)
+	if ((Red+RedBots) > 5 && (Blue+BlueBots) > 5)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{
@@ -957,6 +963,8 @@ void CGameControllerCSTT::Tick()
 {
 	IGameController::Tick();
 
+	GameServer()->UpdateSpectators();
+	
 	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;	
 
@@ -1171,6 +1179,8 @@ void CGameControllerCSTT::Tick()
 				DefusingBomb = true;
 				m_aDefusing[i] = true;
 				
+				pPlayer->m_InterestPoints += 7;
+							
 				if (m_BombDefuseTimer == 0)
 				{
 					GameServer()->SendBroadcast("Defusing bomb", pPlayer->GetCID());
@@ -1249,8 +1259,12 @@ void CGameControllerCSTT::Tick()
 							GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
 						}
 						
+						B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 6;
+						
 						if (++B->m_Timer >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
 						{
+							B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 120;
+							
 							B->m_pCarryingCharacter = NULL;
 							B->m_Status = BOMB_PLANTED;
 							B->m_Timer = 0;
@@ -1289,6 +1303,9 @@ void CGameControllerCSTT::Tick()
 			B->m_Status = BOMB_CARRYING;
 			B->m_Owner = apCloseCCharacters[i]->GetPlayer()->GetCID();
 			B->m_pCarryingCharacter->GetPlayer()->m_Score += 1;
+			
+			
+			B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 120;
 
 			// console printing
 			char aBuf[256];

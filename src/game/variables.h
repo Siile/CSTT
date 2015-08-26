@@ -71,6 +71,8 @@ MACRO_CONFIG_INT(SvBombTime, sv_bombtime, 20, 10, 120, CFGFLAG_SERVER, "Bomb tim
 MACRO_CONFIG_INT(SvBombPlantTime, sv_bombplanttime, 3, 2, 20, CFGFLAG_SERVER, "Time bomb planting takes (seconds)")
 MACRO_CONFIG_INT(SvBombDefuseTime, sv_bombdefusetime, 4, 2, 20, CFGFLAG_SERVER, "Time bomb defusing takes (seconds)")
 
+MACRO_CONFIG_INT(SvSpectatorUpdateTime, sv_spectatorupdatetime, 2, 1, 20, CFGFLAG_SERVER, "Time between spectator view changes to spectators")
+
 
 MACRO_CONFIG_INT(SvWarmup, sv_warmup, 0, 0, 0, CFGFLAG_SERVER, "Number of seconds to do warmup before round starts")
 MACRO_CONFIG_STR(SvMotd, sv_motd, 900, "", CFGFLAG_SERVER, "Message of the day to display for the clients")

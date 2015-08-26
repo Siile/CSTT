@@ -642,6 +642,8 @@ bool IGameController::CanJoinTeam(int Team, int NotThisID)
 
 bool IGameController::CheckTeamBalance()
 {
+	return true;
+	
 	if(!IsTeamplay() || !g_Config.m_SvTeambalanceTime)
 		return true;
 

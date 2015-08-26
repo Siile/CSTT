@@ -87,6 +87,9 @@ public:
 	IGameController *m_pController;
 	CGameWorld m_World;
 	
+	int m_aMostInterestingPlayer[2];
+	
+	void UpdateSpectators();
 	
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);

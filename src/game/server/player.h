@@ -99,6 +99,8 @@ public:
 	
 	void DisableShopping();
 	
+	float m_InterestPoints;
+	
 	int m_RespawnTick;
 	int m_DieTick;
 	int m_Score;
@@ -155,6 +157,9 @@ public:
 
 	int m_WantedTeam;
 	
+	bool m_EnableWeaponInfo;
+	bool m_EnableAutoSpectating;
+	
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
@@ -163,8 +168,6 @@ private:
 	IServer *Server() const;
 
 	void ForceToSpectators();
-	
-	int m_SpecChangeCount;
 	
 	//
 	bool m_Spawning;

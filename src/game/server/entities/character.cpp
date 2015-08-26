@@ -319,7 +319,7 @@ void CCharacter::SetCustomWeapon(int CustomWeapon)
 	else
 		m_ClipReloadTimer = 0;
 
-	if (!m_IsBot)
+	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "Using: %s", aCustomWeapon[CustomWeapon].m_Name);
@@ -681,6 +681,8 @@ void CCharacter::FireWeapon()
 	{
 		case PROJTYPE_SWORD:
 		{
+			GetPlayer()->m_InterestPoints += 30;
+			
 			// reset Hit objects
 			m_NumObjectsHit = 0;
 
@@ -708,6 +710,8 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_HAMMER:
 		{
+			GetPlayer()->m_InterestPoints += 10;
+			
 			// reset objects Hit
 			m_NumObjectsHit = 0;
 
@@ -750,6 +754,8 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_BULLET:
 		{
+			GetPlayer()->m_InterestPoints += 10;
+			
 			float a = GetAngle(Direction);
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
 				a += frandom()*0.08f - frandom()*0.08f;
@@ -779,6 +785,8 @@ void CCharacter::FireWeapon()
 
 		case PROJTYPE_PELLET:
 		{
+			GetPlayer()->m_InterestPoints += 30;
+			
 			// int ShotSpread = 2;
 
 			// CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
@@ -845,6 +853,8 @@ void CCharacter::FireWeapon()
 
 		case PROJTYPE_GRENADE:
 		{
+			GetPlayer()->m_InterestPoints += 30;
+			
 			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
 				m_pPlayer->GetCID(),
 				ProjStartPos,
@@ -865,6 +875,8 @@ void CCharacter::FireWeapon()
 
 		case PROJTYPE_LASER:
 		{
+			GetPlayer()->m_InterestPoints += 40;
+			
 			float a = GetAngle(Direction);
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
 				a += frandom()*0.08f - frandom()*0.08f;
@@ -877,6 +889,7 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_LIGHTNING:
 		{
+			GetPlayer()->m_InterestPoints += 10;
 		/*
 			float a = GetAngle(Direction);
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
@@ -947,6 +960,7 @@ void CCharacter::FireWeapon()
 	{
 		m_ReloadTimer = aCustomWeapon[m_ActiveCustomWeapon].m_BulletReloadTime * Server()->TickSpeed() / 1000;
 	}
+	
 }
 
 
@@ -1351,6 +1365,9 @@ bool CCharacter::IncreaseHealth(int Amount)
 	if(m_HiddenHealth >= m_MaxHealth)
 		return false;
 	m_HiddenHealth = clamp(m_HiddenHealth+Amount, 0, m_MaxHealth);
+	
+	GetPlayer()->m_InterestPoints += 40;
+	
 	return true;
 }
 
@@ -1388,6 +1405,8 @@ bool CCharacter::IncreaseArmor(int Amount)
 	{
 		m_aWeapon[m_ActiveCustomWeapon].m_AmmoReserved += aCustomWeapon[m_ActiveCustomWeapon].m_PowerupSize;
 	}
+	
+	GetPlayer()->m_InterestPoints += 40;
 	
 	return true;
 }
@@ -1502,7 +1521,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		m_HiddenHealth -= Dmg;
 	}
 	
-	
+	GetPlayer()->m_InterestPoints += Dmg * 4;
 
 	m_DamageTakenTick = Server()->Tick();
 
@@ -1510,6 +1529,8 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	// do damage Hit sound
 	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
+		GameServer()->m_apPlayers[From]->m_InterestPoints += Dmg * 5;
+		
 		int Mask = CmaskOne(From);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
