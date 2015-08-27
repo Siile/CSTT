@@ -121,7 +121,9 @@ public:
 	bool WeaponDisabled(int CustomWeapon){ return m_aWeapon[CustomWeapon].m_Disabled; }
 	void DisableWeapon(int CustomWeapon){ m_aWeapon[CustomWeapon].m_Disabled = true; }
 	
-	bool GiveCustomWeapon(int CustomWeapon);
+	bool GiveCustomWeapon(int CustomWeapon, float AmmoFill = 0.7f);
+	bool GiveAmmo(int CustomWeapon, float AmmoFill);
+	
 	void SetCustomWeapon(int CustomWeapon);
 	
 	void GiveStartWeapon();

@@ -23,22 +23,33 @@ void CAIBasicbot::OnCharacterSpawn(CCharacter *pChr)
 	
 	m_WaypointDir = vec2(0, 0);
 	
-	if (frandom()*10 < 3)
-		Weapon = GUN_PISTOL;
-	else if (frandom()*10 < 2)
-		Weapon = SWORD_KATANA;
-	else if (frandom()*10 < 3)
-		Weapon = RIFLE_ASSAULTRIFLE;
-	else if (frandom()*10 < 3)
-		Weapon = RIFLE_LASERRIFLE;
-	else if (frandom()*10 < 3)
-		Weapon = SHOTGUN_DOUBLEBARREL;
-	else if (frandom()*10 < 3)
-		Weapon = RIFLE_LIGHTNINGRIFLE;
-	else if (frandom()*10 < 3)
-		Weapon = RIFLE_DOOMRAY;
-	else if (frandom()*10 < 3)
-		Weapon = RIFLE_STORMRIFLE;
+	int Round = GameServer()->m_pController->GetRound();
+	
+	
+	Weapon = GUN_PISTOL;
+	
+	if (frandom()*8 < (Round-1)*3)
+	{
+		if (frandom()*10 < 2)
+			Weapon = SWORD_KATANA;
+		else if (frandom()*10 < 3)
+			Weapon = RIFLE_ASSAULTRIFLE;
+		else if (frandom()*10 < 3)
+			Weapon = RIFLE_LASERRIFLE;
+		else if (frandom()*10 < 3)
+			Weapon = SHOTGUN_DOUBLEBARREL;
+		else if (frandom()*10 < 3)
+			Weapon = RIFLE_LIGHTNINGRIFLE;
+		else if (Round > 3)
+		{
+			if (frandom()*10 < 3)
+				Weapon = SHOTGUN_COMBAT;
+			else if (frandom()*10 < 3)
+				Weapon = RIFLE_STORMRIFLE;
+			else if (frandom()*10 < 3)
+				Weapon = RIFLE_DOOMRAY;
+		}
+	}
 
 	pChr->GiveCustomWeapon(Weapon);
 	pChr->SetCustomWeapon(Weapon);

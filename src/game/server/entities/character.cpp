@@ -1066,7 +1066,29 @@ void CCharacter::GiveStartWeapon()
 	//GiveCustomWeapon(RIFLE_ASSAULTRIFLE);
 }
 
-bool CCharacter::GiveCustomWeapon(int CustomWeapon)
+
+
+
+bool CCharacter::GiveAmmo(int CustomWeapon, float AmmoFill)
+{
+	if(m_aWeapon[CustomWeapon].m_Got)
+	{
+		if (m_aWeapon[CustomWeapon].m_AmmoReserved < aCustomWeapon[CustomWeapon].m_MaxAmmo)
+		{
+			m_aWeapon[CustomWeapon].m_AmmoReserved += aCustomWeapon[CustomWeapon].m_MaxAmmo * AmmoFill;
+			
+			if (m_aWeapon[CustomWeapon].m_AmmoReserved > aCustomWeapon[CustomWeapon].m_MaxAmmo)
+				m_aWeapon[CustomWeapon].m_AmmoReserved = aCustomWeapon[CustomWeapon].m_MaxAmmo;
+			
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+
+bool CCharacter::GiveCustomWeapon(int CustomWeapon, float AmmoFill)
 {
 	if(!m_aWeapon[CustomWeapon].m_Got)
 	{	
@@ -1095,7 +1117,7 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon)
 		}
 		
 		// ammo fill
-		m_aWeapon[CustomWeapon].m_AmmoReserved = aCustomWeapon[CustomWeapon].m_MaxAmmo * 0.7f;
+		m_aWeapon[CustomWeapon].m_AmmoReserved = aCustomWeapon[CustomWeapon].m_MaxAmmo * AmmoFill;
 		
 		
 		ScanWeapons();

@@ -121,7 +121,10 @@ void CPlayer::Tick()
 		ForceToSpectators();
 
 	
-	m_InterestPoints /= 1.02f;
+	if (m_IsBot)
+		m_InterestPoints /= 1.025f;
+	else
+		m_InterestPoints /= 1.02f;
 	
 	/*
 	if (m_InterestPoints > 0)
@@ -505,11 +508,18 @@ bool CPlayer::GotWeapon(int CustomWeapon)
 
 bool CPlayer::BuyableWeapon(int i)
 {
+	// check if we already have better version of the weapon
+	for (int w = 0; w < NUM_CUSTOMWEAPONS; w++)
+	{
+		if (aCustomWeapon[w].m_Require == i && GotWeapon(w))
+			return false;
+	}
+	
 	if (!GotWeapon(i) && aCustomWeapon[i].m_Cost > 0 && (GotWeapon(aCustomWeapon[i].m_Require) || aCustomWeapon[i].m_Require == -1))
 	{
 		if (aCustomWeapon[i].m_Require >= 0 && WeaponDisabled(aCustomWeapon[i].m_Require))
 			return false;
-
+		
 		return true;
 	}
 	

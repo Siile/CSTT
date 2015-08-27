@@ -73,7 +73,7 @@ void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, int PickupSubtype
 			m_apPickup[i]->m_Pos = Pos;
 			m_apPickup[i]->RespawnDropable();
 			if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
-				m_apPickup[i]->SetSubtype(WEAPON_SHOTGUN+frandom()*3);
+				m_apPickup[i]->SetSubtype(PickupSubtype);
 			return;
 		}
 	}
@@ -281,6 +281,12 @@ void CGameControllerCSTT::CreateDroppables()
 		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
 		m_apPickup[m_PickupCount]->m_Dropable = true;
 		m_PickupCount++;
+		
+		// weapons
+		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_WEAPON, 0);
+		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
+		m_apPickup[m_PickupCount]->m_Dropable = true;
+		m_PickupCount++;
 	}
 	
 	m_DroppablesCreated = true;
@@ -295,11 +301,20 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	
 	pVictim->GetPlayer()->m_InterestPoints = 0;
 	
-	// drop pickup
-	if (pVictim->HasAmmo())
-		DropPickup(pVictim->m_Pos, POWERUP_ARMOR, 0);
+	int DropWeapon = pVictim->m_ActiveCustomWeapon;
+	
+	if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL) // g_Config.m_SvWeaponDrops == 1 && 
+	{
+		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, DropWeapon);
+	}
 	else
-		DropPickup(pVictim->m_Pos, POWERUP_HEALTH, 0);
+	{
+		// drop pickup
+		if (pVictim->HasAmmo())
+			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, 0);
+		else
+			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, 0);
+	}
 
 	// drop flags
 	CBomb *B = m_pBomb;
@@ -1293,7 +1308,7 @@ void CGameControllerCSTT::Tick()
 	{
 		// pick up the bomb!
 		CCharacter *apCloseCCharacters[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(B->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_World.FindEntities(B->m_Pos, CFlag::ms_PhysSize * 1.3f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		
 		for(int i = 0; i < Num; i++)
 		{

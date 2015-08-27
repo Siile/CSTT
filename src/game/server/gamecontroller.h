@@ -133,6 +133,9 @@ public:
 				weapon when switching team or player suicides.
 	*/
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	
+	
+	virtual int GetRound();
 
 	virtual bool CanCharacterSpawn(int ClientID);
 

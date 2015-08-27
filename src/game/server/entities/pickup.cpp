@@ -4,6 +4,7 @@
 #include <game/server/gamecontext.h>
 #include "pickup.h"
 
+
 CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP)
 {
@@ -114,8 +115,50 @@ void CPickup::Tick()
 				break;
 
 			case POWERUP_WEAPON:
-				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS)
+				if(m_Subtype >= 0 && m_Subtype < NUM_CUSTOMWEAPONS)
 				{
+					int Parent = aCustomWeapon[m_Subtype].m_ParentWeapon;
+					
+					if (Parent < 0 || Parent >= NUM_WEAPONS)
+					{
+						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+						m_Life = 0;
+						m_Flashing = false;
+						break;
+					}
+					
+					if (pChr->GiveCustomWeapon(m_Subtype, 0.075f + frandom()*0.225f))
+					{
+						if(Parent == WEAPON_GRENADE)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
+						else
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+						
+						if(pChr->GetPlayer())
+						{
+							//GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), Parent);
+							
+							char aBuf[256]; str_format(aBuf, sizeof(aBuf), "Picked up %s", aCustomWeapon[m_Subtype].m_Name);
+							GameServer()->SendChatTarget(pChr->GetPlayer()->GetCID(), aBuf);
+						}
+						
+						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+						m_Life = 0;
+						m_Flashing = false;
+					}
+					else
+					{
+						if (pChr->GiveAmmo(m_Subtype, 0.125f + frandom()*0.15f))
+						{
+							char aBuf[256]; str_format(aBuf, sizeof(aBuf), "Picked up ammo for %s", aCustomWeapon[m_Subtype].m_Name);
+							GameServer()->SendChatTarget(pChr->GetPlayer()->GetCID(), aBuf);
+							
+							RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+							m_Life = 0;
+							m_Flashing = false;
+						}
+					}
+					
 					/*if(pChr->GiveWeapon(m_Subtype, 10)) // !pChr->m_WeaponPicked && 
 					{
 						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
@@ -135,6 +178,7 @@ void CPickup::Tick()
 				}
 				break;
 
+			// sword not in use, instead snap weapon to look like sword
 			case POWERUP_NINJA:
 				{
 					/*
@@ -189,5 +233,14 @@ void CPickup::Snap(int SnappingClient)
 	pP->m_X = (int)m_Pos.x;
 	pP->m_Y = (int)m_Pos.y;
 	pP->m_Type = m_Type;
-	pP->m_Subtype = m_Subtype;
+	
+	if (m_Type == POWERUP_WEAPON && m_Subtype >= 0 && m_Subtype < NUM_CUSTOMWEAPONS)
+	{
+		if (aCustomWeapon[m_Subtype].m_ProjectileType == PROJTYPE_SWORD)
+			pP->m_Type = POWERUP_NINJA;
+		
+		pP->m_Subtype = aCustomWeapon[m_Subtype].m_ParentWeapon;
+	}
+	else
+		pP->m_Subtype = m_Subtype;
 }

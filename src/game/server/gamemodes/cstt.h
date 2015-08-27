@@ -109,6 +109,9 @@ public:
 	void FlashPickups();
 	
 	
+	
+	int GetRound(){ return m_Round; }
+	
 	virtual bool OnEntity(int Index, vec2 Pos);
 	int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 	void OnCharacterSpawn(class CCharacter *pChr, bool RequestAI = false);

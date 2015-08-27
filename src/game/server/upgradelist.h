@@ -217,7 +217,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		10, // clip size
 		10, // powerup size
 		100, // max ammo
-		0.185f, // bullet life
+		0.2f, // bullet life
 		215, // bullet reload time
 		1200, // clip reload time
 		6.0f // bullet knockback
