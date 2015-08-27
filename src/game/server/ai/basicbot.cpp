@@ -298,6 +298,6 @@ void CAIBasicbot::DoBehavior()
 		m_Move = LockMove;
 	
 	// next reaction in
-	m_ReactionTime = 4 + frandom()*4;
+	m_ReactionTime = 6 + frandom()*26;
 	
 }

@@ -272,7 +272,7 @@ void CAI::ShootAtClosestEnemy()
 		if (ClosestDistance < WeaponShootRange())
 			m_Attack = 1;
 		
-		m_Direction = vec2(m_PlayerDirection.x+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f), m_PlayerDirection.y+m_PlayerDistance*(frandom()*0.2f-frandom()*0.2f));
+		m_Direction = vec2(m_PlayerDirection.x+ClosestDistance*(frandom()*0.3f-frandom()*0.3f), m_PlayerDirection.y+ClosestDistance*(frandom()*0.3f-frandom()*0.3f));
 	}
 	
 	// ammo check
