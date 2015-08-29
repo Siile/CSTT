@@ -1081,16 +1081,27 @@ void CCharacter::GiveStartWeapon()
 
 
 
-bool CCharacter::GiveAmmo(int CustomWeapon, float AmmoFill)
+bool CCharacter::GiveAmmo(int *CustomWeapon, float AmmoFill)
 {
-	if(m_aWeapon[CustomWeapon].m_Got)
+	if(m_aWeapon[*CustomWeapon].m_Got)
 	{
-		if (m_aWeapon[CustomWeapon].m_AmmoReserved < aCustomWeapon[CustomWeapon].m_MaxAmmo)
+		if (m_aWeapon[*CustomWeapon].m_Disabled)
 		{
-			m_aWeapon[CustomWeapon].m_AmmoReserved += aCustomWeapon[CustomWeapon].m_MaxAmmo * AmmoFill;
+			for (int i=0; i < NUM_CUSTOMWEAPONS; i++)
+			{
+				if (aCustomWeapon[i].m_Require == *CustomWeapon && m_aWeapon[i].m_Got)
+				{
+					*CustomWeapon = i;
+				}
+			}
+		}
+		
+		if (m_aWeapon[*CustomWeapon].m_AmmoReserved < aCustomWeapon[*CustomWeapon].m_MaxAmmo)
+		{
+			m_aWeapon[*CustomWeapon].m_AmmoReserved += aCustomWeapon[*CustomWeapon].m_MaxAmmo * AmmoFill;
 			
-			if (m_aWeapon[CustomWeapon].m_AmmoReserved > aCustomWeapon[CustomWeapon].m_MaxAmmo)
-				m_aWeapon[CustomWeapon].m_AmmoReserved = aCustomWeapon[CustomWeapon].m_MaxAmmo;
+			if (m_aWeapon[*CustomWeapon].m_AmmoReserved > aCustomWeapon[*CustomWeapon].m_MaxAmmo)
+				m_aWeapon[*CustomWeapon].m_AmmoReserved = aCustomWeapon[*CustomWeapon].m_MaxAmmo;
 			
 			return true;
 		}

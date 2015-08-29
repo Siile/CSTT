@@ -172,7 +172,7 @@ void CPickup::Tick()
 					}
 					else
 					{
-						if (pChr->GiveAmmo(m_Subtype, 0.125f + frandom()*0.15f))
+						if (pChr->GiveAmmo(&m_Subtype, 0.125f + frandom()*0.15f))
 						{
 							char aBuf[256]; str_format(aBuf, sizeof(aBuf), "Picked up ammo for %s", aCustomWeapon[m_Subtype].m_Name);
 							GameServer()->SendChatTarget(pChr->GetPlayer()->GetCID(), aBuf);

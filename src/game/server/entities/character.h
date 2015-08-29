@@ -122,7 +122,7 @@ public:
 	void DisableWeapon(int CustomWeapon){ m_aWeapon[CustomWeapon].m_Disabled = true; }
 	
 	bool GiveCustomWeapon(int CustomWeapon, float AmmoFill = 0.7f);
-	bool GiveAmmo(int CustomWeapon, float AmmoFill);
+	bool GiveAmmo(int *CustomWeapon, float AmmoFill);
 	
 	void SetCustomWeapon(int CustomWeapon);
 	
