@@ -105,7 +105,7 @@ public:
 	virtual void Snap(int SnappingClient);
 	virtual void Tick();
 	
-	virtual void DropPickup(vec2 Pos, int PickupType, int PickupSubtype = -1);
+	virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
 	void FlashPickups();
 	
 	

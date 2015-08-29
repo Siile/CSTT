@@ -143,7 +143,7 @@ public:
 	// not in use
 	int m_Grenades;
 	void AddGrenades(int Num);
-	void ThrowGrenade();
+	void ThrowGrenade(float Angle = -1);
 	
 	
 	bool SetLandmine();
@@ -160,6 +160,7 @@ public:
 	
 	vec2 GetVel(){ return m_Core.m_Vel; }
 	
+	vec2 m_LatestHitVel;
 	
 private:
 	// player controlling this character

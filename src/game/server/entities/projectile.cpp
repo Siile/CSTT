@@ -4,6 +4,7 @@
 #include <game/server/gamecontext.h>
 #include "projectile.h"
 #include "superexplosion.h"
+#include "smokescreen.h"
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon, int ExtraInfo)
@@ -68,14 +69,24 @@ void CProjectile::Tick()
 	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
 	m_LifeSpan--;
+	
+	//if (m_ExtraInfo == SMOKE)
+	//	GameServer()->CreateDeath(CurPos, -1);
 
 	if(TargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 	{
 		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
 			GameServer()->CreateSound(CurPos, m_SoundImpact);
 
+		if (m_ExtraInfo == SMOKE)
+		{
+			CSmokescreen *S = new CSmokescreen(&GameServer()->m_World, CurPos, Server()->TickSpeed()*5);
+			GameServer()->m_World.InsertEntity(S);
+		}
+		
 		if(m_Explosive)
 		{
+			
 			if (m_ExtraInfo == MEGAROCKETS)
 			{
 				/*GameServer()->CreateExplosion(CurPos+vec2(-32, -32), m_Owner, m_Weapon, false);

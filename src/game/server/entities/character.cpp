@@ -94,6 +94,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 	m_SpawnPos = Pos;
 	
+	m_LatestHitVel = vec2(0, 0);
+	
 	m_Core.Reset();
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
@@ -235,9 +237,19 @@ void CCharacter::AddGrenades(int Num)
 
 
 
-void CCharacter::ThrowGrenade()
+void CCharacter::ThrowGrenade(float Angle)
 {
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = vec2();
+	
+	if (Angle == -1)
+	{
+		Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	}
+	else
+	{
+		Direction = normalize(vec2(cos(Angle*RAD), sin(Angle*RAD)));
+	}
+	
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 
 	CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
@@ -245,7 +257,7 @@ void CCharacter::ThrowGrenade()
 		ProjStartPos,
 		Direction,
 		(int)(Server()->TickSpeed()*aCustomWeapon[GRENADE_GRENADE].m_BulletLife),
-		aCustomWeapon[GRENADE_GRENADE].m_Damage, true, 0, SOUND_GRENADE_EXPLODE, aCustomWeapon[GRENADE_GRENADE].m_ParentWeapon, aCustomWeapon[GRENADE_GRENADE].m_Extra1);
+		aCustomWeapon[GRENADE_GRENADE].m_Damage, false, 0, SOUND_GRENADE_EXPLODE, aCustomWeapon[GRENADE_GRENADE].m_ParentWeapon, aCustomWeapon[GRENADE_GRENADE].m_Extra1);
 
 	// pack the Projectile and send it to the client Directly
 	CNetObj_Projectile p;
@@ -1263,14 +1275,19 @@ void CCharacter::Tick()
 		GameLayerClipped(m_Pos))
 	{
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		m_LatestHitVel = vec2(0, 0);
 	}
 	
 	if (m_DelayedKill)
+	{
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		m_LatestHitVel = vec2(0, 0);
+	}
 
 	if (m_DeathTileTimer > 0)
 		m_DeathTileTimer--;
 	
+	// GameServer()->CreateDeath(m_Pos+vec2(frandom()*100, frandom()*100) - vec2(frandom()*100, frandom()*100), -1);
 	
 	// handle Weapons
 	if (!GameServer()->m_FreezeCharacters)
@@ -1541,6 +1558,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(Dmg)
 	{
 		m_HiddenHealth -= Dmg;
+		m_LatestHitVel = Force;
 	}
 	
 	GetPlayer()->m_InterestPoints += Dmg * 4;

@@ -292,12 +292,14 @@ void CAIBasicbot::DoBehavior()
 				m_Move = 1;
 		}
 	}
-		
+	
+	if (frandom()*10 < 3)
+		m_Attack = 0;
 		
 	if (LockMove != 0)
 		m_Move = LockMove;
 	
 	// next reaction in
-	m_ReactionTime = 6 + frandom()*26;
+	m_ReactionTime = 6 + frandom()*18;
 	
 }

@@ -19,6 +19,8 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
 	
 	m_Dropable = false;
 	m_Life = 0;
+	m_Static = false;
+	m_Vel = vec2(0, 0);
 }
 
 void CPickup::Reset()
@@ -32,6 +34,7 @@ void CPickup::Reset()
 			
 		m_Flashing = false;
 		m_FlashTimer = 0;
+		m_Static = false;
 	}
 }
 
@@ -83,6 +86,27 @@ void CPickup::Tick()
 			m_SpawnTick = 999;
 		else
 			m_SpawnTick = -1;
+	}
+	
+	
+	
+	// physics
+	if (!m_Static)
+	{
+		m_Vel.y += 0.5f;
+		
+		bool Grounded = false;
+		if(GameServer()->Collision()->CheckPoint(m_Pos.x+12, m_Pos.y+12+5))
+			Grounded = true;
+		if(GameServer()->Collision()->CheckPoint(m_Pos.x-12, m_Pos.y+12+5))
+			Grounded = true;
+		
+		if (Grounded)
+			m_Vel.x *= 0.8f;
+		else
+			m_Vel.x *= 0.99f;
+		
+		GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(24.0f, 24.0f), 0);
 	}
 	
 	

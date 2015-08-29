@@ -599,6 +599,15 @@ bool CPlayer::BuyWeapon(int CustomWeapon)
 	}
 	
 	GameServer()->ResetVotes();
+	
+	if (GetCharacter())
+	{
+		if (aCustomWeapon[CustomWeapon].m_ParentWeapon == WEAPON_GRENADE)
+			GameServer()->CreateSound(GetCharacter()->m_Pos, SOUND_PICKUP_GRENADE);
+		else
+			GameServer()->CreateSound(GetCharacter()->m_Pos, SOUND_PICKUP_SHOTGUN);
+	}
+	
 	return true;
 }
 

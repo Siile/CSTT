@@ -64,7 +64,7 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 
 
 
-void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, int PickupSubtype)
+void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype)
 {
 	for (int i = 0; i < m_PickupCount; i++)
 	{
@@ -74,6 +74,8 @@ void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, int PickupSubtype
 			m_apPickup[i]->RespawnDropable();
 			if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
 				m_apPickup[i]->SetSubtype(PickupSubtype);
+			
+			m_apPickup[i]->m_Vel = Force;
 			return;
 		}
 	}
@@ -305,15 +307,15 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	
 	if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL) // g_Config.m_SvWeaponDrops == 1 && 
 	{
-		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, DropWeapon);
+		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
 	}
 	else
 	{
 		// drop pickup
 		if (pVictim->HasAmmo())
-			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, 0);
+			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel, 0);
 		else
-			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, 0);
+			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel, 0);
 	}
 
 	// drop flags
@@ -326,6 +328,8 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 		B->m_DropTick = Server()->Tick();
 		B->m_pCarryingCharacter = 0;
 		B->m_Vel = vec2(0,0);
+		
+		B->m_Status = BOMB_IDLE;
 
 		HadBomb |= 1;
 	}
@@ -538,7 +542,7 @@ int CGameControllerCSTT::CheckLose()
 		if(g_Config.m_SvBombTime > 0 && m_pBomb->m_Timer >= g_Config.m_SvBombTime*Server()->TickSpeed())
 		{
 			// big ass explosion
-			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_pBomb->m_Pos, m_pBomb->m_Owner, 0, 10, true /* superdamage */);
+			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_pBomb->m_Pos, m_pBomb->m_Owner, 0, 10, 0, true /* superdamage */);
 			GameServer()->m_World.InsertEntity(S);
 							
 			m_pBomb->m_Hide = true;

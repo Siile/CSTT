@@ -136,6 +136,7 @@ enum WeaponExtraFeature
 	BIGBULLETSPREAD,
 	SLEEPEFFECT,
 	ELECTRIC,
+	SMOKE,
 	NUM_EXTRA_FEATURES
 };
 
@@ -443,21 +444,21 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.0f // bullet knockback
 		),
 	CWeapon(
-		"Grenade",
+		"Smoke grenade",
 		"/buy grenade",
 		WEAPON_GRENADE,
 		PROJTYPE_GRENADE,
 		SOUND_GRENADE_FIRE,
 		-1, // require
 		0, // cost
-		8, // damage
-		MEGAROCKETS, // extra1
+		0, // damage
+		SMOKE, // extra1
 		false, // autofire
 		0, // bullet spread
 		0, // clip size
 		0, // powerup size
 		0, // max ammo
-		1.0f, // bullet life
+		1.2f, // bullet life
 		0, // bullet reload time
 		0, // clip reload time
 		0.0f // bullet knockback

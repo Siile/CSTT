@@ -1290,14 +1290,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			
 			
 			// throwing grenades
-			// if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
-				/*
-
+			//if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
+			{
 				if (pPlayer->GetCharacter())
 				{
 					if (pPlayer->GetCharacter()->m_Grenades > 0)
 					{
-						pPlayer->GetCharacter()->ThrowGrenade();
+						pPlayer->GetCharacter()->ThrowGrenade(pMsg->m_Emoticon*(360.0f / NUM_EMOTICONS));
 					}
 					else
 					{
@@ -1305,7 +1304,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					}
 					
 				}
-			*/
+			}
 			
 
 			SendEmoticon(ClientID, pMsg->m_Emoticon);

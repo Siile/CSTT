@@ -53,6 +53,9 @@ public:
 	bool m_Flashing;
 	int m_FlashTimer;
 	
+	bool m_Static;
+	vec2 m_Vel;
+	
 	int GetType(){ return m_Type; }
 	int GetSubtype(){ return m_Type; }
 	
