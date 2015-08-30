@@ -69,6 +69,9 @@ void CAIBasicbot::DoBehavior()
 	m_Jump = 0;
 	m_Attack = 0;
 	
+	if (GameServer()->m_pController->GetRoundStatus() < 2) // GAMESTATE_ROUND
+		return;
+	
 	// using this later
 	CBomb *Bomb = GameServer()->m_pController->GetBomb();
 	

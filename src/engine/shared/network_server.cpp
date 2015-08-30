@@ -142,7 +142,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 					// check if we already got this client
 					for(int i = 0; i < MaxClients(); i++)
 					{
-						if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
+						if(!m_SlotTakenByBot[i] && m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE &&
 							net_addr_comp(m_aSlots[i].m_Connection.PeerAddress(), &Addr) == 0)
 						{
 							Found = true; // silent ignore.. we got this client already

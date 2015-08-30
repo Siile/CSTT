@@ -85,7 +85,7 @@ enum CustomWeapons
 	RIFLE_LASERRIFLE,
 	RIFLE_DOOMRAY,
 	GRENADE_GRENADELAUNCHER,
-	GRENADE_HEAVYLAUNCHER,
+	//GRENADE_HEAVYLAUNCHER,
 	GRENADE_DOOMLAUNCHER,
 	GRENADE_GRENADE,
 	NUM_CUSTOMWEAPONS
@@ -107,8 +107,8 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	700, // RIFLE_LASERRIFLE,
 	700, // RIFLE_DOOMRAY,
 	500, // GRENADE_GRENADELAUNCHER,
-	500, // GRENADE_HEAVYLAUNCHER,
-	500, // GRENADE_DOOMLAUNCHER,
+	//500, // GRENADE_HEAVYLAUNCHER,
+	600, // GRENADE_DOOMLAUNCHER,
 	500, // GRENADE_GRENADE
 };
 
@@ -236,7 +236,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		7, // clip size
-		14, // powerup size
+		7, // powerup size
 		70, // max ammo
 		0.3f, // bullet life
 		160, // bullet reload time
@@ -256,7 +256,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		true, // autofire
 		1, // bullet spread
 		6, // clip size
-		12, // powerup size
+		6, // powerup size
 		60, // max ammo
 		0.35f, // bullet life
 		160, // bullet reload time
@@ -383,6 +383,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		1200, // clip reload time
 		0.0f // bullet knockback
 		),
+		/*
 	CWeapon(
 		"Grenade launcher",
 		"/buy grenade",
@@ -423,21 +424,42 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		1000, // clip reload time
 		0.0f // bullet knockback
 		),
+		*/
+	CWeapon(
+		"Grenade launcher",
+		"/buy grenade",
+		WEAPON_GRENADE,
+		PROJTYPE_GRENADE,
+		SOUND_GRENADE_FIRE,
+		-1, // require
+		100, // cost
+		8, // damage
+		MEGAROCKETS, // extra1
+		true, // autofire
+		1, // bullet spread
+		6, // clip size
+		6, // powerup size
+		60, // max ammo
+		1.4f, // bullet life
+		300, // bullet reload time
+		800, // clip reload time
+		0.0f // bullet knockback
+		),
 	CWeapon(
 		"Doom launcher",
 		"/upg doom",
 		WEAPON_GRENADE,
 		PROJTYPE_GRENADE,
 		SOUND_GRENADE_FIRE,
-		GRENADE_HEAVYLAUNCHER, // require
-		100, // cost
-		14, // damage
+		GRENADE_GRENADELAUNCHER, // require
+		120, // cost
+		12, // damage
 		DOOMROCKETS, // extra1
 		true, // autofire
 		1, // bullet spread
-		3, // clip size
-		6, // powerup size
-		30, // max ammo
+		4, // clip size
+		4, // powerup size
+		40, // max ammo
 		1.5f, // bullet life
 		360, // bullet reload time
 		1200, // clip reload time

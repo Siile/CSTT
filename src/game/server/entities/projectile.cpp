@@ -80,7 +80,7 @@ void CProjectile::Tick()
 
 		if (m_ExtraInfo == SMOKE)
 		{
-			CSmokescreen *S = new CSmokescreen(&GameServer()->m_World, CurPos, Server()->TickSpeed()*5);
+			CSmokescreen *S = new CSmokescreen(&GameServer()->m_World, CurPos, Server()->TickSpeed()*6);
 			GameServer()->m_World.InsertEntity(S);
 		}
 		
