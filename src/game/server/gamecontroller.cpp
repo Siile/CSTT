@@ -393,6 +393,11 @@ int IGameController::GetRound()
 	return -1;
 }
 
+int IGameController::GetRoundStatus()
+{
+	return -1;
+}
+
 
 int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {

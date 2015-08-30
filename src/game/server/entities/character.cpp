@@ -14,6 +14,8 @@
 #include "electromine.h"
 
 #include <game/server/upgradelist.h>
+#include <game/server/gamemodes/cstt.h>
+
 
 #define RAD 0.017453292519943295769236907684886f
 
@@ -239,6 +241,17 @@ void CCharacter::AddGrenades(int Num)
 
 void CCharacter::ThrowGrenade(float Angle)
 {
+	// check for proper gamestate
+	if (GameServer()->m_pController->GetRoundStatus() < GAMESTATE_ROUND || !IsAlive())
+		return;
+	
+	// check for grenades left
+	if (m_Grenades <= 0)
+	{
+		GameServer()->SendChatTarget(GetPlayer()->GetCID(), "No grenades left");
+		return;
+	}
+	
 	vec2 Direction = vec2();
 	
 	if (Angle == -1)
@@ -331,11 +344,18 @@ void CCharacter::SetCustomWeapon(int CustomWeapon)
 	else
 		m_ClipReloadTimer = 0;
 
-	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo)
+	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo == 1)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "Using: %s", aCustomWeapon[CustomWeapon].m_Name);
 		GameServer()->SendChatTarget(GetPlayer()->GetCID(), aBuf);
+	}
+	
+	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo == 2 && GameServer()->m_pController->GetRoundStatus() == GAMESTATE_ROUND)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "Using: %s", aCustomWeapon[CustomWeapon].m_Name);
+		GameServer()->SendBroadcast(aBuf, GetPlayer()->GetCID());
 	}
 }
 

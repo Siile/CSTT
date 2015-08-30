@@ -44,7 +44,7 @@ void CGameContext::Construct(int Resetting)
 	m_aMostInterestingPlayer[0] = -1;
 	m_aMostInterestingPlayer[1] = -1;
 	
-	
+	m_ShowWaypoints = false;
 	m_FreezeCharacters = false;
 
 	if(Resetting==NO_RESET)
@@ -894,18 +894,60 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if (strcmp(pMsg->m_pMessage, "/cmdlist") == 0 || strcmp(pMsg->m_pMessage, "/cmd") == 0 || strcmp(pMsg->m_pMessage, "/commands") == 0)
 			{
 				SendChatTarget(ClientID, "Commands:");
-				SendChatTarget(ClientID, "/dwi - Disable / enable weapon info (Using: ...)");
+				SendChatTarget(ClientID, "/dwc - Disable / enable weapon chat (Using: ...)");
+				SendChatTarget(ClientID, "/dwb - Disable / enable weapon broadcast");
 				SendChatTarget(ClientID, "/das - Disable / enable auto spectating");
+				SendChatTarget(ClientID, "/deg - Disable / enable throwing grenades with emoticons");
+				SendChatTarget(ClientID, "/grenade - Throw a grenade");
 				SkipSending = true;
 			}
 			
-			if (strcmp(pMsg->m_pMessage, "/dwi") == 0)
+			if (strcmp(pMsg->m_pMessage, "/grenade") == 0)
 			{
-				pPlayer->m_EnableWeaponInfo = !pPlayer->m_EnableWeaponInfo;
-				if (pPlayer->m_EnableWeaponInfo)
-					SendChatTarget(ClientID, "Weapon info messages enabled");
+				if (pPlayer->GetCharacter())
+					pPlayer->GetCharacter()->ThrowGrenade();
+				
+				SkipSending = true;
+			}
+			
+			if (strcmp(pMsg->m_pMessage, "/dwc") == 0)
+			{
+				if (pPlayer->m_EnableWeaponInfo == 1)
+					pPlayer->m_EnableWeaponInfo = 0;
 				else
-					SendChatTarget(ClientID, "Weapon info messages disabled");
+					pPlayer->m_EnableWeaponInfo = 1;
+				
+				if (pPlayer->m_EnableWeaponInfo)
+					SendChatTarget(ClientID, "Weapon chat info messages enabled");
+				else
+					SendChatTarget(ClientID, "Weapon chat info messages disabled");
+				
+				SkipSending = true;
+			}
+			
+			if (strcmp(pMsg->m_pMessage, "/dwb") == 0)
+			{
+				if (pPlayer->m_EnableWeaponInfo == 2)
+					pPlayer->m_EnableWeaponInfo = 0;
+				else
+					pPlayer->m_EnableWeaponInfo = 2;
+				
+				if (pPlayer->m_EnableWeaponInfo)
+					SendChatTarget(ClientID, "Weapon broadcast info messages enabled");
+				else
+					SendChatTarget(ClientID, "Weapon broadcast info messages disabled");
+				
+				SkipSending = true;
+			}
+			
+			
+			if (strcmp(pMsg->m_pMessage, "/deg") == 0)
+			{
+				pPlayer->m_EnableEmoticonGrenades = !pPlayer->m_EnableEmoticonGrenades;
+				if (pPlayer->m_EnableEmoticonGrenades)
+					SendChatTarget(ClientID, "Throwing grenades with emoticons enabled");
+				else
+					SendChatTarget(ClientID, "Throwing grenades with emoticons disabled");
 				
 				SkipSending = true;
 			}
@@ -921,6 +963,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SkipSending = true;
 			}
 			
+			if ( strcmp(pMsg->m_pMessage, "/showwaypoints") == 0 )
+			{
+				m_ShowWaypoints = !m_ShowWaypoints;
+				SkipSending = true;
+			}
+				
 			if ( strcmp(pMsg->m_pMessage, "/addbot") == 0 )
 			{
 				SendChatTarget(ClientID, "Adding bot...");
@@ -1292,17 +1340,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// throwing grenades
 			//if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
 			{
-				if (pPlayer->GetCharacter())
+				if (pPlayer->GetCharacter() && pPlayer->m_EnableEmoticonGrenades)
 				{
-					if (pPlayer->GetCharacter()->m_Grenades > 0)
-					{
-						pPlayer->GetCharacter()->ThrowGrenade(pMsg->m_Emoticon*(360.0f / NUM_EMOTICONS));
-					}
-					else
-					{
-						SendChatTarget(ClientID, "No grenades left");
-					}
-					
+					pPlayer->GetCharacter()->ThrowGrenade(pMsg->m_Emoticon*(360.0f / NUM_EMOTICONS));
 				}
 			}
 			

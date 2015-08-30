@@ -108,7 +108,10 @@ public:
 	virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
 	void FlashPickups();
 	
-	
+	int GetRoundStatus()
+	{
+		return m_GameState;
+	}
 	
 	int GetRound(){ return m_Round; }
 	

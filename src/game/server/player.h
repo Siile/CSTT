@@ -158,8 +158,9 @@ public:
 	int m_WantedTeam;
 	
 	// settings
-	bool m_EnableWeaponInfo;
+	int m_EnableWeaponInfo; // 0 = disabled, 1 = chat, 2 = broadcast
 	bool m_EnableAutoSpectating;
+	bool m_EnableEmoticonGrenades;
 	
 	// warm welcome
 	bool m_Welcomed;

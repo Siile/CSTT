@@ -32,6 +32,8 @@ void CAIBasicbot::OnCharacterSpawn(CCharacter *pChr)
 	{
 		if (frandom()*10 < 2)
 			Weapon = SWORD_KATANA;
+		else if (frandom()*10 < 2)
+			Weapon = GUN_MAGNUM;
 		else if (frandom()*10 < 3)
 			Weapon = RIFLE_ASSAULTRIFLE;
 		else if (frandom()*10 < 3)
@@ -103,7 +105,7 @@ void CAIBasicbot::DoBehavior()
 	
 	
 	// release hook at random
-	if (frandom()*10 < 3)
+	if (frandom()*10 < 4)
 		m_Hook = 0;
 	
 	
@@ -178,15 +180,23 @@ void CAIBasicbot::DoBehavior()
 			}
 		}
 		
-		//GameServer()->CreatePlayerSpawn(m_WaypointPos);
-		m_TargetTimer = 10;
+		if (GameServer()->m_ShowWaypoints)
+			GameServer()->CreatePlayerSpawn(m_WaypointPos);
+		m_TargetTimer = 0;
 	}
 	else
 		m_TargetTimer--;
 				
 
 	MoveTowardsWaypoint(40);
-		
+	
+	
+	// jump if waypoint is above us
+	if (abs(m_WaypointPos.x - m_Pos.x) < 100 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*10 < 4)
+	{
+		m_Jump = 1;
+	}
+	
 		
 	// hook moving
 	if (m_LastHook == 0)

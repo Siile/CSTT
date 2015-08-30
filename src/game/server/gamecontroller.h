@@ -136,6 +136,7 @@ public:
 	
 	
 	virtual int GetRound();
+	virtual int GetRoundStatus();
 
 	virtual bool CanCharacterSpawn(int ClientID);
 

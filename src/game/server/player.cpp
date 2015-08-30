@@ -35,7 +35,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	
 	m_InterestPoints = 0;
 	
-	m_EnableWeaponInfo = true;
+	m_EnableEmoticonGrenades = true;
+	m_EnableWeaponInfo = 2;
 	m_EnableAutoSpectating = true;
 	
 	m_IsBot = false;

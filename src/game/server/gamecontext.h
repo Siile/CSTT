@@ -197,6 +197,8 @@ public:
 	bool m_FreezeCharacters;
 	bool m_CanRespawn;
 	
+	bool m_ShowWaypoints;
+	
 	// custom vote stuff
 	//void SetupVotes(int ClientID = -1);
 	void ResetVotes();
