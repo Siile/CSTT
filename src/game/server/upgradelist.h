@@ -351,7 +351,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_RIFLE_FIRE,
 		-1, // require
 		100, // cost
-		15, // damage
+		17, // damage
 		BULLETSPREAD, // extra1
 		true, // autofire
 		1, // bullet spread
@@ -359,7 +359,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		6, // powerup size
 		60, // max ammo
 		0, // bullet life
-		250, // bullet reload time
+		275, // bullet reload time
 		1200, // clip reload time
 		0.0f // bullet knockback
 		),

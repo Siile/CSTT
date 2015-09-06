@@ -535,6 +535,8 @@ void CGameControllerCSBB::CaptureBase()
 	if (!m_apBombArea[m_Base])
 		return;
 	
+	bool Red = false;
+	bool Blue = false;
 	
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -549,14 +551,12 @@ void CGameControllerCSBB::CaptureBase()
 		if (!pCharacter->IsAlive())
 			continue;
 		
+		
 		if (distance(m_apBombArea[m_Base]->m_Pos, pCharacter->m_Pos) < g_Config.m_SvBaseCaptureDistance)
 		{
 			
 			
 		}
-		
-		
-		break;
 	}
 	
 }
