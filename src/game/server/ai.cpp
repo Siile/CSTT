@@ -374,16 +374,6 @@ bool CAI::SeekClosestEnemyInSight()
 
 
 
-void CAI::CheckAITiles()
-{
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_AILEFT)
-		m_Move = -1;
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_AIRIGHT)
-		m_Move = 1;
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_AIUP)
-		m_Jump = 1;
-}
-
 
 
 void CAI::Tick()

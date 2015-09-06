@@ -153,6 +153,7 @@ void CServerBrowser::Filter()
 			Filtered = 1;
 		else if(g_Config.m_BrFilterPure &&
 			(str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CSTT") != 0 &&
+			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CSBB") != 0 &&
 			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "DM") != 0 &&
 			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "TDM") != 0 &&
 			str_comp(m_ppServerlist[i]->m_Info.m_aGameType, "CTF") != 0))

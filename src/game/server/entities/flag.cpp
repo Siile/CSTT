@@ -11,6 +11,8 @@ CFlag::CFlag(CGameWorld *pGameWorld, int Team)
 	m_pCarryingCharacter = NULL;
 	m_GrabTick = 0;
 
+	m_UseSnapping = true;
+	
 	Reset();
 }
 
@@ -36,7 +38,7 @@ void CFlag::TickPaused()
 void CFlag::Snap(int SnappingClient)
 {
 	// return if this is not the closest flag to the character
-	if ((!m_ClosestFlagToCharacter[SnappingClient] && m_Team == TEAM_BLUE))
+	if (!m_ClosestFlagToCharacter[SnappingClient] && m_Team == TEAM_BLUE && m_UseSnapping)
 		return;
 
 	if(NetworkClipped(SnappingClient))

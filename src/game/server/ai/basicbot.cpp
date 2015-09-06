@@ -25,7 +25,6 @@ void CAIBasicbot::OnCharacterSpawn(CCharacter *pChr)
 	
 	int Round = GameServer()->m_pController->GetRound();
 	
-	
 	Weapon = GUN_PISTOL;
 	
 	if (frandom()*8 < (Round-1)*3)

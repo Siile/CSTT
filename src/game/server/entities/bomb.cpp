@@ -21,7 +21,7 @@ void CBomb::Reset()
 	m_Pos = vec2(0,0);
 	m_Vel = vec2(0,0);
 	m_GrabTick = 0;
-	m_Hide = false;
+	m_Hide = true;
 	
 	m_Status = BOMB_IDLE;
 	m_Timer = 0;

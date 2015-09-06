@@ -15,6 +15,7 @@
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
 #include "gamemodes/cstt.h"
+#include "gamemodes/csbb.h"
 #include "gamemodes/mod.h"
 
 #include <game/server/ai_protocol.h>
@@ -1942,6 +1943,8 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		m_pController = new CGameControllerTDM(this);
 	else if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
 		m_pController = new CGameControllerCSTT(this);
+	else if(str_comp(g_Config.m_SvGametype, "csbb") == 0)
+		m_pController = new CGameControllerCSBB(this);
 	else
 		m_pController = new CGameControllerDM(this);
 
@@ -2304,7 +2307,7 @@ void CGameContext::KickBots()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(IsBot(i))
-			Server()->Kick(i, "Bot kicked by engine");
+			Server()->Kick(i, "");
 	}
 }
 
@@ -2312,7 +2315,7 @@ void CGameContext::KickBots()
 void CGameContext::KickBot(int ClientID)
 {
 	if(IsBot(ClientID))
-		Server()->Kick(ClientID, "Bot kicked by engine");
+		Server()->Kick(ClientID, "");
 }
 
 

@@ -19,6 +19,14 @@ class IGameController
 	class IServer *m_pServer;
 
 protected:
+	// CSTT & CSBB
+	int m_Round;
+	int m_MaxRounds;
+
+	int m_GameState;
+	
+	
+	//
 	CGameContext *GameServer() const { return m_pGameServer; }
 	IServer *Server() const { return m_pServer; }
 
@@ -63,6 +71,12 @@ protected:
 	bool m_ForceBalanced;
 
 public:
+	// CSTT & CSBB
+	int GetRoundStatus(){ return m_GameState; }
+	int GetRound(){ return m_Round; }
+
+	
+	//
 	const char *m_pGameType;
 
 	bool IsTeamplay() const;
@@ -135,8 +149,6 @@ public:
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 	
 	
-	virtual int GetRound();
-	virtual int GetRoundStatus();
 
 	virtual bool CanCharacterSpawn(int ClientID);
 

@@ -84,12 +84,6 @@ public:
 	
 	
 	int m_DeathTileTimer;
-
-
-	void ForceNogo();
-	bool InNogo();
-
-
 	
 	
 	

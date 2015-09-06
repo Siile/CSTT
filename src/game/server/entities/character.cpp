@@ -15,6 +15,7 @@
 
 #include <game/server/upgradelist.h>
 #include <game/server/gamemodes/cstt.h>
+#include <game/server/gamemodes/csbb.h>
 
 
 #define RAD 0.017453292519943295769236907684886f
@@ -125,50 +126,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	GiveStartWeapon();
 	
 	return true;
-}
-
-void CCharacter::ForceNogo()
-{
-	if (InNogo())
-	{
-		TakeDeathtileDamage();
-		GameServer()->CreatePlayerSpawn(m_Pos);
-		GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN);
-		if (m_Core.m_Vel.x < 0)
-		{
-			Teleport(m_Pos + vec2(60, 0));
-			m_Core.m_Vel.x = 16.0f;
-		}
-		else if (m_Core.m_Vel.x > 0)
-		{
-			Teleport(m_Pos - vec2(60, 0));
-			m_Core.m_Vel.x = -16.0f;
-		}
-		GameServer()->CreatePlayerSpawn(m_Pos);
-		
-		if ((aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD || aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER) && m_Ninja.m_CurrentMoveTime > 0)
-		{
-			m_Ninja.m_CurrentMoveTime = 0;
-			
-			if (m_Ninja.m_ActivationDir.x < 0)
-			{
-				Teleport(m_Pos + vec2(60, 0));
-				m_Core.m_Vel.x = 16.0f;
-			}
-			else if (m_Ninja.m_ActivationDir.x > 0)
-			{
-				Teleport(m_Pos - vec2(60, 0));
-				m_Core.m_Vel.x = -16.0f;
-			}
-		}
-	}
-}
-
-bool CCharacter::InNogo()
-{
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_NOGO)
-		return true;
-	return false;
 }
 
 
@@ -1305,9 +1262,11 @@ void CCharacter::Tick()
 		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameLayerClipped(m_Pos))
 	{
-		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
-		m_LatestHitVel = vec2(0, 0);
+		//Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		m_DeathTileTimer = 10;
+		TakeDeathtileDamage();
 	}
+	
 	
 	if (m_DelayedKill)
 	{
@@ -1485,12 +1444,12 @@ bool CCharacter::IncreaseArmor(int Amount)
 
 void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 {
-	if (Weapon < 0)
-		Weapon = 0;
+	//if (Weapon < 0)
+	//	Weapon = 0;
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	
-	if (Killer == m_pPlayer->GetCID() && Weapon == WEAPON_HAMMER)
+	if (Killer == m_pPlayer->GetCID() && (Weapon == WEAPON_HAMMER || Weapon == WEAPON_GAME))
 		SkipKillMessage = true;
 	
 	if (!SkipKillMessage)
@@ -1654,13 +1613,24 @@ void CCharacter::TakeDeathtileDamage()
 {
 	m_DamageTaken++;
 	
-	int i = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
+	int top = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y-32);
+	int bot = GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y+32);
+	int left = GameServer()->Collision()->GetCollisionAt(m_Pos.x-32, m_Pos.y);
+	int right = GameServer()->Collision()->GetCollisionAt(m_Pos.x+32, m_Pos.y);
 	
-	if(!(i&CCollision::COLFLAG_SOLID) && !(i&CCollision::COLFLAG_DEATH) && !(i&CCollision::COLFLAG_NOHOOK))
-	{
+	m_Core.m_Jumped = 0;
+	
+	if(!top && bot)
 		m_Core.m_Vel.y = -5.0f;
-		m_Core.m_Jumped = 0;
-	}
+	if(!bot && top)
+		m_Core.m_Vel.y = +5.0f;
+	if(!left && right)
+		m_Core.m_Vel.x = -5.0f;
+	if(!right && left)
+		m_Core.m_Vel.x = +5.0f;
+	
+	m_LatestHitVel = GetVel();
+
 	/*
 	else
 	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+32, m_Pos.y) == 0)
@@ -1691,7 +1661,7 @@ void CCharacter::TakeDeathtileDamage()
 		GameServer()->CreateDamageInd(m_Pos, 0, 3);
 	}
 
-	m_HiddenHealth -= 3;
+	m_HiddenHealth -= 10;
 
 	m_DamageTakenTick = Server()->Tick();
 	

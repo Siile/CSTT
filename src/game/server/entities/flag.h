@@ -19,6 +19,7 @@ public:
 	int m_GrabTick;
 	
 	bool m_Hide;
+	bool m_UseSnapping;
 	
 	// to check if to be snapped / displayed
 	bool m_ClosestFlagToCharacter[64];

@@ -1,5 +1,5 @@
-#ifndef GAME_SERVER_GAMEMODES_CSTT_H
-#define GAME_SERVER_GAMEMODES_CSTT_H
+#ifndef GAME_SERVER_GAMEMODES_CSBB_H
+#define GAME_SERVER_GAMEMODES_CSBB_H
 #include <game/server/gamecontroller.h>
 #include <game/server/entity.h>
 
@@ -8,39 +8,37 @@
 #define MAX_DROPPABLES 30
 
 
-
-enum GameStateCSTT
+enum GameStateCSBB
 {
-	GAMESTATE_NEWGAME,
-	GAMESTATE_STARTING,
-	GAMESTATE_ROUND,
-	GAMESTATE_ENDING,
+	CSBB_NEWBASE,
+	CSBB_DEFENDING,
+	CSBB_ENDING,
 };
 
 
-class CGameControllerCSTT : public IGameController
+class CGameControllerCSBB : public IGameController
 {
 private:
 	bool m_DroppablesCreated;
 	
-	//int m_GameState;
 	int m_RoundTick;
+	
+	int m_Base;
+	
+	int m_HoldingTeam;
 	
 	
 	void Restart();
-	void StartCountdown();
-	void StartRound();
+	
+	void NewBase();
+	void CaptureBase();
 	
 	void RoundWinLose();
 	void RoundRewards(int WinningTeam);
 	
-	void SaveWeapons();
-	
 	int CheckLose();
 	void AutoBalance();
-	
-	void EndTheShit();
-	
+		
 	bool m_NewGame;
 	
 	bool m_aDefusing[MAX_CLIENTS];
@@ -80,10 +78,10 @@ private:
 	
 	void RespawnPickups();
 	void ClearPickups();
-	
-	
+
+
 public:
-	CGameControllerCSTT(class CGameContext *pGameServer);
+	CGameControllerCSBB(class CGameContext *pGameServer);
 	
 	virtual void DoWincheck();
 	virtual bool CanBeMovedOnBalance(int ClientID);
@@ -92,6 +90,7 @@ public:
 	
 	virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
 	void FlashPickups();
+	
 	
 	
 	virtual bool OnEntity(int Index, vec2 Pos);

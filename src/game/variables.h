@@ -75,6 +75,11 @@ MACRO_CONFIG_INT(SvSpectatorUpdateTime, sv_spectatorupdatetime, 2, 1, 20, CFGFLA
 
 MACRO_CONFIG_INT(SvWeaponDrops, sv_weapondrops, 1, 0, 1, CFGFLAG_SERVER, "Enable weapon drops")
 
+// CS:BB
+MACRO_CONFIG_INT(SvBaseCaptureDistance, sv_basecapturedistance, 1000, 100, 2000, CFGFLAG_SERVER, "Base capture distance")
+
+
+
 
 MACRO_CONFIG_INT(SvWarmup, sv_warmup, 0, 0, 0, CFGFLAG_SERVER, "Number of seconds to do warmup before round starts")
 MACRO_CONFIG_STR(SvMotd, sv_motd, 900, "", CFGFLAG_SERVER, "Message of the day to display for the clients")

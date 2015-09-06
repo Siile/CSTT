@@ -80,7 +80,6 @@ public:
 	
 	bool SeekClosestEnemy();
 	bool SeekClosestEnemyInSight();
-	void CheckAITiles();
 	
 	bool m_InputChanged;
 	
