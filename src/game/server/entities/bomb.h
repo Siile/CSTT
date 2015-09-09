@@ -24,6 +24,7 @@ public:
 	int m_GrabTick;
 	
 	bool m_Hide;
+	int m_Team;
 	
 	int m_Status;
 	int m_Timer;

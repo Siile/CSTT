@@ -6,14 +6,14 @@
 #include <game/server/entities/bomb.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/pickup.h>
-#include <game/server/entities/staticlaser.h>
+#include <game/server/entities/arrow.h>
 #include <game/server/entities/superexplosion.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
 #include "csbb.h"
 
 #include <game/server/ai.h>
-#include <game/server/ai/basicbot.h>
+#include <game/server/ai/csbb_ai.h>
 
 
 enum WinStatus
@@ -26,7 +26,7 @@ enum WinStatus
 
 CGameControllerCSBB::CGameControllerCSBB(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
-	m_pGameType = "CSTT";
+	m_pGameType = "CSBB";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 
 	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
@@ -49,9 +49,7 @@ CGameControllerCSBB::CGameControllerCSBB(class CGameContext *pGameServer) : IGam
 	m_NewGame = false;
 	
 	m_BombSoundTimer = 0;
-	m_BombActionTimer = 0;
 	
-	m_MaxRounds = g_Config.m_SvNumRounds;
 	Restart();
 	
 	m_BroadcastTimer = 0;
@@ -93,6 +91,8 @@ bool CGameControllerCSBB::OnEntity(int Index, vec2 Pos)
 	{
 		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating bomb entity");
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+		
+		GameServer()->GenerateArrows();
 		
 		CBomb *B = new CBomb(&GameServer()->m_World);
 		B->m_Pos = vec2(0, 0);
@@ -159,7 +159,14 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	
 	if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL) // g_Config.m_SvWeaponDrops == 1 && 
 	{
-		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
+		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), DropWeapon);
+		
+		if (frandom()*10 < 3)
+			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
+		else
+			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
+		
+			
 	}
 	else
 	{
@@ -168,6 +175,11 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel, 0);
 		else
 			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel, 0);
+		
+		if (frandom()*10 < 3)
+			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
+		else
+			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
 	}
 
 	// drop flags
@@ -196,6 +208,7 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 
 	//if (WeaponID != WEAPON_GAME)
 	//	pVictim->GetPlayer()->m_ForceToSpectators = true;
+	pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*g_Config.m_SvRespawnDelayCSBB;
 	
 	return HadBomb;
 }
@@ -208,7 +221,9 @@ void CGameControllerCSBB::OnCharacterSpawn(CCharacter *pChr, bool RequestAI)
 	
 	// init AI
 	if (RequestAI)
-		pChr->GetPlayer()->m_pAI = new CAIBasicbot(GameServer(), pChr->GetPlayer());
+		pChr->GetPlayer()->m_pAI = new CAIcsbb(GameServer(), pChr->GetPlayer());
+	
+	GameServer()->ResetVotes();
 }
 
 
@@ -246,9 +261,23 @@ void CGameControllerCSBB::Snap(int SnappingClient)
 	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
 	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
 
+
+	
+	switch (m_DefendingTeam)
+	{
+	case TEAM_BLUE:
+	case TEAM_RED:
+		if (m_pBomb && m_pBomb->m_Team == TEAM_RED) pGameDataObj->m_FlagCarrierBlue = FLAG_ATSTAND;
+		break;
+	default:
+		if (m_pBomb && m_pBomb->m_Team == TEAM_RED) pGameDataObj->m_FlagCarrierBlue = FLAG_MISSING;
+	}
+	
+	pGameDataObj->m_FlagCarrierRed = FLAG_ATSTAND;
 	pGameDataObj->m_FlagCarrierBlue = FLAG_ATSTAND;
+		
 	
-	
+	/*
 	if(m_pBomb)
 	{
 		if(m_pBomb->m_pCarryingCharacter && m_pBomb->m_pCarryingCharacter->GetPlayer())
@@ -258,6 +287,7 @@ void CGameControllerCSBB::Snap(int SnappingClient)
 	}
 	else
 		pGameDataObj->m_FlagCarrierRed = FLAG_MISSING;
+	*/
 }
 
 
@@ -346,81 +376,69 @@ int CGameControllerCSBB::CountPlayersAlive()
 
 
 
-int CGameControllerCSBB::CheckLose()
+int CGameControllerCSBB::CheckLose(bool Broadcast)
 {
 	// check team & bomb status
 	
 	if (m_BombDefused)
 	{
-		return COUNTERTERRORISTS_WIN;
+		m_SkipWinBroadcast = true;
+	
+		if (m_DefendingTeam == TEAM_BLUE)
+			return COUNTERTERRORISTS_WIN;
+		if (m_DefendingTeam == TEAM_RED)
+			return TERRORISTS_WIN;
 	}
 	
-	
-	int Red = 0, Blue = 0;
-	
-	for (int i = 0; i < MAX_CLIENTS; i++)
-	{
-		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
-		if(!pPlayer)
-			continue;
-
-		CCharacter *pCharacter = pPlayer->GetCharacter();
-		if (!pCharacter)
-			continue;
-
-		if (!pCharacter->IsAlive())
-			continue;
-		
-		if (pPlayer->GetTeam() == TEAM_RED)
-			Red++;
-		
-		if (pPlayer->GetTeam() == TEAM_BLUE)
-			Blue++;
-	}
-	
-	/* console debugging
-	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "status: %d - %d", Red, Blue);
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
-	*/
 	
 	if (m_pBomb && m_pBomb->m_Status == BOMB_PLANTED)
 	{
-		// bomb planted and ready to explode
-		if(m_Timeout || Blue == 0)
-		{
-			return TERRORISTS_WIN;
-		}
-		
 		if(g_Config.m_SvBombTime > 0 && m_pBomb->m_Timer >= g_Config.m_SvBombTime*Server()->TickSpeed())
 		{
 			// big ass explosion
 			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_pBomb->m_Pos, m_pBomb->m_Owner, 0, 10, 0, true /* superdamage */);
 			GameServer()->m_World.InsertEntity(S);
-							
+
 			m_pBomb->m_Hide = true;
-			
+
 			m_Timeout = true;
-			return TERRORISTS_WIN;
+			if (m_DefendingTeam == TEAM_BLUE)
+			{
+				if (Broadcast)
+					GameServer()->SendBroadcast("Base destroyed - Terrorists score!", -1, true);
+				return TERRORISTS_WIN;
+			}
+			if (m_DefendingTeam == TEAM_RED)
+			{
+				if (Broadcast)
+					GameServer()->SendBroadcast("Base destroyed - Counter-terrorists score!", -1, true);
+				return COUNTERTERRORISTS_WIN;
+			}
 		}
 	}
 	else
 	{
-		// time out, counter-terrorists win
+		// time out, defending team score
 		if(m_Timeout || (g_Config.m_SvRoundTime > 0 && m_RoundTick >= g_Config.m_SvRoundTime*Server()->TickSpeed()))
 		{
 			m_Timeout = true;
-			return COUNTERTERRORISTS_WIN;
+			
+			if (m_pBomb)
+				m_pBomb->m_Hide = true;
+			
+			if (m_DefendingTeam == TEAM_BLUE)
+			{
+				if (Broadcast)
+					GameServer()->SendBroadcast("Base defend success - Counter-terrorists score!", -1, true);
+				return COUNTERTERRORISTS_WIN;
+			}
+			if (m_DefendingTeam == TEAM_RED)
+			{
+				if (Broadcast)
+					GameServer()->SendBroadcast("Base defend success - Terrorists score!", -1, true);
+				return TERRORISTS_WIN;
+			}
 		}
-		
-		// check tees left only if bomb isn't planted
-		if (Red > 0 && Blue == 0)
-			return TERRORISTS_WIN;
-		
-		if (Red == 0 && Blue > 0)
-			return COUNTERTERRORISTS_WIN;
-
-		if (Red == 0 && Blue == 0)
-			return DRAW;
 	}
 	
 	return 0;
@@ -442,6 +460,7 @@ void CGameControllerCSBB::RoundRewards(int WinningTeam)
 	}
 	
 	//GameServer()->SwapTeams();
+	GameServer()->ResetVotes();
 }
 
 
@@ -463,52 +482,98 @@ CFlag *CGameControllerCSBB::GetClosestBombArea(vec2 Pos)
 
 
 
+void CGameControllerCSBB::EndRound()
+{
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "csbb", "Ending round");
+	m_Round++;
+	m_DefendingTeam = -1;
+	m_GameState = CSBB_ENDING;
+	m_RoundTick = 0;
+	m_RoundTimeLimit = g_Config.m_SvPreroundTime;
+	m_ResetTime = true;
+	
+	HideBombAreas();
+	
+	if (m_pBomb)
+		m_pBomb->m_Hide = true;
+	
+	m_pBomb->m_Owner = -1;
+	m_pBomb->m_Status = BOMB_IDLE;
+	
+	if (GameServer()->m_pArrow)
+		GameServer()->m_pArrow->m_Hide = true;
+}
+
+
 void CGameControllerCSBB::RoundWinLose()
 {
-	int win = CheckLose();
+	m_SkipWinBroadcast = false;
+	
+	int score = CheckLose(true);
 
 	// give points and stuff
 
-	/*
-	if (win == TERRORISTS_WIN)
+	if (score == TERRORISTS_WIN)
 	{
-		GameServer()->SendBroadcast("Terrorists win", -1);
+		//if (!m_SkipWinBroadcast)
+		//	GameServer()->SendBroadcast("Terrorists score", -1, true);
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_RED]++;
 		RoundRewards(TEAM_RED);
+		EndRound();
 	}
-	else if (win == COUNTERTERRORISTS_WIN)
+	else if (score == COUNTERTERRORISTS_WIN)
 	{
-		GameServer()->SendBroadcast("Counter-terrorists win", -1);
+		//if (!m_SkipWinBroadcast)
+		//	GameServer()->SendBroadcast("Counter-terrorists score", -1, true);
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_BLUE]++;
 		RoundRewards(TEAM_BLUE);
+		EndRound();
 	}
-	else // draw
-	{
-		GameServer()->SendBroadcast("Nobody wins", -1);
-		GameServer()->CreateSoundGlobal(SOUND_TEE_CRY, -1);
-		RoundRewards(-1);
-	}
-	*/
 }
 
 
 
 
 
-void CGameControllerCSBB::NewBase()
+void CGameControllerCSBB::HideBombAreas()
 {
-	m_GameState = CSBB_NEWBASE;
-	
-	m_RoundTimeLimit = 0; // gamecontroller
-	m_ResetTime = true; // gamecontroller
-	
 	for (int i = 0; i < MAX_BOMBAREAS; i++)
 	{
 		if (m_apBombArea[i])
+		{
 			m_apBombArea[i]->m_Hide = true;
+			m_apBombArea[i]->m_UseSnapping = false;
+		}
 	}
+}
+
+
+void CGameControllerCSBB::NewBase()
+{
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "csbb", "Generating new base");
+	
+	m_GameState = CSBB_NEWBASE;
+	
+	m_DefendingTeam = -1;
+	
+	m_RoundTick = 0;
+	m_RoundTimeLimit = 0; // gamecontroller
+	m_ResetTime = true; // gamecontroller
+	m_Timeout = false;
+	m_BombDefused = false;
+	m_BombDefuseTimer = 0;
+	
+
+	if (m_pBomb)
+		m_pBomb->m_Hide = true;
+	
+	m_pBomb->m_Owner = -1;
+	m_pBomb->m_Status = BOMB_IDLE;
+	
+	
+	HideBombAreas();
 	
 	// get a new base
 	int Base = rand()%m_BombAreaCount;
@@ -518,8 +583,33 @@ void CGameControllerCSBB::NewBase()
 			Base = rand()%m_BombAreaCount;
 	}
 	
+	if (m_pBomb)
+	{
+		m_pBomb->m_Hide = true;
+		m_pBomb->m_Status = BOMB_IDLE;
+	}
+	
 	m_apBombArea[Base]->m_Hide = false;
+	m_apBombArea[Base]->m_UseSnapping = false;
 	m_Base = Base;
+
+	
+	// dont clear players broadcast
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+
+		if (pPlayer->m_BroadcastingCaptureStatus)
+			pPlayer->m_BroadcastingCaptureStatus = false;
+	}
+	
+
+	GameServer()->SendBroadcast("Capture the new base!", -1, true);
+	GameServer()->CreateSoundGlobal(SOUND_NINJA_HIT, -1);	
+	
+	AutoBalance();
 }
 
 
@@ -533,11 +623,15 @@ void CGameControllerCSBB::CaptureBase()
 	}
 	
 	if (!m_apBombArea[m_Base])
+	{
+		NewBase();
 		return;
+	}
 	
 	bool Red = false;
 	bool Blue = false;
 	
+	// check for players within base range
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
@@ -552,13 +646,118 @@ void CGameControllerCSBB::CaptureBase()
 			continue;
 		
 		
-		if (distance(m_apBombArea[m_Base]->m_Pos, pCharacter->m_Pos) < g_Config.m_SvBaseCaptureDistance)
+		if (distance(m_apBombArea[m_Base]->m_Pos, pCharacter->m_Pos) < g_Config.m_SvBaseCaptureDistance && pCharacter->m_Pos.y < m_apBombArea[m_Base]->m_Pos.y+48)
 		{
-			
-			
+			if (pPlayer->GetTeam() == TEAM_RED)
+				Red = true;
+			if (pPlayer->GetTeam() == TEAM_BLUE)
+				Blue = true;
 		}
 	}
 	
+	if (Red && Blue)
+	{
+		m_RedCaptureTime = 0;
+		m_BlueCaptureTime = 0;
+	}
+	
+	if (!Red)
+	{
+		m_RedCaptureTime = 0;
+		if (Blue)
+		{
+			// blue team capturing the base
+			m_BlueCaptureTime++;
+		}
+	}
+	
+	if (!Blue)
+	{
+		m_BlueCaptureTime = 0;
+		if (Red)
+		{
+			// red team capturing the base
+			m_RedCaptureTime++;
+		}
+	}
+	
+	// broadcast to players capturing the base
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		
+		CCharacter *pCharacter = pPlayer->GetCharacter();
+		if (!pCharacter)
+			continue;
+		
+		if (!pCharacter->IsAlive() || pPlayer->m_IsBot)
+			continue;
+		
+		if (((pPlayer->GetTeam() == TEAM_RED && Red && !Blue) || (pPlayer->GetTeam() == TEAM_BLUE && Blue && !Red)) &&
+			(distance(m_apBombArea[m_Base]->m_Pos, pCharacter->m_Pos) < g_Config.m_SvBaseCaptureDistance && pCharacter->m_Pos.y < m_apBombArea[m_Base]->m_Pos.y+48))
+		{
+			pPlayer->m_BroadcastingCaptureStatus = true;
+			GameServer()->SendBroadcast("Capturing the base", pPlayer->GetCID());
+		}
+		else if (pPlayer->m_BroadcastingCaptureStatus)
+		{
+			pPlayer->m_BroadcastingCaptureStatus = false;
+			GameServer()->SendBroadcast("", pPlayer->GetCID());
+		}
+	}
+	
+	if (m_RedCaptureTime > g_Config.m_SvBaseCaptureTime*Server()->TickSpeed())
+	{
+		m_BlueCaptureTime = 0;
+		m_RedCaptureTime = 0;
+		
+		m_DefendingTeam = TEAM_RED;
+		m_GameState = CSBB_DEFENDING;
+		m_RoundTick = 0;
+		m_RoundTimeLimit = g_Config.m_SvRoundTime;
+		m_ResetTime = true;
+		
+		
+		for (int i = 0; i < MAX_BOMBAREAS; i++)
+		{
+			if (m_apBombArea[i])
+				m_apBombArea[i]->m_Team = TEAM_RED;
+		}
+		if (m_pBomb)
+			m_pBomb->m_Team = TEAM_BLUE;
+		
+		
+		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);	
+		GameServer()->SendBroadcast("Terrorists captured the base!", -1, true);
+		GiveBombToPlayer();
+	}
+	else if (m_BlueCaptureTime > g_Config.m_SvBaseCaptureTime*Server()->TickSpeed())
+	{
+		m_BlueCaptureTime = 0;
+		m_RedCaptureTime = 0;
+		
+		m_DefendingTeam = TEAM_BLUE;
+		m_GameState = CSBB_DEFENDING;
+		m_RoundTick = 0;
+		m_RoundTimeLimit = g_Config.m_SvRoundTime;
+		m_ResetTime = true;
+		
+		
+		for (int i = 0; i < MAX_BOMBAREAS; i++)
+		{
+			if (m_apBombArea[i])
+				m_apBombArea[i]->m_Team = TEAM_BLUE;
+		}
+		if (m_pBomb)
+			m_pBomb->m_Team = TEAM_RED;
+		
+		
+		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);	
+		GameServer()->SendBroadcast("Counter-terrorists captured the base!", -1, true);
+		GiveBombToPlayer();
+	}
 }
 
 
@@ -570,8 +769,11 @@ void CGameControllerCSBB::Restart()
 	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Restarting game");
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 	
+	m_RedCaptureTime = 0;
+	m_BlueCaptureTime = 0;
+	
 	m_Base = -1;
-	m_HoldingTeam = -1;
+	m_DefendingTeam = -1;
 	
 	m_RoundTimeLimit = 0; // gamecontroller
 	m_ResetTime = true; // gamecontroller
@@ -591,9 +793,14 @@ void CGameControllerCSBB::Restart()
 	
 	GameServer()->SendBroadcast("", -1);
 	
+	m_BombActionTimer = 0;
+	
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		m_aDefusing[i] = false;
+		m_aDefusing[i] = false;	
+		m_aPlanting[i] = 0;
+		m_aBombActionTimer[i] = 0;
+		
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if(!pPlayer)
 			continue;
@@ -631,12 +838,19 @@ void CGameControllerCSBB::Restart()
 
 void CGameControllerCSBB::GiveBombToPlayer()
 {
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "csbb", "Giving bomb to a player");
+	
 	if (!m_pBomb)
 		return;
 	
-	m_pBomb->m_Hide = false;
+	m_pBomb->m_Hide = true;
 	int BombCarrier = -1;
 	
+	m_pBomb->m_Owner = -1;
+	m_pBomb->m_pCarryingCharacter = NULL;
+	m_pBomb->m_Status = BOMB_CARRYING;
+		
+	/*
 	for (int c = 0; c < MAX_CLIENTS; c++)
 	{
 		int i = c + m_BombCarrierTurn;
@@ -648,7 +862,7 @@ void CGameControllerCSBB::GiveBombToPlayer()
 		if(!pPlayer)
 			continue;
 		
-		if(pPlayer->GetTeam() != TEAM_RED)
+		if(pPlayer->GetTeam() == m_DefendingTeam || pPlayer->GetTeam() == TEAM_SPECTATORS)
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -667,6 +881,9 @@ void CGameControllerCSBB::GiveBombToPlayer()
 		m_pBomb->m_pCarryingCharacter = GameServer()->m_apPlayers[BombCarrier]->GetCharacter();
 		m_pBomb->m_Status = BOMB_CARRYING;
 	}
+	*/
+	
+	
 }
 
 
@@ -693,12 +910,14 @@ void CGameControllerCSBB::AutoBalance()
 		if(!pPlayer)
 			continue;
 
+		/*
 		CCharacter *pCharacter = pPlayer->GetCharacter();
 		if (!pCharacter)
 			continue;
 			
 		if (!pCharacter->IsAlive())
 			continue;
+		*/
 		
 		if (pPlayer->GetTeam() == TEAM_RED)
 		{
@@ -728,7 +947,7 @@ void CGameControllerCSBB::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 4 && (Blue+BlueBots) < 4)
+	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
@@ -745,7 +964,7 @@ void CGameControllerCSBB::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 5 && (Blue+BlueBots) > 5)
+	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{
@@ -779,22 +998,53 @@ void CGameControllerCSBB::Tick()
 	}
 	else
 	{
+		if (CountPlayers() == 1)
+		{
+			Restart();
+			AutoBalance();
+			return;
+		}
+		
 		if (m_GameState == CSBB_NEWBASE)
 		{
-			AutoBalance();
+			CaptureBase();
 			
-			
+			if (GameServer()->m_pArrow)
+			{
+				GameServer()->m_pArrow->m_Hide = false;
+				GameServer()->m_pArrow->m_Target = m_apBombArea[m_Base]->m_Pos;
+			}
 		}
 		if (m_GameState == CSBB_DEFENDING)
 		{
-			AutoBalance();
+
+			if (GameServer()->m_pArrow)
+			{
+				GameServer()->m_pArrow->m_Hide = false;
+				GameServer()->m_pArrow->m_Target = m_apBombArea[m_Base]->m_Pos;
+			}
 			
-			
+			RoundWinLose();
 		}
 		if (m_GameState == CSBB_ENDING)
 		{
-			
-			
+			if (m_RoundTick >= g_Config.m_SvPreroundTime*Server()->TickSpeed())
+			{
+				/*
+				if (m_Round >= g_Config.m_SvNumRounds)
+				{
+					EndRound();
+					m_NewGame = true;
+					return;
+				}
+				*/
+				
+				NewBase();
+				//AutoBalance();
+				
+				if (GameServer()->m_pArrow)
+					GameServer()->m_pArrow->m_Hide = true;
+			}
 		}
 	}
 	
@@ -816,7 +1066,7 @@ void CGameControllerCSBB::Tick()
 		
 		if (!pPlayer->m_Welcomed && !pPlayer->m_IsBot)
 		{
-			GameServer()->SendBroadcast("Welcome to Counter-Strike: Base Bombing", pPlayer->GetCID());
+			GameServer()->SendBroadcast("Welcome to Counter-Strike: Base Bombing", pPlayer->GetCID(), true);
 			pPlayer->m_Welcomed = true;
 		}
 	}
@@ -832,6 +1082,7 @@ void CGameControllerCSBB::Tick()
 	
 	
 	
+	/*
 	// always update bomb position
 	if(B->m_pCarryingCharacter)
 	{
@@ -846,6 +1097,7 @@ void CGameControllerCSBB::Tick()
 			B->m_Status = BOMB_IDLE;
 		}
 	}
+	*/
 	
 	
 	if (m_Timeout || m_BombDefused || m_GameState != CSBB_DEFENDING)
@@ -879,7 +1131,7 @@ void CGameControllerCSBB::Tick()
 			if (!pCharacter)
 				continue;
 		
-			if(!pCharacter->IsAlive() || pCharacter->GetPlayer()->GetTeam() != m_HoldingTeam)
+			if(!pCharacter->IsAlive() || pCharacter->GetPlayer()->GetTeam() != m_DefendingTeam)
 				continue;
 			
 			// check distance
@@ -920,7 +1172,10 @@ void CGameControllerCSBB::Tick()
 			{
 				B->m_Hide = true;
 				m_BombDefused = true;
-				GameServer()->SendBroadcast("Bomb defused!", -1);
+				if (m_DefendingTeam == TEAM_RED)
+					GameServer()->SendBroadcast("Bomb defused - Terrorists score!", -1, true);
+				if (m_DefendingTeam == TEAM_BLUE)
+					GameServer()->SendBroadcast("Bomb defused - Counter-terrorists score!", -1, true);
 				GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
 							
 				m_RoundTimeLimit = 0; // gamecontroller
@@ -934,99 +1189,92 @@ void CGameControllerCSBB::Tick()
 		
 		return;
 	}
-	
-
-	//
-	if(B->m_pCarryingCharacter && B->m_Status != BOMB_PLANTED)
+	else
 	{
-		bool BombPlantable = false;
-		
-		// check if carrying tee is planting the bomb
-		for (int i = 0; i < MAX_BOMBAREAS; i++)
+		for (int c = 0; c < MAX_CLIENTS; c++)
 		{
-			if (m_apBombArea[i])
+			bool BombPlantable = false;
+			CPlayer *pPlayer = GameServer()->m_apPlayers[c];
+			if(!pPlayer)
+				continue;
+			
+			if(pPlayer->GetTeam() == m_DefendingTeam)
+				continue;
+
+			CCharacter *pCharacter = pPlayer->GetCharacter();
+			if (!pCharacter)
+				continue;
+		
+			if(!pCharacter->IsAlive() || pPlayer->GetTeam() == m_DefendingTeam)
+				continue;
+				
+			if (m_Base > 0)
 			{
-				// check distance
-				if (abs(m_apBombArea[i]->m_Pos.x - B->m_Pos.x) < 200 && abs(m_apBombArea[i]->m_Pos.y - B->m_Pos.y) < 200 &&
-					B->m_pCarryingCharacter->IsGrounded())
+				if (m_apBombArea[m_Base] && !m_apBombArea[m_Base]->m_Hide)
 				{
-					BombPlantable = true;
 					
-					if (B->m_Status == BOMB_CARRYING)
+					// check distance
+					if (abs(m_apBombArea[m_Base]->m_Pos.x - pCharacter->m_Pos.x) < 200 && abs(m_apBombArea[m_Base]->m_Pos.y - pCharacter->m_Pos.y) < 200 &&
+						pCharacter->IsGrounded())
 					{
-						B->m_Status = BOMB_PLANTING;
-						B->m_Timer = 0;
+						BombPlantable = true;
+						//GameServer()->SendBroadcast("Inside range", pPlayer->GetCID());
 						
-						GameServer()->SendBroadcast("Planting bomb", B->m_pCarryingCharacter->GetPlayer()->GetCID());
-						//GameServer()->CreateSoundGlobal(SOUND_CTF_DROP, B->m_pCarryingCharacter->GetPlayer()->GetCID());
-					}
-					else if (B->m_Status == BOMB_PLANTING)
-					{
-						// bomb planting sound
-						if (++m_BombActionTimer >= Server()->TickSpeed()/4)
+						if (pCharacter->m_BombStatus != BOMB_PLANTING)
 						{
-							m_BombActionTimer = 0;
-							GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
+							pCharacter->m_BombStatus = BOMB_PLANTING;
+							m_aPlanting[c] = 0;
+							
+							GameServer()->SendBroadcast("Planting bomb", pPlayer->GetCID());
 						}
-						
-						B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 6;
-						
-						if (++B->m_Timer >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
+						else if (pCharacter->m_BombStatus == BOMB_PLANTING)
 						{
-							B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 120;
+							// bomb planting sound
+							if (++m_aBombActionTimer[c] >= Server()->TickSpeed()/4)
+							{
+								m_aBombActionTimer[c] = 0;
+								GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
+							}
 							
-							B->m_pCarryingCharacter = NULL;
-							B->m_Status = BOMB_PLANTED;
-							B->m_Timer = 0;
-							GameServer()->SendBroadcast("Bomb planted!", -1);
-							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
+							pPlayer->m_InterestPoints += 6;
 							
-							m_RoundTimeLimit = g_Config.m_SvBombTime; // gamecontroller
-							m_ResetTime = true; // gamecontroller
-							
-							return;
+							if (++m_aPlanting[c] >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
+							{
+								pPlayer->m_InterestPoints += 120;
+								
+								B->m_pCarryingCharacter = NULL;
+								B->m_Status = BOMB_PLANTED;
+								pCharacter->m_BombStatus = BOMB_PLANTED;
+								m_aPlanting[c] = 0;
+								B->m_Timer = 0;
+								GameServer()->SendBroadcast("Bomb planted!", -1, true);
+								GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
+								
+								B->m_Hide = false;
+								B->m_Pos = pCharacter->m_Pos;
+								B->m_Owner = c;
+								
+								m_RoundTimeLimit = g_Config.m_SvBombTime; // gamecontroller
+								m_ResetTime = true; // gamecontroller
+								
+								return;
+							}
 						}
 					}
 				}
 			}
-		}
-		
-		if (!BombPlantable && B->m_Status == BOMB_PLANTING)
-		{
-			B->m_Status = BOMB_CARRYING;
-			B->m_Timer = 0;
-			GameServer()->SendBroadcast("", B->m_pCarryingCharacter->GetPlayer()->GetCID());
+			
+			if (!BombPlantable)
+			{
+				pCharacter->m_BombStatus = BOMB_CARRYING;
+				if (m_aPlanting[c] > 0)
+					GameServer()->SendBroadcast("", c);
+				
+				m_aPlanting[c] = 0;
+			}
 		}
 	}
-	else if (B->m_Status == BOMB_IDLE)
-	{
-		// pick up the bomb!
-		CCharacter *apCloseCCharacters[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(B->m_Pos, CFlag::ms_PhysSize * 1.3f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
-		
-		for(int i = 0; i < Num; i++)
-		{
-			if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == m_HoldingTeam || GameServer()->Collision()->IntersectLine(B->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
-				continue;
 
-			B->m_pCarryingCharacter = apCloseCCharacters[i];
-			B->m_Status = BOMB_CARRYING;
-			B->m_Owner = apCloseCCharacters[i]->GetPlayer()->GetCID();
-			B->m_pCarryingCharacter->GetPlayer()->m_Score += 1;
-			
-			
-			B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 120;
-
-			// console printing
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "bomb_grab player='%d:%s'",
-				B->m_pCarryingCharacter->GetPlayer()->GetCID(),
-				Server()->ClientName(B->m_pCarryingCharacter->GetPlayer()->GetCID()));
-			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-		}
-		
-		
-	}	
 
 	// don't add anything relevant here! possible return; above!
 }

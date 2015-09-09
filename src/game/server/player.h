@@ -33,7 +33,7 @@ class CPlayer
 public:
 	CPlayer(CGameContext *pGameServer, int ClientID, int Team);
 	~CPlayer();
-
+	
 	void Init(int CID);
 
 	void NewRound();
@@ -70,6 +70,8 @@ public:
 	int m_SpectatorID;
 
 	bool m_IsReady;
+	
+	bool m_BroadcastingCaptureStatus;
 
 	//
 	int m_Vote;
@@ -167,6 +169,7 @@ public:
 	
 	
 	
+	
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
@@ -174,6 +177,7 @@ private:
 	CGameContext *GameServer() const { return m_pGameServer; }
 	IServer *Server() const;
 
+	//
 	void ForceToSpectators();
 	
 	//

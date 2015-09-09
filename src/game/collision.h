@@ -23,7 +23,7 @@ class CCollision
 	
 	int m_CheckOrder[4];
 	
-	bool CheckPath(int x, int y);
+	bool CheckPath(int x, int y, int Direction, int Distance = 0); // -1, 0, 1
 	
 public:
 	enum
@@ -36,7 +36,7 @@ public:
 	vec2 m_VisionPos;
 	bool m_GotVision;
 	
-	bool FindPath(vec2 Start, vec2 End);
+	bool FindPath(vec2 Start, vec2 End, int Direction = 0); // -1, 0, 1
 	
 	CCollision();
 	void Init(class CLayers *pLayers);

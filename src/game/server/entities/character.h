@@ -73,6 +73,7 @@ public:
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
 	bool Hooking();
+	int HookedPlayer();
 	
 	bool m_IsBot;
 	int m_HiddenHealth;
@@ -85,6 +86,7 @@ public:
 	
 	int m_DeathTileTimer;
 	
+	int m_BombStatus;
 	
 	
 	// custom weapon system

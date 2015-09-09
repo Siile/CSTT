@@ -56,7 +56,7 @@ void CCollision::Init(class CLayers *pLayers)
 
 
 
-bool CCollision::FindPath(vec2 Start, vec2 End)
+bool CCollision::FindPath(vec2 Start, vec2 End, int Direction)
 {
 	ClearPath();
 	
@@ -66,7 +66,7 @@ bool CCollision::FindPath(vec2 Start, vec2 End)
 	m_TargetX = clamp(int(End.x)/32, 0, m_Width-1);
 	m_TargetY = clamp(int(End.y)/32, 0, m_Height-1);
 	
-	return CheckPath(m_StartX, m_StartY);
+	return CheckPath(m_StartX, m_StartY, Direction);
 }
 
 
@@ -79,7 +79,7 @@ enum Directions
 };
 
 
-bool CCollision::CheckPath(int x, int y)
+bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 {
 	if (x < 1 || y < 1 || x > m_Width-2 || y > m_Height-2)
 		return false;
@@ -94,6 +94,9 @@ bool CCollision::CheckPath(int x, int y)
 	
 	if (abs(x - m_TargetX) < 2 && abs(y - m_TargetY) < 2)
 		return true;
+	
+	if (Distance > 10)
+		Direction = 0;
 	
 	if (abs(m_TargetX - x) < abs(m_TargetY - y))
 	{
@@ -119,7 +122,7 @@ bool CCollision::CheckPath(int x, int y)
 		{
 			m_CheckOrder[0] = DOWN;
 			
-			if (m_TargetX < x)
+			if ((m_TargetX < x && Direction != 1) || Direction == -1)
 			{
 				m_CheckOrder[1] = LEFT;
 				m_CheckOrder[2] = RIGHT;
@@ -136,7 +139,7 @@ bool CCollision::CheckPath(int x, int y)
 	else
 	{
 		// go left or right first
-		if (m_TargetX < x)
+		if ((m_TargetX < x && Direction != 1) || Direction == -1)
 		{
 			m_CheckOrder[0] = LEFT;
 			
@@ -182,7 +185,7 @@ bool CCollision::CheckPath(int x, int y)
 		if (m_CheckOrder[i] == LEFT){ AddX = -1; AddY = 0; }
 		if (m_CheckOrder[i] == RIGHT){ AddX = 1; AddY = 0; }
 		
-		if (CheckPath(x+AddX, y+AddY))
+		if (CheckPath(x+AddX, y+AddY, Distance+1))
 		{
 			if (!m_GotVision && !FastIntersectLine(vec2(m_StartX*32+16, m_StartY*32+16), vec2(x*32+16, y*32+16)))
 			{

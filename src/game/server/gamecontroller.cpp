@@ -417,6 +417,13 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr, bool RequestAI)
 	pChr->GiveCustomWeapon(GUN_PISTOL);
 }
 
+
+// CSTT & CSBB
+int IGameController::GetDefendingTeam()
+{
+	return -1;
+}
+
 CBomb *IGameController::GetBomb()
 {
 	return NULL;

@@ -18,6 +18,8 @@
 #include "gamemodes/csbb.h"
 #include "gamemodes/mod.h"
 
+#include <game/server/entities/arrow.h>
+
 #include <game/server/ai_protocol.h>
 #include <game/server/ai.h>
 
@@ -35,6 +37,8 @@ void CGameContext::Construct(int Resetting)
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_apPlayers[i] = 0;
 
+	m_BroadcastLockTick = 0;
+	
 	m_pController = 0;
 	m_VoteCloseTime = 0;
 	m_pVoteOptionFirst = 0;
@@ -128,6 +132,16 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 }
 
 
+void CGameContext::GenerateArrows()
+{
+	m_pArrow = new CArrow(&m_World);
+}
+
+
+
+
+
+
 void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool Superdamage)
 {
 	// create the event
@@ -159,7 +173,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 				Dmg *= 5;
 			
 			if((int)Dmg)
-				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
+				apEnts[i]->TakeDamage(ForceDir*Dmg, (int)Dmg, Owner, Weapon);
 		}
 	}
 }
@@ -311,11 +325,13 @@ void CGameContext::SendWeaponPickup(int ClientID, int Weapon)
 }
 
 
-void CGameContext::SendBroadcast(const char *pText, int ClientID)
+void CGameContext::SendBroadcast(const char *pText, int ClientID, bool Lock)
 {
 	CNetMsg_Sv_Broadcast Msg;
 	Msg.m_pMessage = pText;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+	if (Lock)
+		m_BroadcastLockTick = Server()->Tick() + g_Config.m_SvBroadcastLock*Server()->TickSpeed();
 }
 
 //
@@ -884,7 +900,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 1.0");
+				SendChatTarget(ClientID, "Counter-Strike: Tee Time 1.1");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -1240,8 +1256,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			*/
 			
 			pPlayer->m_LastSetTeam = Server()->Tick();
-			pPlayer->SetTeam(TEAM_SPECTATORS, pMsg->m_Team == TEAM_SPECTATORS);
-			pPlayer->SetWantedTeam(pMsg->m_Team);
+			if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
+			{
+				pPlayer->SetTeam(TEAM_SPECTATORS, pMsg->m_Team == TEAM_SPECTATORS);
+				pPlayer->SetWantedTeam(pMsg->m_Team);
+			}
+			else
+			{
+				pPlayer->SetTeam(pMsg->m_Team, true);
+				pPlayer->SetWantedTeam(pMsg->m_Team);
+			}
 			
 			
 			/*
@@ -2042,6 +2066,9 @@ void CGameContext::ResetVotes()
 
 void CGameContext::ClearShopVotes(int ClientID)
 {
+	if (str_comp(g_Config.m_SvGametype, "csbb") == 0)
+		return;
+	
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, ClientID);
 	
@@ -2109,7 +2136,7 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 			{
 				char aBuf[256];
 				
-				if (m_apPlayers[i]->m_CanShop)
+				if (m_apPlayers[i]->m_CanShop || str_comp(g_Config.m_SvGametype, "csbb") == 0)
 					str_format(aBuf, sizeof(aBuf), "Money: %d ", m_apPlayers[i]->m_Money);
 				else
 					str_format(aBuf, sizeof(aBuf), "Can't shop right now");
@@ -2132,7 +2159,7 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
-				if (!m_apPlayers[i]->m_CanShop)
+				if (!m_apPlayers[i]->m_CanShop && str_comp(g_Config.m_SvGametype, "cstt") == 0)
 					continue;
 				
 				if (m_apPlayers[i]->BuyableWeapon(WeaponIndex))
@@ -2153,7 +2180,7 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
-				if (!m_apPlayers[i]->m_CanShop)
+				if (!m_apPlayers[i]->m_CanShop && str_comp(g_Config.m_SvGametype, "cstt") == 0)
 					continue;
 				
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);

@@ -21,7 +21,6 @@ class IGameController
 protected:
 	// CSTT & CSBB
 	int m_Round;
-	int m_MaxRounds;
 
 	int m_GameState;
 	
@@ -75,6 +74,8 @@ public:
 	int GetRoundStatus(){ return m_GameState; }
 	int GetRound(){ return m_Round; }
 
+	virtual int GetDefendingTeam();
+	
 	
 	//
 	const char *m_pGameType;

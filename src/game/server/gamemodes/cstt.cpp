@@ -6,14 +6,13 @@
 #include <game/server/entities/bomb.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/pickup.h>
-#include <game/server/entities/staticlaser.h>
 #include <game/server/entities/superexplosion.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
 #include "cstt.h"
 
 #include <game/server/ai.h>
-#include <game/server/ai/basicbot.h>
+#include <game/server/ai/cstt_ai.h>
 
 
 enum WinStatus
@@ -51,7 +50,6 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 	m_BombSoundTimer = 0;
 	m_BombActionTimer = 0;
 	
-	m_MaxRounds = g_Config.m_SvNumRounds;
 	Restart();
 	
 	m_BroadcastTimer = 0;
@@ -211,7 +209,7 @@ void CGameControllerCSTT::OnCharacterSpawn(CCharacter *pChr, bool RequestAI)
 	
 	// init AI
 	if (RequestAI)
-		pChr->GetPlayer()->m_pAI = new CAIBasicbot(GameServer(), pChr->GetPlayer());
+		pChr->GetPlayer()->m_pAI = new CAIcstt(GameServer(), pChr->GetPlayer());
 }
 
 
@@ -483,21 +481,21 @@ void CGameControllerCSTT::RoundWinLose()
 
 	if (win == TERRORISTS_WIN)
 	{
-		GameServer()->SendBroadcast("Terrorists win", -1);
+		GameServer()->SendBroadcast("Terrorists win", -1, true);
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_RED]++;
 		RoundRewards(TEAM_RED);
 	}
 	else if (win == COUNTERTERRORISTS_WIN)
 	{
-		GameServer()->SendBroadcast("Counter-terrorists win", -1);
+		GameServer()->SendBroadcast("Counter-terrorists win", -1, true);
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_BLUE]++;
 		RoundRewards(TEAM_BLUE);
 	}
 	else // draw
 	{
-		GameServer()->SendBroadcast("Nobody wins", -1);
+		GameServer()->SendBroadcast("Nobody wins", -1, true);
 		GameServer()->CreateSoundGlobal(SOUND_TEE_CRY, -1);
 		RoundRewards(-1);
 	}
@@ -537,6 +535,7 @@ void CGameControllerCSTT::Restart()
 	
 		pPlayer->m_CanShop = false;
 		pPlayer->NewRound();
+		pPlayer->DisableShopping();
 	}
 	
 	GameServer()->m_FreezeCharacters = false;
@@ -631,7 +630,7 @@ void CGameControllerCSTT::StartCountdown()
 		pPlayer->m_CanShop = true;
 	}
 	
-	GameServer()->SendBroadcast("Prepare for battle (shop using vote menu)", -1);
+	GameServer()->SendBroadcast("Prepare for battle (shop using vote menu)", -1, true);
 	GameServer()->ResetVotes();
 }
 
@@ -812,9 +811,9 @@ void CGameControllerCSTT::Tick()
 			//if (m_RoundTick == 60)
 			//	GameServer()->SendBroadcast("First round starting in 3...", -1);
 			if (m_RoundTick == 120)
-				GameServer()->SendBroadcast("First round starting in 2...", -1);
+				GameServer()->SendBroadcast("First round starting in 2...", -1, true);
 			if (m_RoundTick == 180)
-				GameServer()->SendBroadcast("First round starting in 1...", -1);
+				GameServer()->SendBroadcast("First round starting in 1...", -1, true);
 			if (m_RoundTick == 240)
 				StartCountdown();
 		}
@@ -824,8 +823,8 @@ void CGameControllerCSTT::Tick()
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-2)*Server()->TickSpeed())
 			{				
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "Round %d / %d", m_Round, m_MaxRounds);
-				GameServer()->SendBroadcast(aBuf, -1);
+				str_format(aBuf, sizeof(aBuf), "Round %d / %d", m_Round, g_Config.m_SvNumRounds);
+				GameServer()->SendBroadcast(aBuf, -1, true);
 				
 				AutoBalance();
 				GiveBombToPlayer();
@@ -854,7 +853,7 @@ void CGameControllerCSTT::Tick()
 			// new round starting
 			if (m_RoundTick >= 300)
 			{
-				if (m_Round == m_MaxRounds)
+				if (m_Round >= g_Config.m_SvNumRounds)
 				{
 					EndTheShit();
 					return;
@@ -882,7 +881,7 @@ void CGameControllerCSTT::Tick()
 		
 		if (!pPlayer->m_Welcomed && !pPlayer->m_IsBot)
 		{
-			GameServer()->SendBroadcast("Welcome to Counter-Strike: Tee Time", pPlayer->GetCID());
+			GameServer()->SendBroadcast("Welcome to Counter-Strike: Tee Time", pPlayer->GetCID(), true);
 			pPlayer->m_Welcomed = true;
 		}
 	}
@@ -1014,7 +1013,7 @@ void CGameControllerCSTT::Tick()
 			{
 				B->m_Hide = true;
 				m_BombDefused = true;
-				GameServer()->SendBroadcast("Bomb defused!", -1);
+				GameServer()->SendBroadcast("Bomb defused!", -1, true);
 				GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
 							
 				m_RoundTimeLimit = 0; // gamecontroller
@@ -1072,7 +1071,7 @@ void CGameControllerCSTT::Tick()
 							B->m_pCarryingCharacter = NULL;
 							B->m_Status = BOMB_PLANTED;
 							B->m_Timer = 0;
-							GameServer()->SendBroadcast("Bomb planted!", -1);
+							GameServer()->SendBroadcast("Bomb planted!", -1, true);
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
 							
 							m_RoundTimeLimit = g_Config.m_SvBombTime; // gamecontroller

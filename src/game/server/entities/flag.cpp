@@ -38,7 +38,10 @@ void CFlag::TickPaused()
 void CFlag::Snap(int SnappingClient)
 {
 	// return if this is not the closest flag to the character
-	if (!m_ClosestFlagToCharacter[SnappingClient] && m_Team == TEAM_BLUE && m_UseSnapping)
+	if (!m_ClosestFlagToCharacter[SnappingClient] && m_UseSnapping)
+		return;
+	
+	if (m_Hide)
 		return;
 
 	if(NetworkClipped(SnappingClient))

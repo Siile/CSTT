@@ -1859,7 +1859,7 @@ void CServer::AddZombie(int ClientID)
 	str_format(aName, sizeof(aName), "%s%s", aName1, aName2);
 	
 	SetClientName(ClientID, aName);
-	SetClientClan(ClientID, "noob AI");
+	SetClientClan(ClientID, "ai");
 }
 
 

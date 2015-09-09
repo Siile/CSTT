@@ -13,10 +13,10 @@ public:
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
-	bool m_Hidden;
+	bool m_Hide;
+	vec2 m_From;
 
 private:
-	vec2 m_From;
 	int m_EvalTick;
 };
 

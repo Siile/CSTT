@@ -25,28 +25,39 @@ private:
 	
 	int m_Base;
 	
-	int m_HoldingTeam;
+	int m_DefendingTeam;
 	
 	
 	void Restart();
 	
 	void NewBase();
 	void CaptureBase();
+	void EndRound();
+	
+	bool m_SkipWinBroadcast;
+	
+	int m_RedCaptureTime;
+	int m_BlueCaptureTime;
 	
 	void RoundWinLose();
 	void RoundRewards(int WinningTeam);
 	
-	int CheckLose();
+	int CheckLose(bool Broadcast = false);
 	void AutoBalance();
+		
+	void HideBombAreas();
 		
 	bool m_NewGame;
 	
 	bool m_aDefusing[MAX_CLIENTS];
+	int m_aPlanting[MAX_CLIENTS];
+	int m_aBombActionTimer[MAX_CLIENTS];
+	
+	int m_BombActionTimer;
 	
 	int m_BroadcastTimer;
 	
 	int m_BombSoundTimer;
-	int m_BombActionTimer;
 	
 	
 	int CountPlayers();
@@ -91,6 +102,7 @@ public:
 	virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
 	void FlashPickups();
 	
+	int GetDefendingTeam(){ return m_DefendingTeam; }
 	
 	
 	virtual bool OnEntity(int Index, vec2 Pos);

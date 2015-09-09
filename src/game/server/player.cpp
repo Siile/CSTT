@@ -5,7 +5,6 @@
 #include <engine/shared/config.h>
 #include "player.h"
 
-#include <game/server/entities/staticlaser.h>
 #include <game/server/upgradelist.h>
 
 
@@ -34,6 +33,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	GameServer()->ClearShopVotes(ClientID);
 	
 	m_InterestPoints = 0;
+	m_BroadcastingCaptureStatus = false;
 	
 	m_EnableEmoticonGrenades = true;
 	m_EnableWeaponInfo = 2;
@@ -45,7 +45,10 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_WantedTeam = m_Team;
 	//m_Team = TEAM_SPECTATORS;
 	
-	m_ForceToSpectators = true;
+	if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
+		m_ForceToSpectators = true;
+	else
+		m_ForceToSpectators = false;
 	
 	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		m_aSavedWeapon[i] = false;
@@ -137,7 +140,6 @@ void CPlayer::Tick()
 	}
 	*/
 	
-	
 
 	
 	if(!GameServer()->m_World.m_Paused)
@@ -162,7 +164,7 @@ void CPlayer::Tick()
 			}
 		}
 		//else if(m_Spawning && m_RespawnTick <= Server()->Tick())
-		else if(m_Spawning)
+		else if(m_Spawning && (m_RespawnTick <= Server()->Tick() || str_comp(g_Config.m_SvGametype, "cstt") == 0))
 			TryRespawn();
 	}
 	else
@@ -424,7 +426,8 @@ void CPlayer::TryRespawn()
 	if(!GameServer()->m_pController->CanCharacterSpawn(GetCID()))
 		return;
 	
-	JoinTeam();
+	if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
+		JoinTeam();
 	
 	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
 		return;

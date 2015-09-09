@@ -68,6 +68,14 @@ bool CCharacter::Hooking()
 	return false;
 }
 
+int CCharacter::HookedPlayer()
+{
+	if (m_Core.m_HookState == HOOK_GRABBED && m_Core.m_HookedPlayer >= 0)
+		return m_Core.m_HookedPlayer;
+		
+	return -1;
+}
+
 void CCharacter::Reset()
 {
 	Destroy();
@@ -76,6 +84,8 @@ void CCharacter::Reset()
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
 	m_Grenades = 2;
+	
+	int m_BombStatus = -1;
 	
 	m_CryTimer = 0;
 	m_CryState = 0;
@@ -199,7 +209,7 @@ void CCharacter::AddGrenades(int Num)
 void CCharacter::ThrowGrenade(float Angle)
 {
 	// check for proper gamestate
-	if (GameServer()->m_pController->GetRoundStatus() < GAMESTATE_ROUND || !IsAlive())
+	if (GameServer()->m_pController->GetRoundStatus() < GAMESTATE_ROUND || !IsAlive() || str_comp(g_Config.m_SvGametype, "csbb") == 0)
 		return;
 	
 	// check for grenades left
@@ -308,7 +318,7 @@ void CCharacter::SetCustomWeapon(int CustomWeapon)
 		GameServer()->SendChatTarget(GetPlayer()->GetCID(), aBuf);
 	}
 	
-	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo == 2 && GameServer()->m_pController->GetRoundStatus() == GAMESTATE_ROUND)
+	if (!m_IsBot && GetPlayer()->m_EnableWeaponInfo == 2 && GameServer()->m_BroadcastLockTick < Server()->Tick())
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "Using: %s", aCustomWeapon[CustomWeapon].m_Name);
@@ -320,10 +330,19 @@ void CCharacter::SetCustomWeapon(int CustomWeapon)
 	
 bool CCharacter::IsGrounded()
 {
+	/*
 	if(GameServer()->Collision()->CheckPoint(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
 	if(GameServer()->Collision()->CheckPoint(m_Pos.x-m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
+	*/
+	
+	int c1 = GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5);
+	int c2 = GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5);
+	
+	if (c1&CCollision::COLFLAG_SOLID || c1&CCollision::COLFLAG_NOHOOK || c2&CCollision::COLFLAG_SOLID || c2&CCollision::COLFLAG_NOHOOK)
+		return true;
+	
 	return false;
 }
 

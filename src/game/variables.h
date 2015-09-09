@@ -64,7 +64,7 @@ MACRO_CONFIG_INT(SvKillMoney, sv_killmoney, 20, 0, 1000, CFGFLAG_SERVER, "Kill m
 MACRO_CONFIG_INT(SvWinMoney, sv_winmoney, 100, 0, 1000, CFGFLAG_SERVER, "Win money")
 MACRO_CONFIG_INT(SvLoseMoney, sv_losemoney, 50, 0, 1000, CFGFLAG_SERVER, "Lose money")
 
-MACRO_CONFIG_INT(SvRoundTime, sv_roundtime, 90, 0, 1000, CFGFLAG_SERVER, "Round time limit (seconds)")
+MACRO_CONFIG_INT(SvRoundTime, sv_roundtime, 60, 0, 1000, CFGFLAG_SERVER, "Round time limit (seconds)")
 MACRO_CONFIG_INT(SvPreroundTime, sv_preroundtime, 5, 2, 20, CFGFLAG_SERVER, "Pre-round time (seconds)")
 
 MACRO_CONFIG_INT(SvBombTime, sv_bombtime, 20, 10, 120, CFGFLAG_SERVER, "Bomb time (seconds)")
@@ -75,9 +75,13 @@ MACRO_CONFIG_INT(SvSpectatorUpdateTime, sv_spectatorupdatetime, 2, 1, 20, CFGFLA
 
 MACRO_CONFIG_INT(SvWeaponDrops, sv_weapondrops, 1, 0, 1, CFGFLAG_SERVER, "Enable weapon drops")
 
-// CS:BB
-MACRO_CONFIG_INT(SvBaseCaptureDistance, sv_basecapturedistance, 1000, 100, 2000, CFGFLAG_SERVER, "Base capture distance")
+MACRO_CONFIG_INT(SvBroadcastLock, sv_broadcastlock, 3, 0, 5, CFGFLAG_SERVER, "Broadcast lock time (seconds)")
 
+// CS:BB
+MACRO_CONFIG_INT(SvBaseCaptureDistance, sv_basecapturedistance, 200, 50, 2000, CFGFLAG_SERVER, "Base capture distance")
+MACRO_CONFIG_INT(SvBaseCaptureTime, sv_basecapturetime, 3, 1, 60, CFGFLAG_SERVER, "Base capture time (seconds)")
+
+MACRO_CONFIG_INT(SvRespawnDelayCSBB, sv_respawn_delay_csbb, 3, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in csbb gametype")
 
 
 

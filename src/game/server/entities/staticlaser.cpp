@@ -10,7 +10,7 @@ CStaticlaser::CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To)
 	m_From = From;
 	m_Pos = To;
 	m_EvalTick = 0;
-	m_Hidden = false;
+	m_Hide = true;
 	
 	GameWorld()->InsertEntity(this);
 }
@@ -20,7 +20,7 @@ CStaticlaser::CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To)
 
 void CStaticlaser::Reset()
 {
-	//GameServer()->m_World.DestroyEntity(this);
+	GameServer()->m_World.DestroyEntity(this);
 }
 
 
@@ -28,7 +28,7 @@ void CStaticlaser::Tick()
 {
 	//if(Server()->Tick() > m_EvalTick+(Server()->TickSpeed()*GameServer()->Tuning()->m_LaserBounceDelay)/1000.0f)
 	
-	if (!m_Hidden)
+	if (!m_Hide)
 		m_EvalTick = Server()->Tick();
 }
 
@@ -43,8 +43,7 @@ void CStaticlaser::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 	
-	//if (m_Hidden)
-	if(Server()->Tick() > m_EvalTick+(Server()->TickSpeed()*GameServer()->Tuning()->m_LaserBounceDelay)/1000.0f)
+	if (m_Hide)
 		return;
 
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_ID, sizeof(CNetObj_Laser)));
