@@ -330,15 +330,14 @@ void CCharacter::SetCustomWeapon(int CustomWeapon)
 	
 bool CCharacter::IsGrounded()
 {
-	/*
+	
 	if(GameServer()->Collision()->CheckPoint(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
 	if(GameServer()->Collision()->CheckPoint(m_Pos.x-m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
-	*/
 	
 	int c1 = GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5);
-	int c2 = GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5);
+	int c2 = GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5);
 	
 	if (c1&CCollision::COLFLAG_SOLID || c1&CCollision::COLFLAG_NOHOOK || c2&CCollision::COLFLAG_SOLID || c2&CCollision::COLFLAG_NOHOOK)
 		return true;
