@@ -107,9 +107,12 @@ void CAIcstt::DoBehavior()
 		if (frandom()*20 < 3)
 			m_Jump = 1;
 		
-		ShootAtClosestEnemy();
-
-		//MoveTowardsTarget(100);
+		if (m_AttackTimer++ > 1)
+			ShootAtClosestEnemy();
+	}
+	else
+	{
+		m_AttackTimer = 0;
 	}
 
 	
@@ -178,8 +181,10 @@ void CAIcstt::DoBehavior()
 		
 		
 	// update waypoint
-	if (m_TargetTimer <= 0)
+	if (distance(m_TargetPos, m_Pos) < 200 || m_TargetTimer++ > 7)// || frandom()*10 < 2)
 	{
+		m_TargetTimer = 0;
+		
 		if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos, m_Move))
 		{
 			if (GameServer()->Collision()->m_GotVision)
@@ -192,10 +197,7 @@ void CAIcstt::DoBehavior()
 		
 		if (GameServer()->m_ShowWaypoints)
 			GameServer()->CreatePlayerSpawn(m_WaypointPos);
-		m_TargetTimer = 0;
 	}
-	else
-		m_TargetTimer--;
 				
 
 	MoveTowardsWaypoint(40);
@@ -211,55 +213,52 @@ void CAIcstt::DoBehavior()
 	// hook moving
 	if (m_LastHook == 0)
 	{
-		
-			//float Angle = atan2(Player()->GetCharacter()->GetVel().x, Player()->GetCharacter()->GetVel().y);
-			float Angle = atan2(m_WaypointDir.x, m_WaypointDir.y);
+		vec2 HookDir = m_WaypointPos - m_Pos;
+		float Angle = atan2(HookDir.x, HookDir.y);
 			
-			//if (frandom()*10 < 4)
-			//	Angle = 180*RAD;
-			
-			float MaxDist = 0;
-			vec2 FinalHookPos = vec2(0, 0);
+		float MaxDist = 0;
+		vec2 FinalHookPos = vec2(0, 0);
 		
-			for (int i = -3; i < 4; i++)
-			{
-				float a = Angle + i*0.025f;
+		for (int i = -3; i < 4; i++)
+		{
+			float a = Angle + i*0.025f;
+			
+			if (a < 60*RAD || a > 300*RAD)
+				continue;
 				
-				//if (a < 90*RAD || a > 270*RAD)
-				//	continue;
-				
-				vec2 HookPos = m_Pos + vec2(sin(a)*380, cos(a)*380);
+			vec2 HookPos = m_Pos + vec2(sin(a)*380, cos(a)*380);
 
-				// hook if something in sight
-				if (GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL) && m_LastHook == 0)
+			// hook if something in sight
+			int C = GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL);
+			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
+			{
+				float Dist = distance(m_Pos, HookPos);
+				if (Dist > 70 && Dist > MaxDist)
 				{
-					float Dist = distance(m_Pos, HookPos);
-					if (Dist > 100 && Dist > MaxDist)
-					{
-						MaxDist = Dist;
-						FinalHookPos = HookPos;
-					}
+					MaxDist = Dist;
+					FinalHookPos = HookPos;
 				}
 			}
-			
-			if (MaxDist > 0)
-			{
-				m_Hook = 1;
-				m_Direction = FinalHookPos - m_Pos;
-				
-				if (Player()->GetCharacter()->IsGrounded())
-					m_Jump = 1;
-			}
-			else
-				m_Hook = 0;
 		}
-		
-		// air jump
-		if (Player()->GetCharacter()->GetVel().y > 0 && m_TargetPos.y + 40 < m_Pos.y )
+			
+		if (MaxDist > 0)
 		{
-			if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
+			m_Hook = 1;
+			m_Direction = FinalHookPos - m_Pos;
+				
+			if (Player()->GetCharacter()->IsGrounded())
 				m_Jump = 1;
 		}
+		else
+			m_Hook = 0;
+	}
+		
+	// air jump
+	if (Player()->GetCharacter()->GetVel().y > 0 && m_TargetPos.y + 80 < m_Pos.y )
+	{
+		if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
+			m_Jump = 1;
+	}
 
 	Unstuck();
 	
@@ -313,10 +312,10 @@ void CAIcstt::DoBehavior()
 	if (frandom()*10 < 3)
 		m_Attack = 0;
 		
-	if (LockMove != 0)
-		m_Move = LockMove;
+	//if (LockMove != 0)
+	//	m_Move = LockMove;
 	
 	// next reaction in
-	m_ReactionTime = 4 + frandom()*16;
+	m_ReactionTime = 4 + frandom()*12;
 	
 }

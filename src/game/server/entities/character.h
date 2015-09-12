@@ -214,6 +214,8 @@ private:
 		int m_CurrentMoveTime;
 		int m_OldVelAmount;
 	} m_Ninja;
+	
+	bool m_SwordReady;
 
 	// the player core for the physics
 	CCharacterCore m_Core;

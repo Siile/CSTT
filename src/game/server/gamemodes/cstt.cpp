@@ -950,7 +950,13 @@ void CGameControllerCSTT::Tick()
 		B->m_Timer++;
 		
 		// bomb ticking sound
-		if (++m_BombSoundTimer >= Server()->TickSpeed())
+		int Time = Server()->TickSpeed();
+		
+		if (Server()->TickSpeed() / 30 + GetTimeLeft()*8 < Time)
+			Time = Server()->TickSpeed() / 20 + GetTimeLeft()*4;
+		
+		if (++m_BombSoundTimer >= Time)
+		//if (++m_BombSoundTimer >= Server()->TickSpeed() / ((GetTimeLeft() < 4) + 1))
 		{
 			m_BombSoundTimer = 0;
 			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);

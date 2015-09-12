@@ -150,15 +150,15 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_SWORD,
 		SOUND_HAMMER_FIRE,
 		-1, // require
-		70, // cost
-		17, // damage
+		75, // cost
+		20, // damage
 		0, // extra1
 		false, // autofire
 		1, // bullet spread
 		0, // clip size
 		0, // powerup size
 		0, // max ammo
-		0.75f, // bullet life - vanilla ninja life * bulletlife
+		0.85f, // bullet life - vanilla ninja life * bulletlife
 		550, // bullet reload time
 		0, // clip reload time
 		0.0f // knockback

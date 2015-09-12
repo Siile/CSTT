@@ -87,6 +87,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	
 	int m_BombStatus = -1;
 	
+	m_SwordReady = false;
+	
 	m_CryTimer = 0;
 	m_CryState = 0;
 	
@@ -639,6 +641,10 @@ void CCharacter::FireWeapon()
 		return;
 	
 	
+	// sword requires standing on ground before it can be reused
+	if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD && !m_SwordReady)
+		return;
+	
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	bool FullAuto = aCustomWeapon[m_ActiveCustomWeapon].m_FullAuto;
@@ -699,6 +705,8 @@ void CCharacter::FireWeapon()
 			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
 			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
+			
+			m_SwordReady = false;
 		} break;		
 		
 		case PROJTYPE_FLYHAMMER:
@@ -1264,6 +1272,9 @@ void CCharacter::Tick()
 	m_Core.m_Input = m_Input;
 	
 	m_Core.Tick(true);
+	
+	if (IsGrounded())
+		m_SwordReady = true;
 	
 	
 	if (abs(m_Pos.x - m_SpawnPos.x) > 500 || abs(m_Pos.y - m_SpawnPos.y) > 500)

@@ -68,6 +68,8 @@ protected:
 	int m_GameFlags;
 	int m_UnbalancedTick;
 	bool m_ForceBalanced;
+	
+	int m_TimeLimit;
 
 public:
 	// CSTT & CSBB
@@ -75,6 +77,9 @@ public:
 	int GetRound(){ return m_Round; }
 
 	virtual int GetDefendingTeam();
+	
+	
+	int GetTimeLeft();
 	
 	
 	//

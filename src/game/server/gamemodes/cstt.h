@@ -5,7 +5,7 @@
 
 #define MAX_BOMBAREAS 10
 #define MAX_PICKUPS 1024
-#define MAX_DROPPABLES 30
+#define MAX_DROPPABLES 50
 
 
 

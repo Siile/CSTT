@@ -15,6 +15,7 @@ class CAI
 	class CPlayer *m_pPlayer;
 	
 	int m_UnstuckCount;
+	vec2 m_StuckPos;
 	
 protected:
 	
@@ -54,6 +55,7 @@ protected:
 	vec2 m_WaypointPos;
 	
 	int m_TargetTimer;
+	int m_AttackTimer;
 	
 	bool MoveTowardsPlayer(int Dist = 0);
 	bool MoveTowardsTarget(int Dist = 0);

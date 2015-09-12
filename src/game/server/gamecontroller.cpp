@@ -567,6 +567,17 @@ bool IGameController::IsTeamplay() const
 	return m_GameFlags&GAMEFLAG_TEAMS;
 }
 
+int IGameController::GetTimeLeft()
+{
+	if (m_TimeLimit == 0)
+		return 0;
+	
+	int Time = m_TimeLimit*60 - (Server()->Tick() - m_RoundStartTick)/Server()->TickSpeed();
+	return Time;
+}
+
+
+
 void IGameController::Snap(int SnappingClient)
 {
 	CNetObj_GameInfo *pGameInfoObj = (CNetObj_GameInfo *)Server()->SnapNewItem(NETOBJTYPE_GAMEINFO, 0, sizeof(CNetObj_GameInfo));
@@ -600,6 +611,8 @@ void IGameController::Snap(int SnappingClient)
 		pGameInfoObj->m_TimeLimit = m_RoundTimeLimit/60+1;
 	else
 		pGameInfoObj->m_TimeLimit = 0;
+	
+	m_TimeLimit = pGameInfoObj->m_TimeLimit;
 			
 	pGameInfoObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap : 0;
 	pGameInfoObj->m_RoundCurrent = m_RoundCount+1;

@@ -35,6 +35,7 @@ void CAI::Reset()
 	m_UnstuckCount = 0;
 	
 	m_TargetTimer = 0;
+	m_AttackTimer = 0;
 	
 	m_PlayerPos = vec2(0, 0);
 	m_TargetPos = vec2(0, 0);
@@ -118,7 +119,7 @@ void CAI::HeadToMovingDirection()
 
 void CAI::Unstuck()
 {
-	if (abs(m_Pos.x - m_LastPos.x) < 20)
+	if (abs(m_Pos.x - m_StuckPos.x) < 10)
 	{
 		if (++m_UnstuckCount > 10)
 		{
@@ -132,7 +133,10 @@ void CAI::Unstuck()
 		}
 	}
 	else
+	{
 		m_UnstuckCount = 0;
+		m_StuckPos = m_Pos;
+	}
 }
 
 

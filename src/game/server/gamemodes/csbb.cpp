@@ -159,13 +159,15 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	
 	if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL) // g_Config.m_SvWeaponDrops == 1 && 
 	{
-		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), DropWeapon);
+		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
 		
-		if (frandom()*10 < 3)
-			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
-		else
-			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
-		
+		for (int i = 0; i < 2; i++)
+		{
+			if (frandom()*10 < 3)
+				DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+			else
+				DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+		}
 			
 	}
 	else
@@ -176,10 +178,13 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 		else
 			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel, 0);
 		
-		if (frandom()*10 < 3)
-			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
-		else
-			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*4.0-frandom()*4.0, frandom()*4.0-frandom()*4.0), 0);
+		for (int i = 0; i < 2; i++)
+		{
+			if (frandom()*10 < 3)
+				DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+			else
+				DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+		}
 	}
 
 	// drop flags
@@ -708,17 +713,15 @@ void CGameControllerCSBB::CaptureBase()
 		}
 	}
 	
+	
+	bool BaseCaptured = false;
+	
 	if (m_RedCaptureTime > g_Config.m_SvBaseCaptureTime*Server()->TickSpeed())
 	{
-		m_BlueCaptureTime = 0;
-		m_RedCaptureTime = 0;
+		GameServer()->SendBroadcast("Terrorists captured the base!", -1, true);
 		
+		BaseCaptured = true;
 		m_DefendingTeam = TEAM_RED;
-		m_GameState = CSBB_DEFENDING;
-		m_RoundTick = 0;
-		m_RoundTimeLimit = g_Config.m_SvRoundTime;
-		m_ResetTime = true;
-		
 		
 		for (int i = 0; i < MAX_BOMBAREAS; i++)
 		{
@@ -727,23 +730,13 @@ void CGameControllerCSBB::CaptureBase()
 		}
 		if (m_pBomb)
 			m_pBomb->m_Team = TEAM_BLUE;
-		
-		
-		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);	
-		GameServer()->SendBroadcast("Terrorists captured the base!", -1, true);
-		GiveBombToPlayer();
 	}
 	else if (m_BlueCaptureTime > g_Config.m_SvBaseCaptureTime*Server()->TickSpeed())
 	{
-		m_BlueCaptureTime = 0;
-		m_RedCaptureTime = 0;
+		GameServer()->SendBroadcast("Counter-terrorists captured the base!", -1, true);
 		
+		BaseCaptured = true;
 		m_DefendingTeam = TEAM_BLUE;
-		m_GameState = CSBB_DEFENDING;
-		m_RoundTick = 0;
-		m_RoundTimeLimit = g_Config.m_SvRoundTime;
-		m_ResetTime = true;
-		
 		
 		for (int i = 0; i < MAX_BOMBAREAS; i++)
 		{
@@ -752,10 +745,20 @@ void CGameControllerCSBB::CaptureBase()
 		}
 		if (m_pBomb)
 			m_pBomb->m_Team = TEAM_RED;
+	}
+	
+	
+	if (BaseCaptured)
+	{
+		m_BlueCaptureTime = 0;
+		m_RedCaptureTime = 0;
 		
+		m_GameState = CSBB_DEFENDING;
+		m_RoundTick = 0;
+		m_RoundTimeLimit = g_Config.m_SvRoundTime;
+		m_ResetTime = true;
 		
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);	
-		GameServer()->SendBroadcast("Counter-terrorists captured the base!", -1, true);
 		GiveBombToPlayer();
 	}
 }
@@ -849,41 +852,19 @@ void CGameControllerCSBB::GiveBombToPlayer()
 	m_pBomb->m_Owner = -1;
 	m_pBomb->m_pCarryingCharacter = NULL;
 	m_pBomb->m_Status = BOMB_CARRYING;
-		
-	/*
-	for (int c = 0; c < MAX_CLIENTS; c++)
-	{
-		int i = c + m_BombCarrierTurn;
-		
-		if (i >= MAX_CLIENTS)
-			i -= MAX_CLIENTS;
 	
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{	
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
 		if(!pPlayer)
-			continue;
-		
-		if(pPlayer->GetTeam() == m_DefendingTeam || pPlayer->GetTeam() == TEAM_SPECTATORS)
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
 		if (!pCharacter)
 			continue;
 		
-		BombCarrier = i;
-		break;
+		pCharacter->m_BombStatus = BOMB_CARRYING;
 	}
-		
-	m_BombCarrierTurn = BombCarrier+1;
-	
-	if (BombCarrier >= 0)
-	{
-		m_pBomb->m_Owner = BombCarrier;
-		m_pBomb->m_pCarryingCharacter = GameServer()->m_apPlayers[BombCarrier]->GetCharacter();
-		m_pBomb->m_Status = BOMB_CARRYING;
-	}
-	*/
-	
-	
 }
 
 
@@ -947,7 +928,7 @@ void CGameControllerCSBB::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
+	if ((Red+RedBots) < 4 && (Blue+BlueBots) < 4)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
@@ -964,7 +945,7 @@ void CGameControllerCSBB::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
+	if ((Red+RedBots) > 5 && (Blue+BlueBots) > 5)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{
@@ -1109,7 +1090,12 @@ void CGameControllerCSBB::Tick()
 		B->m_Timer++;
 		
 		// bomb ticking sound
-		if (++m_BombSoundTimer >= Server()->TickSpeed())
+		int Time = Server()->TickSpeed();
+		
+		if (Server()->TickSpeed() / 30 + GetTimeLeft()*8 < Time)
+			Time = Server()->TickSpeed() / 20 + GetTimeLeft()*4;
+		
+		if (++m_BombSoundTimer >= Time)
 		{
 			m_BombSoundTimer = 0;
 			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
@@ -1131,7 +1117,7 @@ void CGameControllerCSBB::Tick()
 			if (!pCharacter)
 				continue;
 		
-			if(!pCharacter->IsAlive() || pCharacter->GetPlayer()->GetTeam() != m_DefendingTeam)
+			if(!pCharacter->IsAlive() || pPlayer->GetTeam() != m_DefendingTeam)
 				continue;
 			
 			// check distance
@@ -1208,7 +1194,7 @@ void CGameControllerCSBB::Tick()
 			if(!pCharacter->IsAlive() || pPlayer->GetTeam() == m_DefendingTeam)
 				continue;
 				
-			if (m_Base > 0)
+			if (m_Base >= 0)
 			{
 				if (m_apBombArea[m_Base] && !m_apBombArea[m_Base]->m_Hide)
 				{

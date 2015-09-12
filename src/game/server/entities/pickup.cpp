@@ -106,7 +106,7 @@ void CPickup::Tick()
 		else
 			m_Vel.x *= 0.99f;
 		
-		GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(24.0f, 24.0f), 0);
+		GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(24.0f, 24.0f), 0.4f);
 	}
 	
 	

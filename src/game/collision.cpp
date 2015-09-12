@@ -95,7 +95,7 @@ bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 	if (abs(x - m_TargetX) < 2 && abs(y - m_TargetY) < 2)
 		return true;
 	
-	if (Distance > 10)
+	if (Distance > 30)
 		Direction = 0;
 	
 	if (abs(m_TargetX - x) < abs(m_TargetY - y))
@@ -193,6 +193,12 @@ bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 				m_VisionPos = vec2(x*32+16, y*32+16);
 			}
 			return true;
+		}
+		else
+		{
+			// stop forcing direction if there's something blocking our way
+			if ((m_CheckOrder[i] == LEFT && Direction < 0) || (m_CheckOrder[i] == RIGHT && Direction > 0))
+				Direction = 0;
 		}
 	}
 
