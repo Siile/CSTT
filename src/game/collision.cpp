@@ -12,6 +12,7 @@
 #include <game/layers.h>
 #include <game/collision.h>
 
+
 CCollision::CCollision()
 {
 	m_pTiles = 0;
@@ -92,11 +93,14 @@ bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 		
 	m_pChecked[y*m_Width+x] = true;
 	
-	if (abs(x - m_TargetX) < 2 && abs(y - m_TargetY) < 2)
+	if (abs(x - m_TargetX) < 3 && abs(y - m_TargetY) < 3)
 		return true;
 	
-	if (Distance > 20)
+	if (Distance > 10)
 		Direction = 0;
+
+	if (Distance < 99)
+		m_aPath[Distance] = vec2(x*32, y*32);
 	
 	if (abs(m_TargetX - x) < abs(m_TargetY - y))
 	{
@@ -185,7 +189,7 @@ bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 		if (m_CheckOrder[i] == LEFT){ AddX = -1; AddY = 0; }
 		if (m_CheckOrder[i] == RIGHT){ AddX = 1; AddY = 0; }
 		
-		if (CheckPath(x+AddX, y+AddY, Distance+1))
+		if (CheckPath(x+AddX, y+AddY, Direction, Distance+1))
 		{
 			if (!m_GotVision && !FastIntersectLine(vec2(m_StartX*32+16, m_StartY*32+16), vec2(x*32+16, y*32+16)))
 			{
@@ -232,7 +236,7 @@ bool CCollision::IsTileSolid(int x, int y)
 
 int CCollision::FastIntersectLine(vec2 Pos0, vec2 Pos1)
 {
-	float Distance = distance(Pos0, Pos1) / 8.0f;
+	float Distance = distance(Pos0, Pos1) / 4.0f;
 	int End(Distance+1);
 
 	for(int i = 0; i < End; i++)

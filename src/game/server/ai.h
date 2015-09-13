@@ -44,6 +44,8 @@ protected:
 	int m_Sleep;
 	int m_Stun;
 	
+	bool m_WayFound;
+	
 	// last spotted the enemy here
 	vec2 m_PlayerPos;
 	vec2 m_PlayerDirection;

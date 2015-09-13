@@ -36,6 +36,7 @@ void CAI::Reset()
 	m_UnstuckCount = 0;
 	
 	m_WayPointUpdateWait = 0;
+	m_WayFound = false;
 	
 	m_TargetTimer = 0;
 	m_AttackTimer = 0;
@@ -114,9 +115,10 @@ void CAI::AirJump()
 }
 
 
+
 void CAI::UpdateWaypoint()
 {
-	if (distance(m_WaypointPos, m_Pos) < 100 || m_TargetTimer > 50)// && m_WayPointUpdateWait > 10)
+	if (distance(m_WaypointPos, m_Pos) < 100 || m_TargetTimer > 30)// && m_WayPointUpdateWait > 10)
 	{
 		m_TargetTimer = 0;
 		
@@ -128,7 +130,21 @@ void CAI::UpdateWaypoint()
 				m_WaypointPos = GameServer()->Collision()->m_VisionPos;
 				m_WaypointDir = m_WaypointPos - m_Pos;
 				m_WayPointUpdateWait = 0;
+				m_WayFound = true;
+				
+				//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Max search distance: %d", GameServer()->Collision()->m_MaxDistance);
+				//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", aBuf);
 			}
+		}
+		else
+		{
+			m_WayFound = false;
+		}
+		
+		if (GameServer()->m_ShowWaypoints)
+		{
+			for (int i = 0; i < 98; i++)
+				new CStaticlaser(&GameServer()->m_World, GameServer()->Collision()->m_aPath[i]+vec2(16, 16), GameServer()->Collision()->m_aPath[i+1]+vec2(16, 16), 10);
 		}
 		
 		if (GameServer()->m_ShowWaypoints)
@@ -138,6 +154,8 @@ void CAI::UpdateWaypoint()
 	m_WayPointUpdateWait++;
 	m_TargetTimer++;
 }
+
+
 
 void CAI::HookMove()
 {
@@ -177,7 +195,7 @@ void CAI::HookMove()
 				continue;
 			
 			// dont hook upwards if going down
-			if (a > 70 && a < 290 && HookDir.y > 50)
+			if (a > 70 && a < 290 && HookDir.y > 10)
 				continue;
 			
 			// dont hook backwards

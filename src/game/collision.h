@@ -36,6 +36,9 @@ public:
 	vec2 m_VisionPos;
 	bool m_GotVision;
 	
+	// for testing
+	vec2 m_aPath[99];
+	
 	bool FindPath(vec2 Start, vec2 End, int Direction = 0); // -1, 0, 1
 	
 	CCollision();
