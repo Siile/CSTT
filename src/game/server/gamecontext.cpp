@@ -751,9 +751,9 @@ void CGameContext::AIUpdateInput(int ClientID, int *Data)
 
 
 // Server hooks
-void CGameContext::AddZombie(int ClientID)
+void CGameContext::AddZombie()
 {
-	Server()->AddZombie(ClientID);
+	Server()->AddZombie();
 }
 
 
@@ -900,7 +900,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 1.11");
+				SendChatTarget(ClientID, "Counter-Strike: Tee Time 1.12");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -2351,6 +2351,7 @@ void CGameContext::AddBot()
 {
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "engine", "Adding a bot...");
 
+	/*
 	// find first free slot
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -2360,4 +2361,6 @@ void CGameContext::AddBot()
 			return;
 		}
 	}
+	*/
+	Server()->AddZombie();
 }

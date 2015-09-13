@@ -170,7 +170,7 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
-	virtual void AddZombie(int ClientID);
+	virtual void AddZombie();
 	virtual bool AIInputUpdateNeeded(int ClientID);
 	virtual void AIUpdateInput(int ClientID, int *Data);
 

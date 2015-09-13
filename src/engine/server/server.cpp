@@ -1791,8 +1791,21 @@ int main(int argc, const char **argv) // ignore_convention
 }
 
 
-void CServer::AddZombie(int ClientID)
+void CServer::AddZombie()
 {
+	int ClientID = -1;
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if (m_aClients[i].m_State == CClient::STATE_EMPTY)
+		{
+			ClientID = i;
+			break;
+		}
+	}
+	
+	if (ClientID == -1)
+		return;
+	
 	m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 	GameServer()->OnClientConnected(ClientID, true);
 	//GameServer()->OnClientEnter(i);

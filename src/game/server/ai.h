@@ -53,9 +53,14 @@ protected:
 	
 	vec2 m_TargetPos;
 	vec2 m_WaypointPos;
+	vec2 m_WaypointDir;
+	
+	int m_WayPointUpdateWait;
 	
 	int m_TargetTimer;
 	int m_AttackTimer;
+	int m_HookTimer;
+	int m_HookReleaseTimer;
 	
 	bool MoveTowardsPlayer(int Dist = 0);
 	bool MoveTowardsTarget(int Dist = 0);
@@ -64,6 +69,10 @@ protected:
 	void Unstuck();
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
+	
+	void UpdateWaypoint();
+	void HookMove();
+	void AirJump();
 	
 	void ShootAtClosestEnemy();
 	int WeaponShootRange();

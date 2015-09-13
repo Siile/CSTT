@@ -242,7 +242,7 @@ public:
 	virtual void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
 	
-	virtual void AddZombie(int ClientID);
+	virtual void AddZombie();
 };
 
 #endif

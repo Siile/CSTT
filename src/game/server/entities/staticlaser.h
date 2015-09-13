@@ -6,18 +6,17 @@
 class CStaticlaser : public CEntity
 {
 public:
-	CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To);
+	CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To, int Life);
 
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
-	bool m_Hide;
 	vec2 m_From;
 
 private:
-	int m_EvalTick;
+	int m_Life;
 };
 
 #endif

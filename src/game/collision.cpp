@@ -95,7 +95,7 @@ bool CCollision::CheckPath(int x, int y, int Direction, int Distance)
 	if (abs(x - m_TargetX) < 2 && abs(y - m_TargetY) < 2)
 		return true;
 	
-	if (Distance > 30)
+	if (Distance > 20)
 		Direction = 0;
 	
 	if (abs(m_TargetX - x) < abs(m_TargetY - y))

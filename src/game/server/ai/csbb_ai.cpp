@@ -72,25 +72,8 @@ void CAIcsbb::DoBehavior()
 	
 	// using this later
 	CBomb *Bomb = GameServer()->m_pController->GetBomb();
-	
-	int LockMove = 0;
-	
-	// release hook if hooking an ally
-	if (Player()->GetCharacter()->HookedPlayer() >= 0 && m_Hook == 1)
-	{
-		CPlayer *pPlayer = GameServer()->m_apPlayers[Player()->GetCharacter()->HookedPlayer()];
-		if(pPlayer && pPlayer->GetTeam() == Player()->GetTeam())
-			m_Hook = 0;
-	}
-	
-	if (!Player()->GetCharacter()->Hooking())
-	{
-		if (m_Hook == 1)
-			m_Hook = 0;
-	}
-	else
-		LockMove = m_Move;
-	
+
+
 	HeadToMovingDirection();
 	SeekClosestEnemyInSight();
 	
@@ -100,30 +83,20 @@ void CAIcsbb::DoBehavior()
 		// angry face
 		if (m_PlayerSpotCount == 1)
 			Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 1200, 1200);
-
-		JumpIfPlayerIsAbove();
 		
-		if (frandom()*20 < 3)
+		if (frandom()*30 < 3)
 			m_Jump = 1;
 		
-		if (m_AttackTimer++ > 1)
+		if (m_AttackTimer++ > 4)
 			ShootAtClosestEnemy();
 	}
 	else
-	{
 		m_AttackTimer = 0;
-	}
 
-	
-	
-	// release hook at random
-	if (frandom()*10 < 4)
-		m_Hook = 0;
 	
 	
 	// main logic
 	{
-
 		// seek bomb area
 		SeekBombArea();		
 
@@ -149,94 +122,19 @@ void CAIcsbb::DoBehavior()
 	}
 		
 	
-	// update waypoint
-	if (distance(m_TargetPos, m_Pos) < 200 || m_TargetTimer++ > 7)// || frandom()*10 < 2)
-	{
-		m_TargetTimer = 0;
-		
-		if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos, m_Move))
-		{
-			if (GameServer()->Collision()->m_GotVision)
-			{
-				// we got waypoint to the target
-				m_WaypointPos = GameServer()->Collision()->m_VisionPos;
-				m_WaypointDir = m_WaypointPos - m_Pos;
-			}
-		}
-		
-		if (GameServer()->m_ShowWaypoints)
-			GameServer()->CreatePlayerSpawn(m_WaypointPos);
-	}
-
-	
-	MoveTowardsWaypoint(40);
-	
+	UpdateWaypoint();
+	MoveTowardsWaypoint(30);
 	
 	// jump if waypoint is above us
-	if (abs(m_WaypointPos.x - m_Pos.x) < 100 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*10 < 4)
-	{
+	if (abs(m_WaypointPos.x - m_Pos.x) < 100 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*20 < 4)
 		m_Jump = 1;
-	}
-
-		
-	// hook moving
-	if (m_LastHook == 0)
-	{
-		vec2 HookDir = m_WaypointPos - m_Pos;
-		float Angle = atan2(HookDir.x, HookDir.y);
-			
-		float MaxDist = 0;
-		vec2 FinalHookPos = vec2(0, 0);
-		
-		for (int i = -4; i < 5; i++)
-		{
-			float a = Angle + i*0.035f;
-			
-			if (a < 60*RAD || a > 300*RAD)
-				continue;
-				
-			vec2 HookPos = m_Pos + vec2(sin(a)*380, cos(a)*380);
-
-			// hook if something in sight
-			int C = GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL);
-			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
-			{
-				float Dist = distance(m_Pos, HookPos);
-				if (Dist > 70 && Dist > MaxDist)
-				{
-					MaxDist = Dist;
-					FinalHookPos = HookPos;
-				}
-			}
-		}
-			
-		if (MaxDist > 0)
-		{			
-			m_Hook = 1;
-			m_Direction = FinalHookPos - m_Pos;
-			
-			if (Player()->GetCharacter()->IsGrounded())
-				m_Jump = 1;
-		}
-		else
-			m_Hook = 0;
-	}
-
-
-
-
-	// air jump
-	if (Player()->GetCharacter()->GetVel().y > 0 && m_TargetPos.y + 80 < m_Pos.y )
-	{
-		if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
-			m_Jump = 1;
-	}
-
 	
-	
+	HookMove();
+	AirJump();
 	Unstuck();
 	
-	if (Player()->GetCharacter()->IsGrounded() && frandom()*10 < 3)
+	
+	if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
 		m_Jump = 1;
 	
 	// go plant the bomb
@@ -281,27 +179,11 @@ void CAIcsbb::DoBehavior()
 	}
 	
 	
-	if (m_Hook != 0 && Player()->GetCharacter()->Hooking())
-	{
-		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
-		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
-		
-		if (distance(CorePos, HookPos) > 100)
-		{
-			if (HookPos > CorePos)
-				m_Move = -1;
-			if (HookPos > CorePos)
-				m_Move = 1;
-		}
-	}
-	
-	if (frandom()*10 < 3)
+	// stop attacking for no reason at random times 
+	if (frandom()*10 < 4)
 		m_Attack = 0;
-		
-	//if (LockMove != 0)
-	//	m_Move = LockMove;
 	
 	// next reaction in
-	m_ReactionTime = 4 + frandom()*12;
+	m_ReactionTime = 2 + frandom()*4;
 	
 }

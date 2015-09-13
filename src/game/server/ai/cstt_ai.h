@@ -13,7 +13,6 @@ public:
 
 private:
 	int m_SkipMoveUpdate;
-	vec2 m_WaypointDir;
 	
 };
 

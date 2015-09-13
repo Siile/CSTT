@@ -67,7 +67,7 @@ public:
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
 	
-	virtual void AddZombie(int ClientID) = 0;
+	virtual void AddZombie() = 0;
 };
 
 class IGameServer : public IInterface
@@ -87,7 +87,7 @@ public:
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
 
 
-	virtual void AddZombie(int ClientID) = 0;
+	virtual void AddZombie() = 0;
 	virtual bool AIInputUpdateNeeded(int ClientID) = 0;
 	virtual void AIUpdateInput(int ClientID, int *Data) = 0; // MAX_INPUT_SIZE
 	

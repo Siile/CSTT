@@ -4,13 +4,12 @@
 #include <game/server/gamecontext.h>
 #include "staticlaser.h"
 
-CStaticlaser::CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To)
+CStaticlaser::CStaticlaser(CGameWorld *pGameWorld, vec2 From, vec2 To, int Life)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER)
 {
 	m_From = From;
 	m_Pos = To;
-	m_EvalTick = 0;
-	m_Hide = true;
+	m_Life = Life;
 	
 	GameWorld()->InsertEntity(this);
 }
@@ -26,24 +25,18 @@ void CStaticlaser::Reset()
 
 void CStaticlaser::Tick()
 {
-	//if(Server()->Tick() > m_EvalTick+(Server()->TickSpeed()*GameServer()->Tuning()->m_LaserBounceDelay)/1000.0f)
-	
-	if (!m_Hide)
-		m_EvalTick = Server()->Tick();
+	if (m_Life-- <= 0)
+		GameServer()->m_World.DestroyEntity(this);
 }
 
 
 void CStaticlaser::TickPaused()
 {
-	++m_EvalTick;
 }
 
 void CStaticlaser::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
-		return;
-	
-	if (m_Hide)
 		return;
 
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_ID, sizeof(CNetObj_Laser)));
@@ -54,5 +47,5 @@ void CStaticlaser::Snap(int SnappingClient)
 	pObj->m_Y = (int)m_Pos.y;
 	pObj->m_FromX = (int)m_From.x;
 	pObj->m_FromY = (int)m_From.y;
-	pObj->m_StartTick = m_EvalTick;
+	pObj->m_StartTick = Server()->Tick();
 }
