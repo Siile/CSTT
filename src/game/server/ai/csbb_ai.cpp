@@ -87,8 +87,48 @@ void CAIcsbb::DoBehavior()
 		if (frandom()*30 < 3)
 			m_Jump = 1;
 		
-		if (m_AttackTimer++ > 4)
+		// shooting part
+		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
+		{
 			ShootAtClosestEnemy();
+			
+			if (m_PlayerSpotCount == 20)
+			{
+				switch (rand() % 5)
+				{
+				case 0:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SPLATTEE);
+					break;
+				case 1:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SUSHI);
+					break;
+				case 2:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_EXCLAMATION);
+					break;
+				case 3:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SPLATTEE);
+					break;
+				default:
+					;
+				}
+			}
+			
+			if (m_PlayerSpotCount == 80)
+			{
+				switch (rand() % 3)
+				{
+				case 0:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_ZOMG);
+					break;
+				case 1:
+					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_WTF);
+					break;
+				default:
+					;
+				}
+					
+			}
+		}
 	}
 	else
 		m_AttackTimer = 0;
@@ -177,10 +217,7 @@ void CAIcsbb::DoBehavior()
 		}
 	}
 	
-	
-	// stop attacking for no reason at random times 
-	if (frandom()*10 < 4)
-		m_Attack = 0;
+	RandomlyStopShooting();
 	
 	// next reaction in
 	m_ReactionTime = 2 + frandom()*4;

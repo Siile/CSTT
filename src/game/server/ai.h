@@ -76,6 +76,8 @@ protected:
 	void HookMove();
 	void AirJump();
 	
+	void RandomlyStopShooting();
+	
 	void ShootAtClosestEnemy();
 	int WeaponShootRange();
 	

@@ -1,5 +1,6 @@
-#include "ai.h"
+#include <engine/shared/config.h>
 
+#include "ai.h"
 #include "entities/character.h"
 #include "entities/staticlaser.h"
 #include "entities/flag.h"
@@ -448,6 +449,19 @@ void CAI::ShootAtClosestEnemy()
 		!Player()->GetCharacter()->HasAmmo())
 		Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
 }
+
+
+void CAI::RandomlyStopShooting()
+{
+	if (frandom()*20 < 4 && m_Attack == 1)
+	{
+		m_Attack = 0;
+		
+		m_AttackTimer = g_Config.m_SvBotReactTime*0.5f;
+	}
+}
+
+
 
 
 bool CAI::SeekClosestEnemy()

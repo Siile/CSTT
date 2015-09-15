@@ -84,6 +84,10 @@ MACRO_CONFIG_INT(SvBaseCaptureTime, sv_basecapturetime, 3, 1, 60, CFGFLAG_SERVER
 MACRO_CONFIG_INT(SvRespawnDelayCSBB, sv_respawn_delay_csbb, 3, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in csbb gametype")
 
 
+// AI
+MACRO_CONFIG_INT(SvBotReactTime, sv_bot_react_time, 6, 0, 20, CFGFLAG_SERVER, "Time bot takes to start shooting")
+
+
 
 MACRO_CONFIG_INT(SvWarmup, sv_warmup, 0, 0, 0, CFGFLAG_SERVER, "Number of seconds to do warmup before round starts")
 MACRO_CONFIG_STR(SvMotd, sv_motd, 900, "", CFGFLAG_SERVER, "Message of the day to display for the clients")

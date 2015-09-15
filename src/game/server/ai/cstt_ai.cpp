@@ -1,3 +1,5 @@
+#include <engine/shared/config.h>
+
 #include <game/server/ai.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/bomb.h>
@@ -88,7 +90,7 @@ void CAIcstt::DoBehavior()
 		if (frandom()*30 < 3)
 			m_Jump = 1;
 		
-		if (m_AttackTimer++ > 4)
+		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
 			ShootAtClosestEnemy();
 	}
 	else
@@ -214,10 +216,7 @@ void CAIcstt::DoBehavior()
 		}
 	}
 	
-	
-	// stop attacking for no reason at random times 
-	if (frandom()*10 < 4)
-		m_Attack = 0;
+	RandomlyStopShooting();
 	
 	// next reaction in
 	m_ReactionTime = 2 + frandom()*4;
