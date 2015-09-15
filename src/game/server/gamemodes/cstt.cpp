@@ -960,6 +960,8 @@ void CGameControllerCSTT::Tick()
 		{
 			m_BombSoundTimer = 0;
 			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
+			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
+			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
 		}
 		
 		// bomb defusing
