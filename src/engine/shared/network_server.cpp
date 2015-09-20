@@ -80,6 +80,9 @@ int CNetServer::Update()
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		m_aSlots[i].m_Connection.Update();
+		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+			m_SlotTakenByBot[i] = false;
+			
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 		{
 			if(Now - m_aSlots[i].m_Connection.ConnectTime() < time_freq() && NetBan())
