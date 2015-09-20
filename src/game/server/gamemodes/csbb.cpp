@@ -948,7 +948,7 @@ void CGameControllerCSBB::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 5 && (Blue+BlueBots) > 5)
+	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{

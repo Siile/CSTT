@@ -31,29 +31,34 @@ void CAIcstt::OnCharacterSpawn(CCharacter *pChr)
 	
 	if (frandom()*8 < (Round-1)*3)
 	{
-		if (frandom()*10 < 2)
+		if (frandom()*12 < 2)
 			Weapon = SWORD_KATANA;
-		else if (frandom()*10 < 2)
+		else if (frandom()*12 < 2)
 			Weapon = GUN_MAGNUM;
-		else if (frandom()*10 < 3)
+		else if (frandom()*12 < 3)
 			Weapon = RIFLE_ASSAULTRIFLE;
-		else if (frandom()*10 < 3)
-			Weapon = RIFLE_LASERRIFLE;
-		else if (frandom()*10 < 3)
+		else if (frandom()*12 < 3)
+			Weapon = GRENADE_GRENADELAUNCHER;
+		else if (frandom()*12 < 3)
 			Weapon = SHOTGUN_DOUBLEBARREL;
-		else if (frandom()*10 < 3)
+		else if (frandom()*12 < 3)
 			Weapon = RIFLE_LIGHTNINGRIFLE;
+		else if (frandom()*12 < 3)
+			Weapon = RIFLE_LASERRIFLE;
 		else if (Round > 3)
 		{
-			if (frandom()*10 < 3)
+			if (frandom()*12 < 3)
 				Weapon = SHOTGUN_COMBAT;
-			else if (frandom()*10 < 3)
+			else if (frandom()*12 < 3)
 				Weapon = RIFLE_STORMRIFLE;
-			else if (frandom()*10 < 3)
+			else if (frandom()*12 < 3)
 				Weapon = RIFLE_DOOMRAY;
+			else if (frandom()*12 < 3)
+				Weapon = GRENADE_DOOMLAUNCHER;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_HEAVYRIFLE;
 		}
 	}
-
 	pChr->GiveCustomWeapon(Weapon);
 	pChr->SetCustomWeapon(Weapon);
 	
