@@ -994,6 +994,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SkipSending = true;
 			}		
 			
+			/*
 			if ( strcmp(pMsg->m_pMessage, "/addbots") == 0 )
 			{
 				SendChatTarget(ClientID, "Adding bots...");
@@ -1001,7 +1002,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					AddBot();
 				
 				SkipSending = true;
-			}		
+			}	
+			*/			
 			
 			if ( strcmp(pMsg->m_pMessage, "/kickbots") == 0 )
 			{

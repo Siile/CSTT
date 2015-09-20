@@ -497,6 +497,7 @@ void IGameController::Tick()
 		// game over.. wait for restart
 		if(Server()->Tick() > m_GameOverTick+Server()->TickSpeed()*10)
 		{
+			GameServer()->KickBots();
 			CycleMap();
 			StartRound();
 			m_RoundCount++;
