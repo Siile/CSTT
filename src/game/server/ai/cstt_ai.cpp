@@ -81,17 +81,15 @@ void CAIcstt::DoBehavior()
 	SeekClosestEnemyInSight();
 	
 	// if we see a player
+	// if we see a player
 	if (m_PlayerSpotCount > 0)
 	{
-		// angry face
-		if (m_PlayerSpotCount == 1)
-			Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 1200, 1200);
-		
-		if (frandom()*30 < 3)
+		// jump at random times
+		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
 			m_Jump = 1;
 		
-		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
-			ShootAtClosestEnemy();
+		ShootAtClosestEnemy();
+		ReactToPlayer();
 	}
 	else
 		m_AttackTimer = 0;
@@ -161,16 +159,14 @@ void CAIcstt::DoBehavior()
 	MoveTowardsWaypoint(30);
 	
 	// jump if waypoint is above us
-	if (abs(m_WaypointPos.x - m_Pos.x) < 100 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*10 < 4)
+	if (abs(m_WaypointPos.x - m_Pos.x) < 200 && m_WaypointPos.y < m_Pos.y - 200 && frandom()*10 < 4)
 		m_Jump = 1;
 		
 	HookMove();
 	AirJump();
 	Unstuck();
 	
-	
-	if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-		m_Jump = 1;
+
 	
 	// go plant the bomb
 	if (Player()->GetTeam() == TEAM_RED)

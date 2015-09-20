@@ -80,60 +80,16 @@ void CAIcsbb::DoBehavior()
 	// if we see a player
 	if (m_PlayerSpotCount > 0)
 	{
-		// angry face
-		if (m_PlayerSpotCount == 1)
-			Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 1200, 1200);
-		
-		if (frandom()*30 < 3)
+		// jump at random times
+		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
 			m_Jump = 1;
-		
-		// shooting part
-		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
-		{
-			ShootAtClosestEnemy();
-			
-			if (m_PlayerSpotCount == 20)
-			{
-				switch (rand() % 5)
-				{
-				case 0:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SPLATTEE);
-					break;
-				case 1:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SUSHI);
-					break;
-				case 2:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_EXCLAMATION);
-					break;
-				case 3:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SPLATTEE);
-					break;
-				default:
-					;
-				}
-			}
-			
-			if (m_PlayerSpotCount == 80)
-			{
-				switch (rand() % 3)
-				{
-				case 0:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_ZOMG);
-					break;
-				case 1:
-					GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_WTF);
-					break;
-				default:
-					;
-				}
-					
-			}
-		}
+
+		ShootAtClosestEnemy();
+		ReactToPlayer();
 	}
 	else
 		m_AttackTimer = 0;
 
-	
 	
 	// main logic
 	{
@@ -165,7 +121,7 @@ void CAIcsbb::DoBehavior()
 		
 	
 	// jump if waypoint is above us
-	if (abs(m_WaypointPos.x - m_Pos.x) < 100 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*20 < 4)
+	if (abs(m_WaypointPos.x - m_Pos.x) < 200 && m_WaypointPos.y < m_Pos.y - 200 && frandom()*20 < 4)
 		m_Jump = 1;
 	
 	HookMove();
@@ -173,8 +129,8 @@ void CAIcsbb::DoBehavior()
 	Unstuck();
 	
 	
-	if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-		m_Jump = 1;
+	//if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
+	//	m_Jump = 1;
 	
 	// go plant the bomb
 	if (Player()->GetTeam() != GameServer()->m_pController->GetDefendingTeam())

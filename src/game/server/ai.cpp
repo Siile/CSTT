@@ -55,6 +55,7 @@ void CAI::OnCharacterSpawn(class CCharacter *pChr)
 {
 	pChr->SetCustomWeapon(GUN_PISTOL);
 	m_WaypointPos = pChr->m_Pos;
+	ClearEmotions();
 }
 
 
@@ -223,8 +224,8 @@ void CAI::HookMove()
 			m_Hook = 1;
 			m_Direction = FinalHookPos - m_Pos;
 			
-			if (Player()->GetCharacter()->IsGrounded())
-				m_Jump = 1;
+			//if (Player()->GetCharacter()->IsGrounded())
+			//	m_Jump = 1;
 		}
 		else
 			m_Hook = 0;
@@ -293,6 +294,14 @@ void CAI::Unstuck()
 			else
 				m_Move = 1;
 			
+			/*
+			if (frandom() * 10 < 4)
+				m_Jump = 1;
+			*/
+		}
+		
+		if (m_UnstuckCount > 4)
+		{
 			if (frandom() * 10 < 4)
 				m_Jump = 1;
 		}
@@ -379,9 +388,57 @@ bool CAI::MoveTowardsWaypoint(int Dist)
 }
 
 
-void CAI::ReceiveDamage()
+void CAI::ReceiveDamage(int CID, int Dmg)
 {
+	if (CID >= 0 && CID < 16)
+	{
+		m_aAnger[CID] += Dmg;
+		m_aAnger[CID] *= 1.1f;
+		
+		m_aAttachment[CID] *= 0.9f;
+	}
+	else
+	{
+		// world damage
+		for (int i = 0; i < 16; i++)
+		{
+			m_aAnger[i] += Dmg/2;
+			m_aAnger[i] *= 1.1f;
+		}
+	}
+}
+
+
+
+
+void CAI::HandleEmotions()
+{
+	m_TotalAnger = 0.0f;
 	
+	for (int i = 0; i < 16; i++)
+	{
+		m_aAnger[i] *= 0.97f;
+		m_aAttachment[i] *= 0.97f;
+		
+		m_TotalAnger += m_aAnger[i];
+	}
+	
+	if (m_TotalAnger > 35.0f)
+	{
+		Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 40, 40, false);
+	}
+}
+
+
+
+
+void CAI::ClearEmotions()
+{
+	for (int i = 0; i < 16; i++)
+	{
+		m_aAnger[i] = 0.0f;
+		m_aAttachment[i] = 0.0f;
+	}
 }
 
 
@@ -395,6 +452,35 @@ int CAI::WeaponShootRange()
 		Range = BotAttackRange[Weapon];
 	
 	return Range;
+}
+
+
+
+void CAI::ReactToPlayer()
+{
+	// angry face
+	//if (m_PlayerSpotCount > 20)
+	//	Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 0, 1200);
+	
+	if (m_PlayerSpotCount == 20 && m_TotalAnger > 35.0f)
+	{
+		switch (rand() % 3)
+		{
+		case 0: GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_SPLATTEE); break;
+		case 1: GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_EXCLAMATION); break;
+		default: /*__*/;
+		}
+	}
+			
+	if (m_PlayerSpotCount == 80)
+	{
+		switch (rand() % 3)
+		{
+		case 0: GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_ZOMG); break;
+		case 1: GameServer()->SendEmoticon(Player()->GetCID(), EMOTICON_WTF); break;
+		default: /*__*/;
+		}
+	}
 }
 
 
@@ -438,8 +524,12 @@ void CAI::ShootAtClosestEnemy()
 	
 	if (pClosestCharacter && ClosestDistance < WeaponShootRange()*1.2f)
 	{
-		if (ClosestDistance < WeaponShootRange())
-			m_Attack = 1;
+		// shooting part
+		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
+		{
+			if (ClosestDistance < WeaponShootRange())
+				m_Attack = 1;
+		}
 		
 		m_Direction = vec2(m_PlayerDirection.x+ClosestDistance*(frandom()*0.3f-frandom()*0.3f), m_PlayerDirection.y+ClosestDistance*(frandom()*0.3f-frandom()*0.3f));
 	}
@@ -586,6 +676,8 @@ void CAI::Tick()
 		
 		return;
 	}
+	
+	HandleEmotions();
 	
 	// stupid AI can't even react to events every frame
 	if (m_NextReaction <= 0)

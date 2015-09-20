@@ -32,7 +32,7 @@ private:
 	
 	void NewBase();
 	void CaptureBase();
-	void EndRound();
+	void EndBaseRound();
 	
 	bool m_SkipWinBroadcast;
 	
@@ -73,6 +73,18 @@ private:
 	int m_BombDefuseTimer;
 	bool m_BombDefused;
 	
+	/*
+		class CFlag *m_apBombArea[2];
+	vec2 m_aBombAreaPos[MAX_BOMBAREAS];
+	int m_aBombAreaStatus[MAX_BOMBAREAS];
+	
+	int m_BombAreaCount;
+	
+	int m_BombDefuseTimer;
+	bool m_BombDefused;
+
+	class CBomb *m_apBomb[2];
+	*/
 	
 	int m_BombCarrierTurn;
 	

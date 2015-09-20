@@ -24,6 +24,18 @@ protected:
 	
 	virtual void DoBehavior() = 0;
 	
+	void ReactToPlayer();
+	
+	float m_aAnger[16]; // MAX_CLIENTS
+	float m_aAttachment[16]; // MAX_CLIENTS
+	
+	float m_TotalAnger;
+	
+	void ClearEmotions();
+	void HandleEmotions();
+	
+	
+	
 	vec2 m_Pos;
 	vec2 m_LastPos;
 	int m_LastMove;
@@ -105,7 +117,7 @@ public:
 	
 	void StandStill(int Time);
 	
-	virtual void ReceiveDamage();
+	virtual void ReceiveDamage(int CID, int Dmg);
 
 	
 	int GetMove(){ return m_Move; }

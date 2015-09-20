@@ -149,7 +149,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		WEAPON_HAMMER,
 		PROJTYPE_SWORD,
 		SOUND_HAMMER_FIRE,
-		-1, // require
+		HAMMER_BASIC, // require
 		75, // cost
 		20, // damage
 		0, // extra1

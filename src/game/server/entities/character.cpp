@@ -1116,7 +1116,7 @@ bool CCharacter::GiveAmmo(int *CustomWeapon, float AmmoFill)
 
 bool CCharacter::GiveCustomWeapon(int CustomWeapon, float AmmoFill)
 {
-	if(!m_aWeapon[CustomWeapon].m_Got)
+	if(!m_aWeapon[CustomWeapon].m_Got && !m_aWeapon[CustomWeapon].m_Disabled)
 	{	
 		m_aWeapon[CustomWeapon].m_Got = true;
 		m_aWeapon[CustomWeapon].m_Disabled = false;
@@ -1124,6 +1124,7 @@ bool CCharacter::GiveCustomWeapon(int CustomWeapon, float AmmoFill)
 		m_aWeapon[CustomWeapon].m_Ammo = aCustomWeapon[CustomWeapon].m_ClipSize;
 		
 		//bool SkipAmmoFill = false;
+		
 		
 		if (aCustomWeapon[CustomWeapon].m_Require >= 0)
 		{
@@ -1548,6 +1549,10 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {	
 	m_Core.m_Vel += Force;
 
+	// signal AI
+	if (Dmg > 0 && GetPlayer()->m_pAI && Weapon >= 0)
+		GetPlayer()->m_pAI->ReceiveDamage(From, Dmg);
+	
 	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
 		return false;
 
@@ -1628,11 +1633,6 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	SetEmote(EMOTE_PAIN, Server()->Tick() + 500 * Server()->TickSpeed() / 1000);
 	//m_EmoteType = EMOTE_PAIN;
 	//m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
-
-	if (Dmg > 0 && GetPlayer()->m_pAI && Weapon >= 0)
-	{
-		GetPlayer()->m_pAI->ReceiveDamage();
-	}
 	
 	return true;
 }
@@ -1707,7 +1707,7 @@ void CCharacter::TakeDeathtileDamage()
 	SetEmote(EMOTE_PAIN, Server()->Tick() + 500 * Server()->TickSpeed() / 1000);
 
 	if (GetPlayer()->m_pAI)
-		GetPlayer()->m_pAI->ReceiveDamage();
+		GetPlayer()->m_pAI->ReceiveDamage(-1, 10);
 }
 
 void CCharacter::Snap(int SnappingClient)

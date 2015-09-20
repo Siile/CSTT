@@ -487,7 +487,7 @@ CFlag *CGameControllerCSBB::GetClosestBombArea(vec2 Pos)
 
 
 
-void CGameControllerCSBB::EndRound()
+void CGameControllerCSBB::EndBaseRound()
 {
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "csbb", "Ending round");
 	m_Round++;
@@ -525,7 +525,7 @@ void CGameControllerCSBB::RoundWinLose()
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_RED]++;
 		RoundRewards(TEAM_RED);
-		EndRound();
+		EndBaseRound();
 	}
 	else if (score == COUNTERTERRORISTS_WIN)
 	{
@@ -534,7 +534,7 @@ void CGameControllerCSBB::RoundWinLose()
 		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, -1);
 		m_aTeamscore[TEAM_BLUE]++;
 		RoundRewards(TEAM_BLUE);
-		EndRound();
+		EndBaseRound();
 	}
 }
 
@@ -828,8 +828,11 @@ void CGameControllerCSBB::Restart()
 		{
 			m_apBombArea[i]->m_Hide = true;
 			m_apBombArea[i]->m_UseSnapping = false;
+			//m_apBombArea[i]->m_Team = TEAM_BLUE;
 		}
 	}
+
+	//m_pBomb->m_Team = TEAM_RED;
 	
 	GameServer()->ResetVotes();
 }
@@ -1011,20 +1014,20 @@ void CGameControllerCSBB::Tick()
 		{
 			if (m_RoundTick >= g_Config.m_SvPreroundTime*Server()->TickSpeed())
 			{
-				/*
-				if (m_Round >= g_Config.m_SvNumRounds)
+				if (m_aTeamscore[TEAM_RED] >= g_Config.m_SvNumRounds || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvNumRounds)
 				{
 					EndRound();
 					m_NewGame = true;
 					return;
 				}
-				*/
 				
 				NewBase();
 				//AutoBalance();
 				
 				if (GameServer()->m_pArrow)
 					GameServer()->m_pArrow->m_Hide = true;
+				
+
 			}
 		}
 	}
@@ -1098,7 +1101,6 @@ void CGameControllerCSBB::Tick()
 		if (++m_BombSoundTimer >= Time)
 		{
 			m_BombSoundTimer = 0;
-			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
 			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
 			GameServer()->CreateSound(B->m_Pos, SOUND_CHAT_SERVER);
 		}
