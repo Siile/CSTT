@@ -1376,12 +1376,17 @@ int CServer::Run()
 					// new map loaded
 					GameServer()->OnShutdown();
 
+					
+					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
+						m_NetServer.m_SlotTakenByBot[c] = false;
+						
 						if(m_aClients[c].m_State <= CClient::STATE_AUTH)
 							continue;
 
 						SendMap(c);
+						
 						m_aClients[c].Reset();
 						m_aClients[c].m_State = CClient::STATE_CONNECTING;
 					}
@@ -1806,14 +1811,15 @@ void CServer::AddZombie()
 	if (ClientID == -1)
 		return;
 	
+	// fake reserve a slot
+	m_NetServer.m_SlotTakenByBot[ClientID] = true;
+	
 	m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 	GameServer()->OnClientConnected(ClientID, true);
 	//GameServer()->OnClientEnter(i);
 	m_aClients[ClientID].m_State = CClient::STATE_INGAME;
 	m_aClients[ClientID].m_Bot = true;
 
-	// fake reserve a slot
-	m_NetServer.m_SlotTakenByBot[ClientID] = true;
 	
 	// generate a cool name for the bot
 	char aName1[128];
