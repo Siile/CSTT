@@ -484,9 +484,6 @@ bool IGameController::CanBeMovedOnBalance(int ClientID)
 
 void IGameController::Tick()
 {
-	GameServer()->m_aFlagSnapped[0] = false;
-	GameServer()->m_aFlagSnapped[1] = false;
-	
 	// do warmup
 	if(m_Warmup)
 	{
