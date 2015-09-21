@@ -204,6 +204,9 @@ public:
 	
 	bool m_ShowWaypoints;
 	
+	// last line defence against incorrect flag team snapping;
+	bool m_aFlagSnapped[2];
+	
 	// custom vote stuff
 	//void SetupVotes(int ClientID = -1);
 	void ResetVotes();

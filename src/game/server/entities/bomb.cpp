@@ -39,6 +39,14 @@ void CBomb::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient) || m_Hide)
 		return;
+	
+	if (m_Team != TEAM_RED && m_Team != TEAM_BLUE)
+		return;
+	
+	if (GameServer()->m_aFlagSnapped[m_Team])
+		return;
+	
+	GameServer()->m_aFlagSnapped[m_Team] = true;
 
 	CNetObj_Flag *pFlag = (CNetObj_Flag *)Server()->SnapNewItem(NETOBJTYPE_FLAG, m_Team, sizeof(CNetObj_Flag));
 	if(!pFlag)

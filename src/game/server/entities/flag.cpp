@@ -43,7 +43,15 @@ void CFlag::Snap(int SnappingClient)
 	
 	if (m_Hide)
 		return;
-
+	
+	if (m_Team != TEAM_RED && m_Team != TEAM_BLUE)
+		return;
+	
+	if (GameServer()->m_aFlagSnapped[m_Team])
+		return;
+	
+	GameServer()->m_aFlagSnapped[m_Team] = true;
+	
 	if(NetworkClipped(SnappingClient))
 		return;
 
@@ -54,4 +62,5 @@ void CFlag::Snap(int SnappingClient)
 	pFlag->m_X = (int)m_Pos.x;
 	pFlag->m_Y = (int)m_Pos.y;
 	pFlag->m_Team = m_Team;
+	
 }
