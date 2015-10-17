@@ -1179,7 +1179,7 @@ void CServer::UpdateAIInput()
 			{
 				CClient::CInput *pInput;
 
-				m_aClients[i].m_LastInputTick = Tick()+1;
+				m_aClients[i].m_LastInputTick = Tick();
 
 				pInput = &m_aClients[i].m_aInputs[m_aClients[i].m_CurrentInput];
 				pInput->m_GameTick = Tick()+1;
@@ -1188,7 +1188,7 @@ void CServer::UpdateAIInput()
 				// update input data
 				GameServer()->AIUpdateInput(i, pInput->m_aData);
 
-
+				
 				mem_copy(m_aClients[i].m_LatestInput.m_aData, pInput->m_aData, MAX_INPUT_SIZE*sizeof(int));
 
 				m_aClients[i].m_CurrentInput++;

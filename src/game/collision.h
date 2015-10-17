@@ -5,6 +5,67 @@
 
 #include <base/vmath.h>
 
+
+#define MAX_WAYPOINTS 10000
+#define MAX_WAYPOINTCONNECTIONS 10
+
+
+class CWaypoint
+{
+private:
+	CWaypoint *m_apConnection[MAX_WAYPOINTCONNECTIONS];
+	int m_ConnectionCount;
+	
+public:
+	int m_X, m_Y; // tileset position
+	vec2 m_Pos; // world position
+
+	CWaypoint(vec2 Pos)
+	{
+		m_X = Pos.x;
+		m_Y = Pos.y;
+		m_Pos = vec2(Pos.x*32+16, Pos.y*32+16);
+		
+		m_ConnectionCount = 0;
+		for (int i = 0; i < MAX_WAYPOINTCONNECTIONS; i++)
+			m_apConnection[i] = NULL;
+	}
+	
+	
+	bool Connected(CWaypoint *Waypoint)
+	{
+		if (!Waypoint || Waypoint == this)
+			return false;
+		
+		// check if we're connected already
+		for (int i = 0; i < MAX_WAYPOINTCONNECTIONS; i++)
+		{
+			if (Waypoint == m_apConnection[i])
+				return true;
+		}
+		
+		return false;
+	}
+	
+	
+	// create a two way connection between this and given waypoint
+	void Connect(CWaypoint *Waypoint)
+	{
+		if (!Waypoint || Waypoint == this || m_ConnectionCount >= MAX_WAYPOINTCONNECTIONS)
+			return;
+		
+		// check if we're connected already
+		if (Connected(Waypoint))
+			return;
+		
+		// connect
+		m_apConnection[m_ConnectionCount++] = Waypoint;
+		Waypoint->Connect(this);
+	}
+};
+
+
+
 class CCollision
 {
 	class CTile *m_pTiles;
@@ -25,6 +86,16 @@ class CCollision
 	
 	bool CheckPath(int x, int y, int Direction, int Distance = 0); // -1, 0, 1
 	
+	int m_WaypointCount;
+	int m_ConnectionCount;
+	
+	void ClearWaypoints();
+	void AddWaypoint(vec2 Position);
+	CWaypoint *GetWaypointAt(int x, int y);
+	void ConnectWaypoints();
+
+	CWaypoint *m_apWaypoint[MAX_WAYPOINTS];
+	
 public:
 	enum
 	{
@@ -32,10 +103,15 @@ public:
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
 	};
-
+	
+	void GenerateWaypoints();
+	int WaypointCount() { return m_WaypointCount; }
+	int ConnectionCount() { return m_ConnectionCount; }
+	
 	vec2 m_VisionPos;
 	bool m_GotVision;
 	
+
 	// for testing
 	vec2 m_aPath[99];
 	

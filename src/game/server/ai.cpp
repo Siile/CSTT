@@ -33,6 +33,9 @@ void CAI::Reset()
 	m_LastHook = 0;
 	m_LastPos = vec2(-9000, -9000);
 	m_Direction = vec2(-1, 0);
+	m_DisplayDirection = vec2(-1, 0);
+	
+	m_HookTick = 0;
 	
 	m_UnstuckCount = 0;
 	
@@ -48,6 +51,8 @@ void CAI::Reset()
 	m_TargetPos = vec2(0, 0);
 	m_PlayerSpotTimer = 0;
 	m_PlayerSpotCount = 0;
+	
+	m_TurnSpeed = 0.2f;
 }
 
 
@@ -97,8 +102,8 @@ void CAI::UpdateInput(int *Data)
 {
 	m_InputChanged = false;
 	Data[0] = m_Move;
-	Data[1] = m_Direction.x;
-	Data[2] = m_Direction.y;
+	Data[1] = m_DisplayDirection.x; Data[2] = m_DisplayDirection.y;
+	
 	Data[3] = m_Jump;
 	Data[4] = m_Attack;
 	Data[5] = m_Hook;
@@ -218,10 +223,15 @@ void CAI::HookMove()
 				}
 			}
 		}
-			
+		
+
 		if (MaxDist > 0)
-		{			
-			m_Hook = 1;
+		{
+			if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 5.0f && m_HookTick < GameServer()->Server()->Tick() - 10)
+			{
+				m_Hook = 1;
+				m_HookTick = GameServer()->Server()->Tick();
+			}
 			m_Direction = FinalHookPos - m_Pos;
 			
 			//if (Player()->GetCharacter()->IsGrounded())
@@ -279,8 +289,8 @@ void CAI::JumpIfPlayerIsAbove()
 
 void CAI::HeadToMovingDirection()
 {
-	if (m_Move != 0)
-		m_Direction = vec2(m_Move, 0);
+	//if (m_Move != 0)
+	//	m_Direction = vec2(m_Move, 0);
 }
 
 void CAI::Unstuck()
@@ -310,6 +320,12 @@ void CAI::Unstuck()
 	{
 		m_UnstuckCount = 0;
 		m_StuckPos = m_Pos;
+	}
+	
+	// death tile check
+	if (Player()->GetCharacter()->GetVel().y > 0 && GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y+32)&CCollision::COLFLAG_DEATH)
+	{
+		m_Jump = 1;
 	}
 }
 
@@ -524,14 +540,17 @@ void CAI::ShootAtClosestEnemy()
 	
 	if (pClosestCharacter && ClosestDistance < WeaponShootRange()*1.2f)
 	{
+		vec2 AttackDirection = vec2(m_PlayerDirection.x+ClosestDistance*(frandom()*0.3f-frandom()*0.3f), m_PlayerDirection.y+ClosestDistance*(frandom()*0.3f-frandom()*0.3f));
+		
+		if (m_HookTick < GameServer()->Server()->Tick() - 20)
+			m_Direction = AttackDirection;
+		
 		// shooting part
 		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
 		{
-			if (ClosestDistance < WeaponShootRange())
+			if (ClosestDistance < WeaponShootRange() && abs(atan2(m_Direction.x, m_Direction.y) - atan2(AttackDirection.x, AttackDirection.y)) < PI / 4.0f)
 				m_Attack = 1;
 		}
-		
-		m_Direction = vec2(m_PlayerDirection.x+ClosestDistance*(frandom()*0.3f-frandom()*0.3f), m_PlayerDirection.y+ClosestDistance*(frandom()*0.3f-frandom()*0.3f));
 	}
 	
 	// ammo check
@@ -699,4 +718,13 @@ void CAI::Tick()
 	{
 		m_Attack = 0;
 	}
+	m_InputChanged = true;
+	
+
+	
+	m_DisplayDirection.x += (m_Direction.x - m_DisplayDirection.x) / 4.0f;
+	m_DisplayDirection.y += (m_Direction.y - m_DisplayDirection.y) / 4.0f;
 }
+
+
+

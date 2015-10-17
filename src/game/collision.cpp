@@ -19,6 +19,9 @@ CCollision::CCollision()
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
+	
+	for (int i = 0; i < MAX_WAYPOINTS; i++)
+		m_apWaypoint[i] = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
@@ -53,6 +56,135 @@ void CCollision::Init(class CLayers *pLayers)
 	
 	// for path finding
 	m_pChecked = new bool [m_Width*m_Height+1];
+}
+
+
+
+
+
+void CCollision::ClearWaypoints()
+{
+	m_WaypointCount = 0;
+	
+	for (int i = 0; i < MAX_WAYPOINTS; i++)
+	{
+		if (m_apWaypoint[i])
+			delete m_apWaypoint[i];
+		
+		m_apWaypoint[i] = NULL;
+	}
+}
+
+
+void CCollision::AddWaypoint(vec2 Position)
+{
+	if (m_WaypointCount >= MAX_WAYPOINTS)
+		return;
+	
+	m_apWaypoint[m_WaypointCount] = new CWaypoint(Position);
+	m_WaypointCount++;
+}
+
+
+void CCollision::GenerateWaypoints()
+{
+	ClearWaypoints();
+	for(int x = 2; x < m_Width-2; x++)
+	{
+		for(int y = 2; y < m_Height-2; y++)
+		{
+			if (m_pTiles[y*m_Width+x].m_Index)
+				continue;
+			
+			// find all outer corners
+			if ((m_pTiles[(y-1)*m_Width+(x-1)].m_Index && !m_pTiles[(y-0)*m_Width+(x-1)].m_Index && !m_pTiles[(y-1)*m_Width+(x-0)].m_Index) ||
+				(m_pTiles[(y-1)*m_Width+(x+1)].m_Index && !m_pTiles[(y-0)*m_Width+(x+1)].m_Index && !m_pTiles[(y-1)*m_Width+(x+0)].m_Index) ||
+				(m_pTiles[(y+1)*m_Width+(x-1)].m_Index && !m_pTiles[(y+0)*m_Width+(x-1)].m_Index && !m_pTiles[(y+1)*m_Width+(x-0)].m_Index) ||
+				(m_pTiles[(y+1)*m_Width+(x+1)].m_Index && !m_pTiles[(y+0)*m_Width+(x+1)].m_Index && !m_pTiles[(y+1)*m_Width+(x+0)].m_Index))
+			{
+				// outer corner found -> create a waypoint
+				AddWaypoint(vec2(x, y));
+			}
+			else
+			// find all inner corners
+			if ((m_pTiles[y*m_Width+(x-1)].m_Index && m_pTiles[(y-1)*m_Width+x].m_Index) ||
+				(m_pTiles[y*m_Width+(x-1)].m_Index && m_pTiles[(y+1)*m_Width+x].m_Index) ||
+				(m_pTiles[y*m_Width+(x+1)].m_Index && m_pTiles[(y-1)*m_Width+x].m_Index) ||
+				(m_pTiles[y*m_Width+(x+1)].m_Index && m_pTiles[(y+1)*m_Width+x].m_Index))
+			{
+				// inner corner found -> create a waypoint
+				AddWaypoint(vec2(x, y));
+			}
+		}
+	}
+	
+	ConnectWaypoints();
+}
+
+
+
+CWaypoint *CCollision::GetWaypointAt(int x, int y)
+{
+	for (int i = 0; i < m_WaypointCount; i++)
+	{
+		if (m_apWaypoint[i])
+		{
+			if (m_apWaypoint[i]->m_X == x && m_apWaypoint[i]->m_Y == y)
+				return m_apWaypoint[i];
+		}
+	}
+	return NULL;
+}
+
+
+void CCollision::ConnectWaypoints()
+{
+	m_ConnectionCount = 0;
+	
+	for (int i = 0; i < m_WaypointCount; i++)
+	{
+		if (!m_apWaypoint[i])
+			continue;
+		
+		int x, y;
+		
+		x = m_apWaypoint[i]->m_X - 1;
+		y = m_apWaypoint[i]->m_Y;
+		
+		// find waypoints at left
+		while (!m_pTiles[y*m_Width+x].m_Index)
+		{
+			CWaypoint *W = GetWaypointAt(x, y);
+			
+			if (W)
+			{
+				m_ConnectionCount++;
+				m_apWaypoint[i]->Connect(W);
+				break;
+			}
+			x--;
+		}
+		
+		x = m_apWaypoint[i]->m_X;
+		y = m_apWaypoint[i]->m_Y - 1;
+		
+		// find waypoints at up
+		while (!m_pTiles[y*m_Width+x].m_Index)
+		{
+			CWaypoint *W = GetWaypointAt(x, y);
+			
+			if (W)
+			{
+				m_ConnectionCount++;
+				m_apWaypoint[i]->Connect(W);
+				break;
+			}
+			
+			y--;
+		}
+	}
+	
+	// connect to near, visible waypoints
 }
 
 

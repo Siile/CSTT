@@ -280,7 +280,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING)
+	if(NewInput->m_PlayerFlags&PLAYERFLAG_CHATTING && !m_pAI)
 	{
 		// skip the input if chat is active
 		if(m_PlayerFlags&PLAYERFLAG_CHATTING)

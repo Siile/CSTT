@@ -7,6 +7,7 @@
 #include "ai_protocol.h"
 
 #define RAD 0.017453292519943295769236907684886f
+#define PI 3.14159265358979323846
 
 
 class CAI
@@ -34,6 +35,8 @@ protected:
 	void ClearEmotions();
 	void HandleEmotions();
 	
+	float m_TargetAngle;
+	float m_TurnSpeed;
 	
 	
 	vec2 m_Pos;
@@ -42,6 +45,8 @@ protected:
 	int m_LastJump;
 	
 	vec2 m_Direction;
+	vec2 m_DisplayDirection;
+	
 	int m_Move;
 	int m_Jump;
 	int m_Attack;
@@ -49,6 +54,8 @@ protected:
 	
 	int m_Hook;
 	int m_LastHook;
+	
+	int m_HookTick;
 	
 	int m_NextReaction;
 	int m_ReactionTime;

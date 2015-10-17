@@ -931,7 +931,7 @@ void CGameControllerCSBB::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 4 && (Blue+BlueBots) < 4)
+	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
