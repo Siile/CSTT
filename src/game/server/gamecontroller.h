@@ -160,6 +160,7 @@ public:
 
 	virtual class CBomb *GetBomb();
 	virtual class CFlag *GetClosestBombArea(vec2 Pos);
+	virtual class CFlag *GetRandomBombArea();
 	
 	
 	virtual void OnPlayerInfoChange(class CPlayer *pP);

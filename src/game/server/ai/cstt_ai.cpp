@@ -14,6 +14,7 @@ CAIcstt::CAIcstt(CGameContext *pGameServer, CPlayer *pPlayer)
 : CAI(pGameServer, pPlayer)
 {
 	m_SkipMoveUpdate = 0;
+	m_TargetBombArea = NULL;
 }
 
 
@@ -24,6 +25,7 @@ void CAIcstt::OnCharacterSpawn(CCharacter *pChr)
 	int Weapon = HAMMER_BASIC;
 	
 	m_WaypointDir = vec2(0, 0);
+	m_TargetBombArea = NULL;
 	
 	int Round = GameServer()->m_pController->GetRound();
 	
@@ -107,24 +109,49 @@ void CAIcstt::DoBehavior()
 	{
 		// seek & protect the bomb
 		if (Bomb && Bomb->m_Status != BOMB_CARRYING)
-			m_TargetPos = Bomb->m_Pos;
-		else
-		if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
-			SeekBombArea();
-		else
-		if (SeekClosestEnemy())
 		{
-			m_TargetPos = m_PlayerPos;
+			// seek bomb
+			m_TargetPos = Bomb->m_Pos;
 			
-			if (m_PlayerSpotCount > 0)
+			if (Bomb->m_Status == BOMB_PLANTED)
 			{
-				// distance to the player
-				if (m_PlayerPos.x < m_Pos.x)
-					m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
-				else
-					m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				// ...unless we're near it && it's in sight
+				if (distance(m_Pos, m_TargetPos) < 400 && !GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos))
+				{
+					if (SeekClosestEnemy())
+						m_TargetPos = m_PlayerPos;
+				}
 			}
 		}
+		else
+		if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
+		{
+			//SeekBombArea();
+			if (m_TargetBombArea)
+				m_TargetPos = m_TargetBombArea->m_Pos;
+			else
+				m_TargetBombArea = GameServer()->m_pController->GetRandomBombArea();
+		}
+		else
+		{
+			if (Bomb && Bomb->m_Status == BOMB_CARRYING && distance(m_Pos, Bomb->m_Pos) > 800)
+				m_TargetPos = Bomb->m_Pos;
+			else
+			if (SeekClosestEnemy())
+			{
+				m_TargetPos = m_PlayerPos;
+				
+				if (m_PlayerSpotCount > 0)
+				{
+					// distance to the player
+					if (m_PlayerPos.x < m_Pos.x)
+						m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+					else
+						m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				}
+			}
+		}
+		
 	}
 	else
 	// blue team
@@ -138,36 +165,46 @@ void CAIcstt::DoBehavior()
 			SeekBombArea();
 				
 			// ...unless we're near it
-			if (distance(m_Pos, m_TargetPos) < 1800)
+			if (distance(m_Pos, m_TargetPos) < 2000)
 			{
 				if (SeekClosestEnemy())
 				{
-					{
-						m_TargetPos = m_PlayerPos;
+					m_TargetPos = m_PlayerPos;
 						
-						if (m_PlayerSpotCount > 0)
-						{
-							// distance to the player
-							if (m_PlayerPos.x < m_Pos.x)
-								m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
-							else
-								m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
-						}
+					if (m_PlayerSpotCount > 0)
+					{
+						// distance to the player
+						if (m_PlayerPos.x < m_Pos.x)
+							m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+						else
+							m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
 					}
 				}
 			}
+			
+			/*
+			if (!m_WayFound)
+			{
+				m_TargetPos = Bomb->m_Pos;
+				m_WaypointPos = m_TargetPos;
+			}
+			*/
 		}
 	}
 		
 		
 	UpdateWaypoint();
-	MoveTowardsWaypoint(30);
+	MoveTowardsWaypoint(10);
 	
+	//if (!m_WayFound)
+	//	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", "No path found!");
+		
 	// jump if waypoint is above us
-	if (abs(m_WaypointPos.x - m_Pos.x) < 200 && m_WaypointPos.y < m_Pos.y - 200 && frandom()*10 < 4)
+	if (abs(m_WaypointPos.x - m_Pos.x) < 60 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*20 < 4)
 		m_Jump = 1;
 		
 	HookMove();
+	DoJumping();
 	AirJump();
 	Unstuck();
 	
@@ -203,6 +240,7 @@ void CAIcstt::DoBehavior()
 		}
 	}
 	
+	/*
 	if (m_Hook != 0 && Player()->GetCharacter()->Hooking())
 	{
 		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
@@ -216,6 +254,7 @@ void CAIcstt::DoBehavior()
 				m_Move = 1;
 		}
 	}
+	*/
 	
 	RandomlyStopShooting();
 	

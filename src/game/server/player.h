@@ -56,6 +56,17 @@ public:
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 
+	void GiveCharacterAway()
+	{
+		m_pCharacter = NULL;
+	}
+	
+	void GiveCharacter(CCharacter *Character)
+	{
+		m_pCharacter = Character;
+	}
+	
+	
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;

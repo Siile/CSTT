@@ -29,8 +29,8 @@ CGameControllerCSBB::CGameControllerCSBB(class CGameContext *pGameServer) : IGam
 	m_pGameType = "CSBB";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 
-	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+	//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
+	//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 		
 	for (int i = 0; i < MAX_PICKUPS; i++)
 		m_apPickup[i] = NULL;
@@ -53,6 +53,12 @@ CGameControllerCSBB::CGameControllerCSBB(class CGameContext *pGameServer) : IGam
 	Restart();
 	
 	m_BroadcastTimer = 0;
+	
+	GameServer()->Collision()->GenerateWaypoints();
+	
+	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "%d waypoints generated, %d connections created", GameServer()->Collision()->WaypointCount(), GameServer()->Collision()->ConnectionCount());
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
+
 }
 
 

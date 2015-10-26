@@ -2,6 +2,7 @@
 #define GAME_SERVER_AI_H
 
 #include <base/vmath.h>
+#include <game/pathfinding.h>
 
 
 #include "ai_protocol.h"
@@ -17,6 +18,11 @@ class CAI
 	
 	int m_UnstuckCount;
 	vec2 m_StuckPos;
+	
+	CWaypointPath *m_pPath;
+	CWaypointPath *m_pVisible;
+	
+	bool m_HookMoveLock;
 	
 protected:
 	
@@ -72,9 +78,14 @@ protected:
 	int m_PlayerSpotTimer;
 	int m_PlayerSpotCount;
 	
+	vec2 m_OldTargetPos;
 	vec2 m_TargetPos;
 	vec2 m_WaypointPos;
 	vec2 m_WaypointDir;
+	
+	bool m_WaypointUpdateNeeded;
+	int m_WayPointUpdateTick;
+	int m_WayVisibleUpdateTick;
 	
 	int m_WayPointUpdateWait;
 	
@@ -94,6 +105,7 @@ protected:
 	void UpdateWaypoint();
 	void HookMove();
 	void AirJump();
+	void DoJumping();
 	
 	void RandomlyStopShooting();
 	

@@ -102,6 +102,7 @@ public:
 	
 	class CBomb *GetBomb();
 	class CFlag *GetClosestBombArea(vec2 Pos);
+	class CFlag *GetRandomBombArea();
 	
 	bool CanCharacterSpawn(int ClientID);
 };

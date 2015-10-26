@@ -434,6 +434,11 @@ CFlag *IGameController::GetClosestBombArea(vec2 Pos)
 	return NULL;
 }
 
+CFlag *IGameController::GetRandomBombArea()
+{
+	return NULL;
+}
+
 
 
 bool IGameController::CanCharacterSpawn(int ClientID)

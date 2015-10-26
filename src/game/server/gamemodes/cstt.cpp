@@ -666,6 +666,17 @@ void CGameControllerCSTT::StartRound()
 
 
 
+CFlag *CGameControllerCSTT::GetRandomBombArea()
+{
+	int i = 0;
+	while (i++ < 20)
+	{
+		int r = frandom()*(MAX_BOMBAREAS-1);
+		if (m_apBombArea[r] && m_apBombArea[r]->m_Team == TEAM_BLUE)
+			return m_apBombArea[r];
+	}
+	return NULL;
+}
 
 CFlag *CGameControllerCSTT::GetClosestBombArea(vec2 Pos)
 {

@@ -13,12 +13,23 @@ CAI::CAI(CGameContext *pGameServer, CPlayer *pPlayer)
 {
 	m_pGameServer = pGameServer;
 	m_pPlayer = pPlayer;
+	
+	m_pPath = 0;
+	m_pVisible = 0;
+	
 	Reset();
 }
 
 
 void CAI::Reset()
 {
+	if (m_pPath)
+		delete m_pPath;
+	
+	m_WaypointUpdateNeeded = true;
+	m_WayPointUpdateTick = 0;
+	m_WayVisibleUpdateTick = 0;
+	
 	m_Sleep = 0;
 	m_Stun = 0;
 	m_ReactionTime = 20;
@@ -42,7 +53,7 @@ void CAI::Reset()
 	m_WayPointUpdateWait = 0;
 	m_WayFound = false;
 	
-	m_TargetTimer = 0;
+	m_TargetTimer = 99;
 	m_AttackTimer = 0;
 	m_HookTimer = 0;
 	m_HookReleaseTimer = 0;
@@ -53,6 +64,8 @@ void CAI::Reset()
 	m_PlayerSpotCount = 0;
 	
 	m_TurnSpeed = 0.2f;
+	
+	m_OldTargetPos = vec2(0, 0);
 }
 
 
@@ -103,6 +116,7 @@ void CAI::UpdateInput(int *Data)
 	m_InputChanged = false;
 	Data[0] = m_Move;
 	Data[1] = m_DisplayDirection.x; Data[2] = m_DisplayDirection.y;
+	//Data[1] = m_Direction.x; Data[2] = m_Direction.y;
 	
 	Data[3] = m_Jump;
 	Data[4] = m_Attack;
@@ -114,52 +128,133 @@ void CAI::UpdateInput(int *Data)
 
 void CAI::AirJump()
 {
-	if (Player()->GetCharacter()->GetVel().y > 0 && m_TargetPos.y + 80 < m_Pos.y )
+	if (Player()->GetCharacter()->GetVel().y > 0 && m_WaypointPos.y + 80 < m_Pos.y )
 	{
-		if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 100)) && frandom()*10 < 5)
+		if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_Pos+vec2(0, 120)) && frandom()*10 < 5)
 			m_Jump = 1;
 	}
 }
 
 
 
+
+void CAI::DoJumping()
+{
+	if (abs(m_Pos.x - m_WaypointPos.x) < 20 && m_Pos.y > m_WaypointPos.y + 20)
+		m_Jump = 1;
+
+	if (Player()->GetCharacter()->IsGrounded() && 
+		(GameServer()->Collision()->IsTileSolid(m_Pos.x + m_Move * 32, m_Pos.y) || GameServer()->Collision()->IsTileSolid(m_Pos.x + m_Move * 96, m_Pos.y)))
+		m_Jump = 1;
+}
+
+
+
 void CAI::UpdateWaypoint()
 {
-	if (distance(m_WaypointPos, m_Pos) < 100 || m_TargetTimer > 30)// && m_WayPointUpdateWait > 10)
+	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*5 < GameServer()->Server()->Tick())
+		m_WaypointUpdateNeeded = true;
+	
+	
+	//if (distance(m_WaypointPos, m_LastPos) < 100) // || m_TargetTimer++ > 30)// && m_WayPointUpdateWait > 10)
+	if (m_TargetTimer++ > 20 && (!m_pVisible || m_WaypointUpdateNeeded))
 	{
 		m_TargetTimer = 0;
 		
-		if (GameServer()->Collision()->FindPath(m_Pos, m_TargetPos, m_Move))
+		m_WayFound = false;
+		
+		
+		if (GameServer()->Collision()->FindWaypointPath(m_Pos, m_TargetPos))
 		{
-			if (GameServer()->Collision()->m_GotVision)
+			if (m_pPath)
 			{
-				// we got a waypoint towards the target
-				m_WaypointPos = GameServer()->Collision()->m_VisionPos;
-				m_WaypointDir = m_WaypointPos - m_Pos;
-				m_WayPointUpdateWait = 0;
-				m_WayFound = true;
-				
-				//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Max search distance: %d", GameServer()->Collision()->m_MaxDistance);
-				//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", aBuf);
+				delete m_pPath;
+				m_pVisible = 0;
 			}
+			m_pPath = GameServer()->Collision()->GetPath();
+			GameServer()->Collision()->ForgetAboutThePath();
+			
+			m_pVisible = m_pPath->GetVisible(GameServer(), m_Pos-vec2(0, 16));
+			
+			m_WayPointUpdateWait = 0;
+			m_WayFound = true;
+			
+			m_WaypointPos = m_pPath->m_Pos;
+			m_WaypointDir = m_WaypointPos - m_Pos;
+			
+			//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Path found, lenght: %d", m_pPath->Length());
+			//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", aBuf);
+			
+			vec2 LastPos = m_Pos;
+			CWaypointPath *Next = m_pPath;
+			
+			m_WaypointUpdateNeeded = false;
+			m_WayPointUpdateTick = GameServer()->Server()->Tick();
 		}
-		else
-		{
-			m_WayFound = false;
-		}
+		
 		
 		if (GameServer()->m_ShowWaypoints)
 		{
-			for (int i = 0; i < 98; i++)
-				new CStaticlaser(&GameServer()->m_World, GameServer()->Collision()->m_aPath[i]+vec2(16, 16), GameServer()->Collision()->m_aPath[i+1]+vec2(16, 16), 10);
+			for (int i = 0; i < 10; i++)
+				new CStaticlaser(&GameServer()->m_World, GameServer()->Collision()->m_aPath[i], GameServer()->Collision()->m_aPath[i+1], 10);
+			
+			new CStaticlaser(&GameServer()->m_World, m_Pos, m_WaypointPos, 20);
 		}
-		
-		if (GameServer()->m_ShowWaypoints)
-			new CStaticlaser(&GameServer()->m_World, m_Pos, m_WaypointPos, 10);
 	}
 	
+	
 	m_WayPointUpdateWait++;
-	m_TargetTimer++;
+	
+	
+	if (m_pVisible)
+	{
+		m_WaypointPos = m_pVisible->m_Pos;
+		m_WaypointDir = m_WaypointPos - m_Pos;
+		
+		m_pVisible = m_pVisible->GetVisible(GameServer(), m_Pos-vec2(0, 16));
+		
+		m_WayVisibleUpdateTick = GameServer()->Server()->Tick();
+		
+		//if (GameServer()->m_ShowWaypoints)
+		//	new CStaticlaser(&GameServer()->m_World, m_Pos, m_WaypointPos, 10);
+	}
+	
+	
+	// left or right
+	if (abs(m_WaypointDir.y)*2 < abs(m_WaypointDir.x))
+	{
+		if (Player()->GetCharacter()->IsGrounded() && abs(m_WaypointDir.x) > 128)
+		{
+			int Dir = m_WaypointDir.x < 0 ? -1 : 1;
+			
+			// simple pits
+			if (!GameServer()->Collision()->IsTileSolid(m_Pos.x + Dir * 32, m_Pos.y + 16) ||
+				!GameServer()->Collision()->IsTileSolid(m_Pos.x + Dir * 64, m_Pos.y + 16))
+			{
+				if (GameServer()->Collision()->IsTileSolid(m_Pos.x + Dir * 128, m_Pos.y + 16) ||
+					GameServer()->Collision()->IsTileSolid(m_Pos.x + Dir * 196, m_Pos.y + 16))
+					m_Jump = 1;
+			}
+				
+		}
+	}
+
+	
+	// check target
+	if (distance(m_Pos, m_TargetPos) < 800)
+	{
+		if (!GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos))
+		{
+			m_WaypointPos = m_TargetPos;
+			m_WaypointDir = m_WaypointPos - m_Pos;
+		}
+	}
+	
+	if (!m_WayFound)
+	{
+		m_WaypointPos = m_TargetPos;
+		m_WaypointDir = m_WaypointPos - m_Pos;
+	}
 }
 
 
@@ -181,15 +276,20 @@ void CAI::HookMove()
 			m_Hook = 0;
 	}
 	
+
+
 	
 	// hook
-	if (m_LastHook == 0 && m_HookTimer++ > 2)
+	if (m_LastHook == 0 && m_HookTimer++ > 1)
 	{
 		vec2 HookDir = m_WaypointPos - m_Pos;
 		float Angle = atan2(HookDir.x, HookDir.y);
 			
-		float MaxDist = 0;
+		float MaxDist = 220;
 		vec2 FinalHookPos = vec2(0, 0);
+		
+		
+		vec2 Vel = Player()->GetCharacter()->GetVel();
 		
 		//for (int i = -19; i <= 19; i++)
 		for (int i = 0; i <= 36; i++)
@@ -202,23 +302,24 @@ void CAI::HookMove()
 				continue;
 			
 			// dont hook upwards if going down
-			if (a > 70 && a < 290 && HookDir.y > 10)
+			//if (a > 70 && a < 290 && HookDir.y > 10)
+			if (HookDir.y > 0)
 				continue;
 			
 			// dont hook backwards
 			if ((HookDir.x < 0 && a < 180) || (HookDir.x > 0 && a > 180))
 				continue;
-				
-			vec2 HookPos = m_Pos + vec2(sin(a*RAD)*380, cos(a*RAD)*380);
+
+			vec2 HookPos = m_Pos + vec2(sin(a*RAD)*380 + Vel.x*10, cos(a*RAD)*380 + Vel.y*10);
 
 			// hook if something in sight
 			int C = GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL);
 			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
 			{
 				float Dist = distance(m_Pos, HookPos);
-				if (Dist > 60 && Dist > MaxDist)
+				if (Dist > 40 && abs(Dist - 220) < MaxDist)
 				{
-					MaxDist = Dist;
+					MaxDist = abs(Dist - 220);
 					FinalHookPos = HookPos;
 				}
 			}
@@ -227,22 +328,41 @@ void CAI::HookMove()
 
 		if (MaxDist > 0)
 		{
-			if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 5.0f && m_HookTick < GameServer()->Server()->Tick() - 10)
-			{
-				m_Hook = 1;
-				m_HookTick = GameServer()->Server()->Tick();
-			}
-			m_Direction = FinalHookPos - m_Pos;
+			bool TryHooking = true;
 			
-			//if (Player()->GetCharacter()->IsGrounded())
-			//	m_Jump = 1;
+			if (m_Pos.y < m_WaypointPos.y)
+				TryHooking = false;
+			
+			if (m_Pos.y < m_WaypointPos.y - 100)
+			{
+				if (m_pVisible && m_pVisible->m_pNext && m_pVisible->m_pNext->m_Pos.y > m_Pos.y)
+					TryHooking = false;
+			}
+	
+			if (TryHooking)
+			{
+				if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 6.0f &&
+					m_DisplayDirection.y < 0 && MaxDist < 100)
+				//if (m_DisplayDirection.y < 0 && MaxDist < 340) // && m_HookTick < GameServer()->Server()->Tick() - 10)
+				{
+					m_Hook = 1;
+					m_HookTick = GameServer()->Server()->Tick();
+					m_HookMoveLock = frandom()*10 < 5;
+				
+					m_Direction = FinalHookPos - m_Pos;
+				}
+				else
+				if (m_PlayerSpotCount == 0)
+					m_Direction = FinalHookPos - m_Pos;
+			}
 		}
 		else
 			m_Hook = 0;
 	}
 	
+	
 	// lock move direction
-	if (m_Hook != 0 && Player()->GetCharacter()->Hooking())
+	if (m_Hook != 0 && Player()->GetCharacter()->Hooking() && m_HookMoveLock)
 	{
 		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
 		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
@@ -261,14 +381,21 @@ void CAI::HookMove()
 		}
 	}
 	
+	
 	// release hook
 	if (m_Hook == 1)
 	{
-		if (m_HookReleaseTimer++ > 6 + frandom()*6)
+		if (m_HookReleaseTimer++ > 4 + frandom()*6)
 		{
-			m_Hook = 0;
-			m_HookReleaseTimer = 0;
-			m_HookTimer = 0;
+			vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
+			vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
+		
+			if (CorePos.y < HookPos.y + 40 || m_Pos.y < m_WaypointPos.y - 40 || m_HookReleaseTimer > 14)
+			{
+				m_Hook = 0;
+				m_HookTimer = 0;
+				m_HookReleaseTimer = 0;
+			}
 		}
 	}
 	else
@@ -338,6 +465,7 @@ void CAI::SeekBombArea()
 	if (BombArea)
 		m_TargetPos = BombArea->m_Pos;
 }
+
 	
 void CAI::SeekBomb()
 {
@@ -638,7 +766,7 @@ bool CAI::SeekClosestEnemyInSight()
 			continue;
 			
 		int Distance = distance(pCharacter->m_Pos, m_LastPos);
-		if (Distance < 800 && 
+		if (Distance < 900 && 
 			!GameServer()->Collision()->FastIntersectLine(pCharacter->m_Pos, m_LastPos))
 			//!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
 		{
@@ -711,6 +839,12 @@ void CAI::Tick()
 		m_LastJump = m_Jump;
 		m_LastAttack = m_Attack;
 		m_LastHook = m_Hook;
+		
+		if (m_OldTargetPos != m_TargetPos)
+		{
+			m_OldTargetPos = m_TargetPos;
+			m_WaypointUpdateNeeded = true;
+		}
 			
 		m_InputChanged = true;
 	}

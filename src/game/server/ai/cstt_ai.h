@@ -14,6 +14,8 @@ public:
 private:
 	int m_SkipMoveUpdate;
 	
+	class CFlag *m_TargetBombArea;
+	
 };
 
 #endif
