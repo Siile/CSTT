@@ -165,7 +165,7 @@ void CAIcstt::DoBehavior()
 			SeekBombArea();
 				
 			// ...unless we're near it
-			if (distance(m_Pos, m_TargetPos) < 2000)
+			if (distance(m_Pos, m_TargetPos) < 1500)
 			{
 				if (SeekClosestEnemy())
 				{
