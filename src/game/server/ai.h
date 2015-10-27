@@ -24,6 +24,10 @@ class CAI
 	
 	bool m_HookMoveLock;
 	
+	
+	int m_HookReleaseTick;
+	int m_HookTick;
+	
 protected:
 	
 	CGameContext *GameServer() const { return m_pGameServer; }
@@ -61,7 +65,6 @@ protected:
 	int m_Hook;
 	int m_LastHook;
 	
-	int m_HookTick;
 	
 	int m_NextReaction;
 	int m_ReactionTime;
@@ -102,7 +105,7 @@ protected:
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
 	
-	void UpdateWaypoint();
+	void UpdateWaypoint(int EnemyWeight = 0);
 	void HookMove();
 	void AirJump();
 	void DoJumping();

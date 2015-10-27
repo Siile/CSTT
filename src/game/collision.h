@@ -29,6 +29,7 @@ class CCollision
 	CWaypoint *GetClosestWaypoint(vec2 Pos);
 
 	CWaypoint *m_apWaypoint[MAX_WAYPOINTS];
+	CWaypoint *m_pCenterWaypoint;
 	
 	CWaypointPath *m_pPath;
 	
@@ -47,7 +48,10 @@ public:
 	bool GenerateSomeMoreWaypoints();
 	int WaypointCount() { return m_WaypointCount; }
 	int ConnectionCount() { return m_ConnectionCount; }
-	bool FindWaypointPath(vec2 Start, vec2 End);
+	
+	void SetWaypointCenter(vec2 Position);
+	void AddWeight(vec2 Pos, int Weight);
+	bool FindWaypointPath(vec2 TargetPos);
 	
 	CWaypointPath *GetPath(){ return m_pPath; }
 	void ForgetAboutThePath(){ m_pPath = 0; }

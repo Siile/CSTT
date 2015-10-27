@@ -134,7 +134,7 @@ void CAIcstt::DoBehavior()
 		}
 		else
 		{
-			if (Bomb && Bomb->m_Status == BOMB_CARRYING && distance(m_Pos, Bomb->m_Pos) > 800)
+			if (Bomb && Bomb->m_Status == BOMB_CARRYING && distance(m_Pos, Bomb->m_Pos) > 400)
 				m_TargetPos = Bomb->m_Pos;
 			else
 			if (SeekClosestEnemy())
@@ -192,8 +192,10 @@ void CAIcstt::DoBehavior()
 		}
 	}
 		
-		
-	UpdateWaypoint();
+	if (Bomb->m_pCarryingCharacter == Player()->GetCharacter())
+		UpdateWaypoint(50000);
+	else
+		UpdateWaypoint();
 	MoveTowardsWaypoint(10);
 	
 	//if (!m_WayFound)

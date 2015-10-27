@@ -58,18 +58,16 @@ class CWaypoint
 private:
 	int m_aDistance[MAX_WAYPOINTCONNECTIONS];
 	
-	void SetCenter(int Distance = 1);
-	CWaypointPath *FindPathToCenter(CWaypointPath *Path = 0);
 	
 public:
 	int m_X, m_Y; // tileset position
 	vec2 m_Pos; // world position
-
-	// to be used to prioritize connection check order
-	int m_Score;
 	
 	CWaypoint *m_apConnection[MAX_WAYPOINTCONNECTIONS];
 	int m_ConnectionCount;
+	
+	void SetCenter(int Distance = 1);
+	CWaypointPath *FindPathToCenter(CWaypointPath *Path = 0);
 	
 	// preventing loops and finding the shortest way to target
 	int m_PathDistance;
@@ -102,6 +100,22 @@ public:
 		return false;
 	}
 	
+	void AddWeight(int Weight, bool Kill = false)
+	{
+		m_PathDistance += Weight;
+		
+		for (int i = 0; i < m_ConnectionCount; i++)
+		{
+			if (m_apConnection[i])
+			{
+				if (!Kill)
+					m_apConnection[i]->AddWeight(Weight / 2, true);
+				else
+					m_apConnection[i]->m_PathDistance += Weight;
+			}
+		}
+	}
+	
 	
 	// create a two way connection between this and given waypoint
 	void Connect(CWaypoint *Waypoint)
@@ -121,20 +135,6 @@ public:
 		Waypoint->Connect(this);
 	}
 	
-	void Clear()
-	{
-		m_PathDistance = 0;
-		
-		// clear all possible paths
-		for (int i = 0; i < m_ConnectionCount; i++)
-		{
-			if (m_apConnection[i])
-			{
-				if (m_apConnection[i]->m_PathDistance != 0)
-					m_apConnection[i]->Clear();
-			}
-		}
-	}
 	
 	
 	void ClearConnections()
@@ -166,7 +166,6 @@ public:
 	}
 	
 	
-	CWaypointPath *FindPath(CWaypoint *Target, int Distance = 0);
 };
 
 

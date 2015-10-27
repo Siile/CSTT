@@ -47,6 +47,7 @@ void CAI::Reset()
 	m_DisplayDirection = vec2(-1, 0);
 	
 	m_HookTick = 0;
+	m_HookReleaseTick = 0;
 	
 	m_UnstuckCount = 0;
 	
@@ -150,21 +151,41 @@ void CAI::DoJumping()
 
 
 
-void CAI::UpdateWaypoint()
+void CAI::UpdateWaypoint(int EnemyWeight)
 {
-	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*5 < GameServer()->Server()->Tick())
+	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*1 < GameServer()->Server()->Tick())
 		m_WaypointUpdateNeeded = true;
 	
 	
 	//if (distance(m_WaypointPos, m_LastPos) < 100) // || m_TargetTimer++ > 30)// && m_WayPointUpdateWait > 10)
-	if (m_TargetTimer++ > 20 && (!m_pVisible || m_WaypointUpdateNeeded))
+	if (m_TargetTimer++ > 10 && (!m_pVisible || m_WaypointUpdateNeeded))
 	{
 		m_TargetTimer = 0;
 		
 		m_WayFound = false;
 		
+		// prepare waypoints for path finding
+		GameServer()->Collision()->SetWaypointCenter(m_Pos);
 		
-		if (GameServer()->Collision()->FindWaypointPath(m_Pos, m_TargetPos))
+		if (EnemyWeight != 0)
+		{
+			for (int i = 0; i < MAX_CLIENTS; i++)
+			{
+				CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+				if(!pPlayer) continue;
+				if (pPlayer->GetTeam() == Player()->GetTeam()) continue;
+
+				CCharacter *pCharacter = pPlayer->GetCharacter();
+				if (!pCharacter) continue;
+				if (!pCharacter->IsAlive()) continue;
+				
+				GameServer()->Collision()->AddWeight(pCharacter->m_Pos, EnemyWeight);
+			}
+		}
+		GameServer()->Collision()->SetWaypointCenter(m_Pos);
+		
+		
+		if (GameServer()->Collision()->FindWaypointPath(m_TargetPos))
 		{
 			if (m_pPath)
 			{
@@ -250,7 +271,7 @@ void CAI::UpdateWaypoint()
 		}
 	}
 	
-	if (!m_WayFound)
+	if (!m_WayFound && !m_pVisible)
 	{
 		m_WaypointPos = m_TargetPos;
 		m_WaypointDir = m_WaypointPos - m_Pos;
@@ -280,55 +301,41 @@ void CAI::HookMove()
 
 	
 	// hook
-	if (m_LastHook == 0 && m_HookTimer++ > 1)
+	if (m_LastHook == 0)
 	{
 		vec2 HookDir = m_WaypointPos - m_Pos;
+		vec2 HookPos;
 		float Angle = atan2(HookDir.x, HookDir.y);
 			
-		float MaxDist = 220;
-		vec2 FinalHookPos = vec2(0, 0);
 		
 		
 		vec2 Vel = Player()->GetCharacter()->GetVel();
+
+		bool TryHooking = false;
 		
-		//for (int i = -19; i <= 19; i++)
-		for (int i = 0; i <= 36; i++)
+		float Distance = distance(m_Pos, m_WaypointPos);
+		
+		
+		for (int i = 0; i < 4; i++)
 		{
-			//float a = Angle + i*0.02f;
-			float a = i*10;
+			HookPos = m_Pos;
 			
-			// dont hook downwards
-			if (a < 90 || a > 270)
-				continue;
+			vec2 Random = vec2(frandom()-frandom(), frandom()-frandom()) * (Distance / 3.0f);
 			
-			// dont hook upwards if going down
-			//if (a > 70 && a < 290 && HookDir.y > 10)
-			if (HookDir.y > 0)
-				continue;
-			
-			// dont hook backwards
-			if ((HookDir.x < 0 && a < 180) || (HookDir.x > 0 && a > 180))
-				continue;
-
-			vec2 HookPos = m_Pos + vec2(sin(a*RAD)*380 + Vel.x*10, cos(a*RAD)*380 + Vel.y*10);
-
-			// hook if something in sight
-			int C = GameServer()->Collision()->IntersectLine(m_Pos, HookPos, &HookPos, NULL);
+			int C = GameServer()->Collision()->IntersectLine(m_Pos, m_WaypointPos+Random, &HookPos, NULL);
 			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
 			{
 				float Dist = distance(m_Pos, HookPos);
-				if (Dist > 40 && abs(Dist - 220) < MaxDist)
+				if (abs(Dist - 220) < 120)
 				{
-					MaxDist = abs(Dist - 220);
-					FinalHookPos = HookPos;
+					TryHooking = true;
+					break;
 				}
 			}
 		}
-		
 
-		if (MaxDist > 0)
+		if (TryHooking)
 		{
-			bool TryHooking = true;
 			
 			if (m_Pos.y < m_WaypointPos.y)
 				TryHooking = false;
@@ -342,18 +349,17 @@ void CAI::HookMove()
 			if (TryHooking)
 			{
 				if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 6.0f &&
-					m_DisplayDirection.y < 0 && MaxDist < 100)
-				//if (m_DisplayDirection.y < 0 && MaxDist < 340) // && m_HookTick < GameServer()->Server()->Tick() - 10)
+					m_DisplayDirection.y < 0)
 				{
 					m_Hook = 1;
 					m_HookTick = GameServer()->Server()->Tick();
 					m_HookMoveLock = frandom()*10 < 5;
 				
-					m_Direction = FinalHookPos - m_Pos;
+					m_Direction = HookPos - m_Pos;
 				}
 				else
 				if (m_PlayerSpotCount == 0)
-					m_Direction = FinalHookPos - m_Pos;
+					m_Direction = HookPos - m_Pos;
 			}
 		}
 		else
@@ -362,7 +368,7 @@ void CAI::HookMove()
 	
 	
 	// lock move direction
-	if (m_Hook != 0 && Player()->GetCharacter()->Hooking() && m_HookMoveLock)
+	if (m_Hook != 0 && Player()->GetCharacter()->Hooking()) // && m_HookMoveLock)
 	{
 		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
 		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
@@ -385,21 +391,15 @@ void CAI::HookMove()
 	// release hook
 	if (m_Hook == 1)
 	{
-		if (m_HookReleaseTimer++ > 4 + frandom()*6)
+		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
+			
+		if (m_Pos.y < HookPos.y ||
+			m_HookTick + GameServer()->Server()->TickSpeed()*1 < GameServer()->Server()->Tick())
 		{
-			vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
-			vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
-		
-			if (CorePos.y < HookPos.y + 40 || m_Pos.y < m_WaypointPos.y - 40 || m_HookReleaseTimer > 14)
-			{
-				m_Hook = 0;
-				m_HookTimer = 0;
-				m_HookReleaseTimer = 0;
-			}
+			m_Hook = 0;
+			m_HookReleaseTick = GameServer()->Server()->Tick();
 		}
 	}
-	else
-		m_HookReleaseTimer = 0;
 }
 
 

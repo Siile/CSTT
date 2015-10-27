@@ -25,6 +25,7 @@ CCollision::CCollision()
 	m_pLayers = 0;
 	
 	m_pPath = 0;
+	m_pCenterWaypoint = 0;
 	
 	for (int i = 0; i < MAX_WAYPOINTS; i++)
 		m_apWaypoint[i] = 0;
@@ -59,6 +60,11 @@ void CCollision::Init(class CLayers *pLayers)
 			m_pTiles[i].m_Index = 0;
 		}
 	}
+	
+	m_pCenterWaypoint = 0;
+	
+	for (int i = 0; i < MAX_WAYPOINTS; i++)
+		m_apWaypoint[i] = 0;
 }
 
 
@@ -81,6 +87,8 @@ void CCollision::ClearWaypoints()
 		
 		m_apWaypoint[i] = NULL;
 	}
+	
+	m_pCenterWaypoint = NULL;
 }
 
 
@@ -235,7 +243,8 @@ void CCollision::ConnectWaypoints()
 			}
 			
 			//if (!IsTileSolid(x*32, (y-1)*32) && !IsTileSolid(x*32, (y+1)*32))
-			//	break;
+			if (!IsTileSolid(x*32, (y+1)*32))
+				break;
 			
 			x--;
 		}
@@ -292,7 +301,7 @@ CWaypoint *CCollision::GetClosestWaypoint(vec2 Pos)
 			//int d = abs(m_apWaypoint[i]->m_Pos.x-Pos.x)+abs(m_apWaypoint[i]->m_Pos.y-Pos.y);
 			int d = distance(m_apWaypoint[i]->m_Pos, Pos);
 			
-			if (d < Dist && d < 1000)
+			if (d < Dist && d < 800)
 			{
 				if (!FastIntersectLine(m_apWaypoint[i]->m_Pos, Pos))
 				{
@@ -308,48 +317,56 @@ CWaypoint *CCollision::GetClosestWaypoint(vec2 Pos)
 
 
 
-bool CCollision::FindWaypointPath(vec2 Start, vec2 End)
+void CCollision::SetWaypointCenter(vec2 Position)
 {
+	m_pCenterWaypoint = GetClosestWaypoint(Position);
+	
+	// clear path weights
 	for (int i = 0; i < m_WaypointCount; i++)
 	{
 		if (m_apWaypoint[i])
 			m_apWaypoint[i]->m_PathDistance = 0;
 	}
 	
-	CWaypoint *StartW = GetClosestWaypoint(Start);
-	CWaypoint *EndW = GetClosestWaypoint(End);
+	if (m_pCenterWaypoint)
+		m_pCenterWaypoint->SetCenter();
+	
+}
+
+
+void CCollision::AddWeight(vec2 Pos, int Weight)
+{
+	CWaypoint *Wp = GetClosestWaypoint(Pos);
+	
+	if (Wp)
+		Wp->AddWeight(Weight);
+}
+
+
+
+bool CCollision::FindWaypointPath(vec2 TargetPos)
+{
+
+	
+	CWaypoint *Target = GetClosestWaypoint(TargetPos);
 	
 	
-	if (StartW && EndW)
+	if (Target && m_pCenterWaypoint)
 	{
 		if (m_pPath)
 			delete m_pPath;
-		m_pPath = StartW->FindPath(EndW);
 		
+		m_pPath = Target->FindPathToCenter();
+		
+		// for displaying the chosen waypoints
 		for (int w = 0; w < 99; w++)
-		{
 			m_aPath[w] = vec2(0, 0);
-		}
-
-		
-		// show nearest waypoint and it's connections
-		/*
-		int p = 0;
-		m_aPath[p++] = vec2(StartW->m_Pos.x, StartW->m_Pos.y);
-		
-		for (int w = 0; w < StartW->m_ConnectionCount; w++)
-		{
-			m_aPath[p++] = vec2(StartW->m_apConnection[w]->m_Pos.x, StartW->m_apConnection[w]->m_Pos.y);
-		}
-		*/
-		
 		
 		if (m_pPath)
 		{
 			CWaypointPath *Wp = m_pPath;
 			
 			int p = 0;
-			
 			for (int w = 0; w < 10; w++)
 			{
 				m_aPath[p++] = vec2(Wp->m_Pos.x, Wp->m_Pos.y);
