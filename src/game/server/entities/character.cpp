@@ -388,11 +388,12 @@ void CCharacter::HandleNinja()
 
 	if (m_Ninja.m_CurrentMoveTime > 0)
 	{
-		// special effet for pikatanachu
+		// special effect for lightng sword
 		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
 		{
-			float a = frandom()*360 * RAD;
-			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2, 1);
+			float a = GetAngle(m_Ninja.m_ActivationDir);
+			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
+			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 5, 1);
 		}
 		
 		// Set velocity
@@ -682,6 +683,9 @@ void CCharacter::FireWeapon()
 		return;
 	}
 	
+	// weapon knockback to self
+	m_Core.m_Vel -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
+	
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 
@@ -723,6 +727,7 @@ void CCharacter::FireWeapon()
 		} break;
 		
 		
+		// todo: clean this
 		case PROJTYPE_HAMMER:
 		{
 			GetPlayer()->m_InterestPoints += 10;
@@ -769,15 +774,10 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_BULLET:
 		{
-			GetPlayer()->m_InterestPoints += 10;
+			GetPlayer()->m_InterestPoints += 10;	
 			
 			float a = GetAngle(Direction);
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
-				a += frandom()*0.08f - frandom()*0.08f;
-			
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BIGBULLETSPREAD)
-				a += frandom()*0.14f - frandom()*0.14f;
-				
+			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 			
 			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GUN,
 				m_pPlayer->GetCID(),
@@ -807,7 +807,6 @@ void CCharacter::FireWeapon()
 			// CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			// Msg.AddInt(ShotSpread*2+1);
 
-			
 			int ShotSpread = aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread / 2;
 			
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
@@ -820,6 +819,7 @@ void CCharacter::FireWeapon()
 					float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
 					float a = GetAngle(Direction);
 					a += Spreading[i+2];
+					a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 					float v = 1-(absolute(i)/(float)ShotSpread);
 					float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
 					CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
@@ -845,6 +845,7 @@ void CCharacter::FireWeapon()
 					float Spreading[] = {-0.185f, -0.130f, -0.050f, 0.050f, 0.130f, 0.185f};
 					float a = GetAngle(Direction);
 					a += Spreading[i+3];
+					a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 					float v = 1-(absolute(i)/(float)ShotSpread);
 					float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
 					CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
@@ -892,12 +893,10 @@ void CCharacter::FireWeapon()
 		{
 			GetPlayer()->m_InterestPoints += 40;
 			
-			float a = GetAngle(Direction);
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
-				a += frandom()*0.08f - frandom()*0.08f;
+			m_Core.m_Vel -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
 			
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BIGBULLETSPREAD)
-				a += frandom()*0.14f - frandom()*0.14f;
+			float a = GetAngle(Direction);
+			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 			
 			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 		} break;
@@ -905,17 +904,6 @@ void CCharacter::FireWeapon()
 		case PROJTYPE_LIGHTNING:
 		{
 			GetPlayer()->m_InterestPoints += 10;
-		/*
-			float a = GetAngle(Direction);
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BULLETSPREAD)
-				a += frandom()*0.08f - frandom()*0.08f;
-			
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == BIGBULLETSPREAD)
-				a += frandom()*0.14f - frandom()*0.14f;
-
-			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage);
-			//new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage);
-		*/
 		
 			int Desc = 1;
 			
@@ -924,26 +912,39 @@ void CCharacter::FireWeapon()
 		
 			int ShotSpread = aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread / 2;
 
-			if (aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread%2)
+			if (ShotSpread == 1)
 			{
-				for(int i = -ShotSpread; i <= ShotSpread; ++i)
-				{
-					float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
-					float a = GetAngle(Direction);
-					a += Spreading[i+2];
+				float a = GetAngle(Direction);
+				a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 
-					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
-				}
+				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
 			}
 			else
 			{
-				for(int i = -ShotSpread; i <= ShotSpread; ++i)
+			// for lightning shotgun, might not work 100% right
+				if (aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread%2)
 				{
-					float Spreading[] = {-0.185f, -0.130f, -0.050f, 0.050f, 0.130f, 0.185f};
-					float a = GetAngle(Direction);
-					a += Spreading[i+3];
-					
-					new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+					for(int i = -ShotSpread; i <= ShotSpread; ++i)
+					{
+						float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
+						float a = GetAngle(Direction);
+						a += Spreading[i+2];
+						a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
+
+						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+					}
+				}
+				else
+				{
+					for(int i = -ShotSpread; i <= ShotSpread; ++i)
+					{
+						float Spreading[] = {-0.185f, -0.130f, -0.050f, 0.050f, 0.130f, 0.185f};
+						float a = GetAngle(Direction);
+						a += Spreading[i+3];
+						a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
+						
+						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+					}
 				}
 			}
 		} break;

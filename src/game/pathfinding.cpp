@@ -108,5 +108,8 @@ CWaypointPath *CWaypoint::FindPathToCenter(CWaypointPath *Path)
 	if (Closest)
 		return Closest->FindPathToCenter(new CWaypointPath(m_Pos, P));
 	
+	if (Path)
+		delete Path;
+	
 	return NULL;
 }

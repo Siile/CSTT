@@ -55,7 +55,7 @@ void CLightning::DoBounce()
 		return;
 	}
 
-	vec2 To = m_Pos + m_Dir * min(int(m_Energy), int(m_StepEnergy)) + vec2(frandom()*50-frandom()*50, frandom()*50-frandom()*50);
+	vec2 To = m_Pos + m_Dir * min(int(m_Energy), int(m_StepEnergy)) + vec2(frandom()-frandom(), frandom()-frandom())*40.0f;
 
 	if(GameServer()->Collision()->IntersectLine(m_Pos, To, 0x0, &To))
 	{
