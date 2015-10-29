@@ -734,7 +734,7 @@ void CGameControllerCSTT::AutoBalance()
 		if (!pCharacter->IsAlive())
 			continue;
 		
-		if (pPlayer->GetTeam() == TEAM_RED)
+		if (pPlayer->GetTeam() == TEAM_RED || pPlayer->m_WantedTeam == TEAM_RED)
 		{
 			if (!pPlayer->m_IsBot)
 				Red++;
@@ -745,7 +745,7 @@ void CGameControllerCSTT::AutoBalance()
 			}
 		}
 		
-		if (pPlayer->GetTeam() == TEAM_BLUE)
+		if (pPlayer->GetTeam() == TEAM_BLUE || pPlayer->m_WantedTeam == TEAM_BLUE)
 		{
 			if (!pPlayer->m_IsBot)
 				Blue++;
@@ -762,7 +762,7 @@ void CGameControllerCSTT::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 4 && (Blue+BlueBots) < 4)
+	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
@@ -777,9 +777,9 @@ void CGameControllerCSTT::AutoBalance()
 		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Adding %d bots for balance", abs((Red+RedBots) - (Blue+BlueBots)));
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	}
-	
+	else
 	// too many bots
-	if ((Red+RedBots) > 5 && (Blue+BlueBots) > 5)
+	if ((Red+RedBots) > g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) > g_Config.m_SvPreferredTeamSize)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{
@@ -810,13 +810,7 @@ void CGameControllerCSTT::Tick()
 			Restart();
 		
 		m_RoundTick = 0;
-		
-		/*
-		if (m_BroadcastTimer++ > 300)
-		{
-			m_BroadcastTimer = 0;
-			GameServer()->SendBroadcast("Waiting for second player...", -1);
-		}*/
+
 		if (CountPlayers() == 1)
 			AutoBalance();
 	}
@@ -837,13 +831,18 @@ void CGameControllerCSTT::Tick()
 		else
 		if (m_GameState == GAMESTATE_STARTING)
 		{
+			if (m_RoundTick == (g_Config.m_SvPreroundTime-3)*Server()->TickSpeed() ||
+				m_RoundTick == (g_Config.m_SvPreroundTime-2.5f)*Server()->TickSpeed())
+			{
+				AutoBalance();
+			}
+		
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-2)*Server()->TickSpeed())
 			{				
 				char aBuf[128];
 				str_format(aBuf, sizeof(aBuf), "Round %d / %d", m_Round, g_Config.m_SvNumRounds);
 				GameServer()->SendBroadcast(aBuf, -1, true);
 				
-				AutoBalance();
 				GiveBombToPlayer();
 			}
 			if (m_RoundTick >= g_Config.m_SvPreroundTime*Server()->TickSpeed())

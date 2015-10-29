@@ -105,7 +105,7 @@ protected:
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
 	
-	void UpdateWaypoint(int EnemyWeight = 0);
+	bool UpdateWaypoint(int EnemyWeight = 0);
 	void HookMove();
 	void AirJump();
 	void DoJumping();
@@ -124,8 +124,8 @@ public:
 	void Tick();
 	void UpdateInput(int *Data); // MAX_INPUT_SIZE
 	
-	void SeekBombArea();
-	void SeekBomb();
+	bool SeekBombArea();
+	bool SeekBomb();
 	
 	bool SeekClosestEnemy();
 	bool SeekClosestEnemyInSight();

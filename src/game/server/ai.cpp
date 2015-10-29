@@ -151,7 +151,7 @@ void CAI::DoJumping()
 
 
 
-void CAI::UpdateWaypoint(int EnemyWeight)
+bool CAI::UpdateWaypoint(int EnemyWeight)
 {
 	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*1 < GameServer()->Server()->Tick())
 		m_WaypointUpdateNeeded = true;
@@ -273,9 +273,12 @@ void CAI::UpdateWaypoint(int EnemyWeight)
 	
 	if (!m_WayFound && !m_pVisible)
 	{
-		m_WaypointPos = m_TargetPos;
-		m_WaypointDir = m_WaypointPos - m_Pos;
+		return false;
+		//m_WaypointPos = m_TargetPos;
+		//m_WaypointDir = m_WaypointPos - m_Pos;
 	}
+	
+	return true;
 }
 
 
@@ -373,17 +376,18 @@ void CAI::HookMove()
 		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
 		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
 		vec2 Vel = Player()->GetCharacter()->GetVel();
-		
-		if (distance(CorePos, HookPos) > 40)
+
+		// check hook point's surroundings
+		for (int y = -2; y < 2; y++)
 		{
-			if (Vel.x > 0 && HookPos.y < CorePos.y)
-				m_Move = 1;
-			if (Vel.x < 0 && HookPos.y < CorePos.y)
-				m_Move = -1;
-			if (HookPos.x > CorePos.x && HookPos.y > CorePos.y)
-				m_Move = 1;
-			if (HookPos.x < CorePos.x && HookPos.y > CorePos.y)
-				m_Move = -1;
+			if (GameServer()->Collision()->IsTileSolid(HookPos.x + 32, HookPos.y + y*32) && 
+				GameServer()->Collision()->IsTileSolid(HookPos.x + 64, HookPos.y + y*32) &&
+				GameServer()->Collision()->IsTileSolid(HookPos.x + 96, HookPos.y + y*32))
+				m_Move = HookPos.y < CorePos.y ? -1 : 1;
+			if (GameServer()->Collision()->IsTileSolid(HookPos.x - 32, HookPos.y + y*32) && 
+				GameServer()->Collision()->IsTileSolid(HookPos.x - 64, HookPos.y + y*32) &&
+				GameServer()->Collision()->IsTileSolid(HookPos.x - 96, HookPos.y + y*32))
+				m_Move = HookPos.y < CorePos.y ? 1 : -1;
 		}
 	}
 	
@@ -458,21 +462,31 @@ void CAI::Unstuck()
 
 
 
-void CAI::SeekBombArea()
+bool CAI::SeekBombArea()
 {
 	CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_LastPos);
 	
 	if (BombArea)
+	{
 		m_TargetPos = BombArea->m_Pos;
+		return true;
+	}
+	
+	return false;
 }
 
 	
-void CAI::SeekBomb()
+bool CAI::SeekBomb()
 {
 	CBomb *Bomb = GameServer()->m_pController->GetBomb();
 	
 	if (Bomb)
+	{
 		m_TargetPos = Bomb->m_Pos;
+		return true;
+	}
+	
+	return false;
 }
 
 

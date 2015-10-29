@@ -83,6 +83,8 @@ MACRO_CONFIG_INT(SvBaseCaptureTime, sv_basecapturetime, 3, 1, 60, CFGFLAG_SERVER
 
 MACRO_CONFIG_INT(SvRespawnDelayCSBB, sv_respawn_delay_csbb, 3, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in csbb gametype")
 
+MACRO_CONFIG_INT(SvPreferredTeamSize, sv_preferredteamsize, 5, 1, 8, CFGFLAG_SERVER, "Preferred team size")
+
 
 // AI
 MACRO_CONFIG_INT(SvBotReactTime, sv_bot_react_time, 6, 0, 20, CFGFLAG_SERVER, "Time bot takes to start shooting")

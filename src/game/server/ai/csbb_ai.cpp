@@ -103,10 +103,16 @@ void CAIcsbb::DoBehavior()
 	if (Player()->GetTeam() == GameServer()->m_pController->GetDefendingTeam())
 	{
 		// seek bomb area
-		SeekBombArea();
-
-		// ...unless we're near it && it's in sight
-		if (!m_WayFound || distance(m_Pos, m_TargetPos) < 400 && !GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos))
+		if (SeekBombArea())
+		{
+			// ...unless we're near it && it's in sight
+			if (!m_WayFound || distance(m_Pos, m_TargetPos) < 400 && !GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos))
+			{
+				if (SeekClosestEnemy())
+					m_TargetPos = m_PlayerPos;
+			}
+		}
+		else
 		{
 			if (SeekClosestEnemy())
 				m_TargetPos = m_PlayerPos;
@@ -114,30 +120,47 @@ void CAIcsbb::DoBehavior()
 	}
 	else
 	{
-		SeekBombArea();
-		
-		// ...unless we're near it or didn't find it
-		if (!m_WayFound || (distance(m_Pos, m_TargetPos) < g_Config.m_SvBaseCaptureDistance/2))
+		if (SeekBombArea())
+		{
+			// ...unless we're near it or didn't find it
+			if (!m_WayFound || (distance(m_Pos, m_TargetPos) < g_Config.m_SvBaseCaptureDistance/2))
+			{
+				if (SeekClosestEnemy())
+				{
+					m_TargetPos = m_PlayerPos;
+				}
+			}
+		}
+		else
 		{
 			if (SeekClosestEnemy())
-			{
 				m_TargetPos = m_PlayerPos;
-			}
 		}
 	}
 		
 
+	/*
 	UpdateWaypoint();
 	MoveTowardsWaypoint(10);
-
+	*/
 	
-	// jump if waypoint is above us
-	if (abs(m_WaypointPos.x - m_Pos.x) < 60 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*20 < 4)
-		m_Jump = 1;
+	if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
+	{
+		MoveTowardsWaypoint(10);
+		HookMove();
+		AirJump();
+		
+		// jump if waypoint is above us
+		if (abs(m_WaypointPos.x - m_Pos.x) < 60 && m_WaypointPos.y < m_Pos.y - 100 && frandom()*20 < 4)
+			m_Jump = 1;
+	}
+	else
+	{
+		m_Hook = 0;
+	}
 	
-	HookMove();
+	
 	DoJumping();
-	AirJump();
 	Unstuck();
 	
 	

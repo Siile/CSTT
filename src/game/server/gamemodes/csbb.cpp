@@ -619,8 +619,6 @@ void CGameControllerCSBB::NewBase()
 
 	GameServer()->SendBroadcast("Capture the new base!", -1, true);
 	GameServer()->CreateSoundGlobal(SOUND_NINJA_HIT, -1);	
-	
-	AutoBalance();
 }
 
 
@@ -937,7 +935,7 @@ void CGameControllerCSBB::AutoBalance()
 	
 
 	// not enough players
-	if ((Red+RedBots) < 3 && (Blue+BlueBots) < 3)
+	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
@@ -954,7 +952,7 @@ void CGameControllerCSBB::AutoBalance()
 	}
 	
 	// too many bots
-	if ((Red+RedBots) > 4 && (Blue+BlueBots) > 4)
+	if ((Red+RedBots) > g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) > g_Config.m_SvPreferredTeamSize)
 	{
 		if (RedBots > 1 && BlueBots > 1)
 		{
@@ -994,6 +992,8 @@ void CGameControllerCSBB::Tick()
 			AutoBalance();
 			return;
 		}
+		
+		AutoBalance();
 		
 		if (m_GameState == CSBB_NEWBASE)
 		{
