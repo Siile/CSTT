@@ -854,7 +854,6 @@ void CGameControllerCSBB::GiveBombToPlayer()
 		return;
 	
 	m_pBomb->m_Hide = true;
-	int BombCarrier = -1;
 	
 	m_pBomb->m_Owner = -1;
 	m_pBomb->m_pCarryingCharacter = NULL;

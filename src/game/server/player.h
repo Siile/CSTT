@@ -150,7 +150,7 @@ public:
 	void ListBuyableWeapons();
 	//void VoteBuyableWeapons();
 	bool BuyWeapon(int CustomWeapon);
-
+	
 	bool m_aSavedWeapon[NUM_CUSTOMWEAPONS];
 	
 	bool GotWeapon(int CustomWeapon);

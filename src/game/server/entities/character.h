@@ -107,7 +107,9 @@ public:
 	// for pickup drops, easy access
 	bool HasAmmo()
 	{
-		if(m_aWeapon[m_ActiveCustomWeapon].m_Ammo > 0 || m_aWeapon[m_ActiveCustomWeapon].m_AmmoReserved > 0)
+		if (m_aWeapon[m_ActiveCustomWeapon].m_Ammo > 0 ||
+			m_aWeapon[m_ActiveCustomWeapon].m_AmmoReserved > 0 || 
+			aCustomWeapon[m_ActiveCustomWeapon].m_MaxAmmo == 0)
 			return true;
 		
 		return false;
@@ -118,9 +120,12 @@ public:
 	void DisableWeapon(int CustomWeapon){ m_aWeapon[CustomWeapon].m_Disabled = true; }
 	
 	bool GiveCustomWeapon(int CustomWeapon, float AmmoFill = 0.7f);
+	void GiveRandomWeapon();
 	bool GiveAmmo(int *CustomWeapon, float AmmoFill);
 	
 	void SetCustomWeapon(int CustomWeapon);
+	
+	void AutoWeaponChange();
 	
 	void GiveStartWeapon();
 	

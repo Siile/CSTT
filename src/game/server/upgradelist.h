@@ -84,6 +84,7 @@ enum CustomWeapons
 	SHOTGUN_DOUBLEBARREL,
 	SHOTGUN_COMBAT,
 	GUN_PISTOL,
+	GUN_UZI,
 	GUN_MAGNUM,
 	GUN_STORM,
 	RIFLE_ASSAULTRIFLE,
@@ -107,15 +108,16 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	400, // SHOTGUN_DOUBLEBARREL,
 	400, // SHOTGUN_COMBAT,
 	750, // GUN_PISTOL,
+	750, // GUN_UZI,
 	750, // GUN_MAGNUM,
 	750, // GUN_STORM,
-	750, // RIFLE_ASSAULTRIFLE,
-	750, // RIFLE_HEAVYRIFLE,
-	400, // RIFLE_LIGHTNINGRIFLE,
-	600, // RIFLE_STORMRIFLE,
-	700, // RIFLE_LASERRIFLE,
-	700, // RIFLE_DOOMRAY,
-	500, // GRENADE_GRENADELAUNCHER,
+	780, // RIFLE_ASSAULTRIFLE,
+	780, // RIFLE_HEAVYRIFLE,
+	430, // RIFLE_LIGHTNINGRIFLE,
+	650, // RIFLE_STORMRIFLE,
+	740, // RIFLE_LASERRIFLE,
+	740, // RIFLE_DOOMRAY,
+	520, // GRENADE_GRENADELAUNCHER,
 	//500, // GRENADE_HEAVYLAUNCHER,
 	600, // GRENADE_DOOMLAUNCHER,
 	500, // GRENADE_GRENADE
@@ -280,7 +282,29 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		160, // bullet reload time
 		650, // clip reload time
 		10.0f, // bullet knockback
-		0.0f // self knockback
+		0.5f // self knockback
+		),
+	CWeapon(
+		"Uzi",
+		"/buy uzi",
+		WEAPON_GUN,
+		PROJTYPE_BULLET,
+		SOUND_GUN_FIRE,
+		GUN_PISTOL, // require
+		50, // cost
+		8, // damage
+		0, // extra1
+		true, // autofire
+		0.2f, // bullet spread
+		1, // shot spread
+		20, // clip size
+		20, // powerup size
+		100, // max ammo
+		0.3f, // bullet life
+		100, // bullet reload time
+		650, // clip reload time
+		7.0f, // bullet knockback
+		0.5f // self knockback
 		),
 	CWeapon(
 		"Magnum .9000",
@@ -305,8 +329,8 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		2.0f // self knockback
 		),
 	CWeapon(
-		"Storm pistol",
-		"/upg stormpistol",
+		"Lightning pistol",
+		"/upg lightningpistol",
 		WEAPON_GUN,
 		PROJTYPE_LIGHTNING,
 		SOUND_RIFLE_FIRE,
@@ -478,7 +502,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		300, // bullet reload time
 		800, // clip reload time
 		0.0f, // bullet knockback
-		2.0f // self knockback
+		3.0f // self knockback
 		),
 	CWeapon(
 		"Doom launcher",
@@ -500,7 +524,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		360, // bullet reload time
 		1200, // clip reload time
 		0.0f, // bullet knockback
-		3.0f // self knockback
+		4.0f // self knockback
 		),
 	CWeapon(
 		"Smoke grenade",

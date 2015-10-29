@@ -21,48 +21,53 @@ void CAIcsbb::OnCharacterSpawn(CCharacter *pChr)
 {
 	CAI::OnCharacterSpawn(pChr);
 	
-	int Weapon = HAMMER_BASIC;
-	
 	m_WaypointDir = vec2(0, 0);
 	
 	int Round = GameServer()->m_pController->GetRound();
-	
-	Weapon = GUN_PISTOL;
-	
-	
-	if (frandom()*10 < (Round+1)*3)
-	{
-		if (frandom()*12 < 2)
-			Weapon = SWORD_KATANA;
-		else if (frandom()*12 < 2)
-			Weapon = GUN_MAGNUM;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_ASSAULTRIFLE;
-		else if (frandom()*12 < 3)
-			Weapon = GRENADE_GRENADELAUNCHER;
-		else if (frandom()*12 < 3)
-			Weapon = SHOTGUN_DOUBLEBARREL;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_LIGHTNINGRIFLE;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_LASERRIFLE;
-		else if (Round > 3)
-		{
-			if (frandom()*12 < 3)
-				Weapon = SHOTGUN_COMBAT;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_STORMRIFLE;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_DOOMRAY;
-			else if (frandom()*12 < 3)
-				Weapon = GRENADE_DOOMLAUNCHER;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_HEAVYRIFLE;
-		}
-	}
 
-	pChr->GiveCustomWeapon(Weapon);
-	pChr->SetCustomWeapon(Weapon);
+	
+	if (g_Config.m_SvRandomWeapons)
+	{
+		pChr->GiveRandomWeapon();
+	}
+	else
+	{
+		int Weapon = GUN_PISTOL;
+		
+		if (frandom()*10 < (Round+1)*3)
+		{
+			if (frandom()*12 < 2)
+				Weapon = SWORD_KATANA;
+			else if (frandom()*12 < 2)
+				Weapon = GUN_MAGNUM;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_ASSAULTRIFLE;
+			else if (frandom()*12 < 3)
+				Weapon = GRENADE_GRENADELAUNCHER;
+			else if (frandom()*12 < 3)
+				Weapon = SHOTGUN_DOUBLEBARREL;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_LIGHTNINGRIFLE;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_LASERRIFLE;
+			else if (Round > 3)
+			{
+				if (frandom()*12 < 3)
+					Weapon = SHOTGUN_COMBAT;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_STORMRIFLE;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_DOOMRAY;
+				else if (frandom()*12 < 3)
+					Weapon = GRENADE_DOOMLAUNCHER;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_HEAVYRIFLE;
+			}
+		}
+
+		pChr->GiveCustomWeapon(Weapon);
+		pChr->SetCustomWeapon(Weapon);
+	}
 	
 	//pChr->SetHealth(100);
 	
@@ -106,7 +111,7 @@ void CAIcsbb::DoBehavior()
 		if (SeekBombArea())
 		{
 			// ...unless we're near it && it's in sight
-			if (!m_WayFound || distance(m_Pos, m_TargetPos) < 400 && !GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos))
+			if (!m_WayFound || (distance(m_Pos, m_TargetPos) < 400 && !GameServer()->Collision()->FastIntersectLine(m_Pos, m_TargetPos)))
 			{
 				if (SeekClosestEnemy())
 					m_TargetPos = m_PlayerPos;

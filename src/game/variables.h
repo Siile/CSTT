@@ -56,6 +56,13 @@ MACRO_CONFIG_INT(UiColorAlpha, ui_color_alpha, 228, 0, 255, CFGFLAG_CLIENT|CFGFL
 MACRO_CONFIG_INT(GfxNoclip, gfx_noclip, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disable clipping")
 
 
+// custom engine settings
+
+MACRO_CONFIG_INT(SvRandomWeapons, sv_randomweapons, 0, 0, 1, CFGFLAG_SERVER, "Enable random weapons")
+MACRO_CONFIG_INT(SvWeaponDrops, sv_weapondrops, 1, 0, 1, CFGFLAG_SERVER, "Enable weapon drops")
+MACRO_CONFIG_INT(SvPreferredTeamSize, sv_preferredteamsize, 5, 1, 8, CFGFLAG_SERVER, "Preferred team size")
+
+
 // CS:TT specific
 MACRO_CONFIG_INT(SvNumRounds, sv_numrounds, 7, 1, 100, CFGFLAG_SERVER, "Number of rounds")
 
@@ -73,7 +80,6 @@ MACRO_CONFIG_INT(SvBombDefuseTime, sv_bombdefusetime, 4, 2, 20, CFGFLAG_SERVER, 
 
 MACRO_CONFIG_INT(SvSpectatorUpdateTime, sv_spectatorupdatetime, 2, 1, 20, CFGFLAG_SERVER, "Time between spectator view changes to spectators")
 
-MACRO_CONFIG_INT(SvWeaponDrops, sv_weapondrops, 1, 0, 1, CFGFLAG_SERVER, "Enable weapon drops")
 
 MACRO_CONFIG_INT(SvBroadcastLock, sv_broadcastlock, 3, 0, 5, CFGFLAG_SERVER, "Broadcast lock time (seconds)")
 
@@ -83,7 +89,6 @@ MACRO_CONFIG_INT(SvBaseCaptureTime, sv_basecapturetime, 3, 1, 60, CFGFLAG_SERVER
 
 MACRO_CONFIG_INT(SvRespawnDelayCSBB, sv_respawn_delay_csbb, 3, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in csbb gametype")
 
-MACRO_CONFIG_INT(SvPreferredTeamSize, sv_preferredteamsize, 5, 1, 8, CFGFLAG_SERVER, "Preferred team size")
 
 
 // AI

@@ -309,15 +309,11 @@ void CAI::HookMove()
 		vec2 HookDir = m_WaypointPos - m_Pos;
 		vec2 HookPos;
 		float Angle = atan2(HookDir.x, HookDir.y);
-			
-		
-		
-		vec2 Vel = Player()->GetCharacter()->GetVel();
-
+	
+	
 		bool TryHooking = false;
 		
 		float Distance = distance(m_Pos, m_WaypointPos);
-		
 		
 		for (int i = 0; i < 4; i++)
 		{
@@ -696,9 +692,13 @@ void CAI::ShootAtClosestEnemy()
 	}
 	
 	// ammo check
-	if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
-		!Player()->GetCharacter()->HasAmmo())
-		Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
+	/*
+		if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
+			!Player()->GetCharacter()->HasAmmo())
+			Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
+		*/
+		
+	Player()->GetCharacter()->AutoWeaponChange();
 }
 
 

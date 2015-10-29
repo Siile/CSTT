@@ -85,8 +85,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
 	m_Grenades = 2;
 	
-	int m_BombStatus = -1;
-	
 	m_SwordReady = false;
 	
 	m_CryTimer = 0;
@@ -456,9 +454,6 @@ void CCharacter::HandleNinja()
 				int Parent = WEAPON_NINJA;
 				if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
 					Parent = WEAPON_HAMMER;
-				
-				int Damage = aCustomWeapon[m_ActiveCustomWeapon].m_Damage;
-				
 				
 				aEnts[i]->TakeDamage(Force, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, m_pPlayer->GetCID(), Parent);
 			}
@@ -1077,11 +1072,42 @@ void CCharacter::ShowArmor()
 
 
 
-void CCharacter::GiveStartWeapon()
+void CCharacter::AutoWeaponChange()
 {
-	//GiveCustomWeapon(RIFLE_ASSAULTRIFLE);
+	if (HasAmmo() && frandom()*100 > 5)
+		return;
+	
+	// -1 because smoke grenade shouldn't be included
+	int w = rand()%(NUM_CUSTOMWEAPONS-1);
+	
+	if (m_aWeapon[w].m_Got && !m_aWeapon[w].m_Disabled)
+	{
+		if (m_aWeapon[w].m_Ammo > 0 ||
+			m_aWeapon[w].m_AmmoReserved > 0 ||
+			aCustomWeapon[w].m_MaxAmmo == 0)
+		{
+			SetCustomWeapon(w);
+		}
+	}
 }
 
+
+
+
+void CCharacter::GiveStartWeapon()
+{
+	if (g_Config.m_SvRandomWeapons)
+		GiveRandomWeapon();
+}
+
+
+
+void CCharacter::GiveRandomWeapon()
+{
+	int w = rand()%(NUM_CUSTOMWEAPONS-1);
+	GiveCustomWeapon(w);
+	SetCustomWeapon(w);
+}
 
 
 

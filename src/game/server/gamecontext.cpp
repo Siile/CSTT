@@ -2048,18 +2048,23 @@ void CGameContext::ResetVotes()
 	m_NumVoteOptions = 0;
 
 
-	AddCustomVote("", "null", VOTE_MONEY); // Money: x
-	AddCustomVote("", "null", VOTE_WEAPONDESC);
-	AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
 	
-	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
+	if (!g_Config.m_SvRandomWeapons)
 	{
-		if (aCustomWeapon[i].m_Cost > 0)
+		AddCustomVote("", "null", VOTE_MONEY); // Money: x
+		AddCustomVote("", "null", VOTE_WEAPONDESC);
+		
+		AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
+		
+		for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "%s - %d points", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
+			if (aCustomWeapon[i].m_Cost > 0)
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "%s - %d points", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
 
-			AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
+				AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
+			}
 		}
 	}
 }

@@ -22,47 +22,55 @@ void CAIcstt::OnCharacterSpawn(CCharacter *pChr)
 {
 	CAI::OnCharacterSpawn(pChr);
 	
-	int Weapon = HAMMER_BASIC;
 	
 	m_WaypointDir = vec2(0, 0);
 	m_TargetBombArea = NULL;
 	
 	int Round = GameServer()->m_pController->GetRound();
 	
-	Weapon = GUN_PISTOL;
 	
-	if (frandom()*8 < (Round-1)*3)
+	if (g_Config.m_SvRandomWeapons)
 	{
-		if (frandom()*12 < 2)
-			Weapon = SWORD_KATANA;
-		else if (frandom()*12 < 2)
-			Weapon = GUN_MAGNUM;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_ASSAULTRIFLE;
-		else if (frandom()*12 < 3)
-			Weapon = GRENADE_GRENADELAUNCHER;
-		else if (frandom()*12 < 3)
-			Weapon = SHOTGUN_DOUBLEBARREL;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_LIGHTNINGRIFLE;
-		else if (frandom()*12 < 3)
-			Weapon = RIFLE_LASERRIFLE;
-		else if (Round > 3)
-		{
-			if (frandom()*12 < 3)
-				Weapon = SHOTGUN_COMBAT;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_STORMRIFLE;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_DOOMRAY;
-			else if (frandom()*12 < 3)
-				Weapon = GRENADE_DOOMLAUNCHER;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_HEAVYRIFLE;
-		}
+		pChr->GiveRandomWeapon();
 	}
-	pChr->GiveCustomWeapon(Weapon);
-	pChr->SetCustomWeapon(Weapon);
+	else
+	{
+		int Weapon = GUN_PISTOL;
+			
+		if (frandom()*8 < (Round-1)*3)
+		{
+			
+			if (frandom()*12 < 2)
+				Weapon = SWORD_KATANA;
+			else if (frandom()*12 < 2)
+				Weapon = GUN_MAGNUM;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_ASSAULTRIFLE;
+			else if (frandom()*12 < 3)
+				Weapon = GRENADE_GRENADELAUNCHER;
+			else if (frandom()*12 < 3)
+				Weapon = SHOTGUN_DOUBLEBARREL;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_LIGHTNINGRIFLE;
+			else if (frandom()*12 < 3)
+				Weapon = RIFLE_LASERRIFLE;
+			else if (Round > 3)
+			{
+				if (frandom()*12 < 3)
+					Weapon = SHOTGUN_COMBAT;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_STORMRIFLE;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_DOOMRAY;
+				else if (frandom()*12 < 3)
+					Weapon = GRENADE_DOOMLAUNCHER;
+				else if (frandom()*12 < 3)
+					Weapon = RIFLE_HEAVYRIFLE;
+			}
+		}
+		pChr->GiveCustomWeapon(Weapon);
+		pChr->SetCustomWeapon(Weapon);
+	}
 	
 	//pChr->SetHealth(100);
 	
