@@ -877,14 +877,13 @@ void CGameControllerCSBB::GiveBombToPlayer()
 
 
 
-
+/*
 void CGameControllerCSBB::AutoBalance()
 {
 	int Red = 0, Blue = 0;
 	int RedBots = 0, BlueBots = 0;
 	
-	// skip
-	// return;
+	int Spectators = 0;
 	
 	int RedBotID = -1;
 	int BlueBotID = -1;
@@ -897,15 +896,6 @@ void CGameControllerCSBB::AutoBalance()
 		if(!pPlayer)
 			continue;
 
-		/*
-		CCharacter *pCharacter = pPlayer->GetCharacter();
-		if (!pCharacter)
-			continue;
-			
-		if (!pCharacter->IsAlive())
-			continue;
-		*/
-		
 		if (pPlayer->GetTeam() == TEAM_RED)
 		{
 			if (!pPlayer->m_IsBot)
@@ -927,39 +917,32 @@ void CGameControllerCSBB::AutoBalance()
 				BlueBots++;
 			}
 		}
-	}
-	
-	if (Red+Blue == 0)
-		return;
-	
-
-	// not enough players
-	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
-	{
-		GameServer()->AddBot();
-		GameServer()->AddBot();
-	}
-	
-	// add bots when needed, as many as needed
-	if (abs((Red+RedBots) - (Blue+BlueBots)) > 0)
-	{
-		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++)
-			GameServer()->AddBot();
 		
-		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Adding %d bots for balance", abs((Red+RedBots) - (Blue+BlueBots)));
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+		if (pPlayer->GetTeam() == TEAM_SPECTATORS)
+			Spectators++;
 	}
+	
+	
+	// kick bots if there's no players
+	if (Red + Blue + Spectators == 0)
+	{
+		if (RedBots + BlueBots > 0)
+			GameServer()->KickBots();
+		
+		return;
+	}
+	
+	// not enough players
+	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize || (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
+		GameServer()->AddBot();
 	
 	// too many bots
-	if ((Red+RedBots) > g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) > g_Config.m_SvPreferredTeamSize)
-	{
-		if (RedBots > 1 && BlueBots > 1)
-		{
-			GameServer()->KickBot(BlueBotID);
-			GameServer()->KickBot(RedBotID);
-		}
-	}
+	if (Red+RedBots > Blue+BlueBots && Red+RedBots > g_Config.m_SvPreferredTeamSize && RedBots > 0)
+		GameServer()->KickBot(RedBotID);
+	if (Red+RedBots < Blue+BlueBots && Blue+BlueBots > g_Config.m_SvPreferredTeamSize && BlueBots > 0)
+		GameServer()->KickBot(BlueBotID);
 }
+*/
 
 
 void CGameControllerCSBB::Tick()
@@ -1273,7 +1256,6 @@ void CGameControllerCSBB::Tick()
 
 	// don't add anything relevant here! possible return; above!
 }
-
 
 
 

@@ -384,6 +384,8 @@ void CServer::SetClientScore(int ClientID, int Score)
 
 void CServer::Kick(int ClientID, const char *pReason)
 {
+	m_NetServer.m_SlotTakenByBot[ClientID] = false;
+	
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CClient::STATE_EMPTY)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id to kick");

@@ -39,11 +39,76 @@ IGameController::IGameController(class CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
+	
+	
+	
+	// custom
+	for (int i = 0; i < MAX_PICKUPS; i++)
+		m_apPickup[i] = NULL;
+	
+	m_PickupCount = 0;
+	m_PickupDropCount = 0;
+	m_DroppablesCreated = false;
+	
+	GameServer()->Collision()->GenerateWaypoints();
+	
+	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "%d waypoints generated, %d connections created", GameServer()->Collision()->WaypointCount(), GameServer()->Collision()->ConnectionCount());
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 }
 
 IGameController::~IGameController()
 {
 }
+
+
+
+void IGameController::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype)
+{
+	for (int i = 0; i < m_PickupCount; i++)
+	{
+		if (m_apPickup[i] && m_apPickup[i]->m_Dropable && m_apPickup[i]->m_Life <= 0 && m_apPickup[i]->GetType() == PickupType)
+		{
+			m_apPickup[i]->m_Pos = Pos;
+			m_apPickup[i]->RespawnDropable();
+			if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
+				m_apPickup[i]->SetSubtype(PickupSubtype);
+			
+			m_apPickup[i]->m_Vel = Force;
+			return;
+		}
+	}
+}
+
+
+
+void IGameController::ClearPickups()
+{
+	for (int i = 0; i < m_PickupCount; i++)
+	{
+		if (m_apPickup[i])
+			m_apPickup[i]->Hide();
+	}
+}
+
+void IGameController::RespawnPickups()
+{
+	for (int i = 0; i < m_PickupCount; i++)
+	{
+		if (m_apPickup[i])
+			m_apPickup[i]->Respawn();
+	}
+}
+
+void IGameController::FlashPickups()
+{
+	for (int i = 0; i < m_PickupCount; i++)
+	{
+		if (m_apPickup[i] && !m_apPickup[i]->m_Dropable && m_apPickup[i]->m_SpawnTick <= 0)
+			m_apPickup[i]->m_Flashing = true;
+	}
+}
+
+
 
 float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)
 {
@@ -145,6 +210,134 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos)
 
 
 
+	
+void IGameController::AutoBalance()
+{
+	if (!IsTeamplay())
+	{
+		int Players = 0, Bots = 0, Spectators = 0;
+		int BotID = -1;
+		
+		// count players
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+			if(!pPlayer)
+				continue;
+			
+			if (pPlayer->GetTeam() != TEAM_SPECTATORS)
+			{
+				if (!pPlayer->m_IsBot)
+					Players++;
+				else
+				{
+					BotID = i;
+					Bots++;
+				}
+			}
+			else
+				Spectators++;
+		}
+		
+		// kick bots if there's no players
+		if (Players == 0 && Spectators == 0)
+		{
+			if (Bots > 0)
+				GameServer()->KickBot(BotID);
+			
+			return;
+		}
+		
+
+		// add bots
+		if (Players + Bots < g_Config.m_SvPreferredTeamSize)
+		{
+			GameServer()->AddBot();
+		}
+		
+		// kick bots
+		if (Players + Bots > g_Config.m_SvPreferredTeamSize && Bots > 0)
+		{
+			GameServer()->KickBot(BotID);
+		}
+	}
+	else
+	{
+		int Red = 0, Blue = 0;
+		int RedBots = 0, BlueBots = 0;
+		
+		int Spectators = 0;
+		
+		int RedBotID = -1;
+		int BlueBotID = -1;
+		
+		
+		// count players
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+			if(!pPlayer)
+				continue;
+
+			if (pPlayer->GetTeam() == TEAM_RED)
+			{
+				if (!pPlayer->m_IsBot)
+					Red++;
+				else
+				{
+					RedBotID = i;
+					RedBots++;
+				}
+			}
+			
+			if (pPlayer->GetTeam() == TEAM_BLUE)
+			{
+				if (!pPlayer->m_IsBot)
+					Blue++;
+				else
+				{
+					BlueBotID = i;
+					BlueBots++;
+				}
+			}
+			
+			if (pPlayer->GetTeam() == TEAM_SPECTATORS)
+				Spectators++;
+		}
+		
+		
+		// kick bots if there's no players
+		if (Red + Blue + Spectators == 0)
+		{
+			if (RedBots + BlueBots > 0)
+				GameServer()->KickBots();
+			
+			return;
+		}
+		
+
+		// not enough players
+		if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize || (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
+			GameServer()->AddBot();
+
+		
+		// unbalanced teams
+		if (Red+RedBots > Blue+BlueBots && Red+RedBots > g_Config.m_SvPreferredTeamSize && RedBots > 0)
+			GameServer()->KickBot(RedBotID);
+		if (Red+RedBots < Blue+BlueBots && Blue+BlueBots > g_Config.m_SvPreferredTeamSize && BlueBots > 0)
+			GameServer()->KickBot(BlueBotID);
+		
+		if (Red+RedBots == Blue+BlueBots && Red+RedBots > g_Config.m_SvPreferredTeamSize && RedBots > 0 && BlueBots > 0)
+		{
+			GameServer()->KickBot(RedBotID);
+			GameServer()->KickBot(BlueBotID);
+		}
+	}
+}
+
+
+
+
 
 bool IGameController::OnNonPickupEntity(int Index, vec2 Pos)
 {
@@ -158,23 +351,48 @@ bool IGameController::OnNonPickupEntity(int Index, vec2 Pos)
 	return false;
 }
 
-/*
-CCharacter *IGameController::GetBoss()
+
+void IGameController::CreateDroppables()
 {
-	return NULL;
+	for (int i = 0; i < MAX_DROPPABLES; i++)
+	{
+		// hearts
+		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_HEALTH, 0);
+		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
+		m_apPickup[m_PickupCount]->m_Dropable = true;
+		m_PickupCount++;
+
+		// armors
+		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_ARMOR, 0);
+		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
+		m_apPickup[m_PickupCount]->m_Dropable = true;
+		m_PickupCount++;
+		
+		// weapons
+		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_WEAPON, 0);
+		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
+		m_apPickup[m_PickupCount]->m_Dropable = true;
+		m_PickupCount++;
+	}
+	
+	m_DroppablesCreated = true;
 }
 
-void IGameController::SetBoss(CCharacter *Boss)
-{
-	
-}
-*/
+
 
 bool IGameController::OnEntity(int Index, vec2 Pos)
 {
 	int Type = -1;
 	int SubType = 0;
+	
+	
+	//if(IGameController::OnNonPickupEntity(Index, Pos))
+	//	return true;
 
+	if (!m_DroppablesCreated)
+		CreateDroppables();
+	
+	
 	if(Index == ENTITY_SPAWN)
 		m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
 	else if(Index == ENTITY_SPAWN_RED)
@@ -185,29 +403,36 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	//else if (SkipPickups)
 	//	return false;
 	
-	else if(Index == ENTITY_ARMOR_1)
-		Type = POWERUP_ARMOR;
-	else if(Index == ENTITY_HEALTH_1)
-		Type = POWERUP_HEALTH;
-	else if(Index == ENTITY_WEAPON_SHOTGUN)
+	
+	else
+	if (g_Config.m_SvVanillaPickups)
 	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_SHOTGUN;
-	}
-	else if(Index == ENTITY_WEAPON_GRENADE)
-	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_GRENADE;
-	}
-	else if(Index == ENTITY_WEAPON_RIFLE)
-	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_RIFLE;
-	}
-	else if(Index == ENTITY_POWERUP_NINJA && g_Config.m_SvPowerups)
-	{
-		Type = POWERUP_NINJA;
-		SubType = WEAPON_NINJA;
+		if(Index == ENTITY_ARMOR_1)
+			Type = POWERUP_ARMOR;
+		else if(Index == ENTITY_HEALTH_1)
+			Type = POWERUP_HEALTH;
+		/*
+		else if(Index == ENTITY_WEAPON_SHOTGUN)
+		{
+			Type = POWERUP_WEAPON;
+			SubType = WEAPON_SHOTGUN;
+		}
+		else if(Index == ENTITY_WEAPON_GRENADE)
+		{
+			Type = POWERUP_WEAPON;
+			SubType = WEAPON_GRENADE;
+		}
+		else if(Index == ENTITY_WEAPON_RIFLE)
+		{
+			Type = POWERUP_WEAPON;
+			SubType = WEAPON_RIFLE;
+		}
+		else if(Index == ENTITY_POWERUP_NINJA && g_Config.m_SvPowerups)
+		{
+			Type = POWERUP_NINJA;
+			SubType = WEAPON_NINJA;
+		}
+		*/
 	}
 
 	if(Type != -1)
@@ -391,12 +616,34 @@ void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 
 int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
-	// do scoring
+	
+	// weapon drops
+	if (g_Config.m_SvWeaponDrops)
+	{
+		int DropWeapon = pVictim->m_ActiveCustomWeapon;
+		
+		if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL)
+			DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
+	}
+	
+	// pickup drops
+	if (g_Config.m_SvPickupDrops)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			if (frandom()*10 < 4)
+				DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+			else
+				DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+		}
+	}
+	
+	
+	// do scoreing
 	if(!pKiller || Weapon == WEAPON_GAME)
 		return 0;
-	
 	if(pKiller == pVictim->GetPlayer())
-		;//pVictim->GetPlayer()->m_Score--; // suicide
+		pVictim->GetPlayer()->m_Score--; // suicide
 	else
 	{
 		if(IsTeamplay() && pVictim->GetPlayer()->GetTeam() == pKiller->GetTeam())
@@ -405,9 +652,10 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 			pKiller->m_Score++; // normal kill
 	}
 	if(Weapon == WEAPON_SELF)
-		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick();
+		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3.0f;
 	return 0;
 }
+
 
 void IGameController::OnCharacterSpawn(class CCharacter *pChr, bool RequestAI)
 {	
@@ -747,7 +995,6 @@ void IGameController::DoWincheck()
 {
 	if(m_GameOverTick == -1 && !m_Warmup && !GameServer()->m_World.m_ResetRequested)
 	{
-		/*
 		if(IsTeamplay())
 		{
 			// check score win condition
@@ -789,7 +1036,6 @@ void IGameController::DoWincheck()
 					m_SuddenDeath = 1;
 			}
 		}
-		*/
 	}
 }
 

@@ -43,7 +43,7 @@ private:
 	void RoundRewards(int WinningTeam);
 	
 	int CheckLose(bool Broadcast = false);
-	void AutoBalance();
+	//void AutoBalance();
 		
 	void HideBombAreas();
 		

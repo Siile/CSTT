@@ -738,14 +738,6 @@ void CGameContext::AIUpdateInput(int ClientID, int *Data)
 {
 	if(m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
 		m_apPlayers[ClientID]->m_pAI->UpdateInput(Data);
-		
-	/*
-	// test remove
-	if (m_apPlayers[ClientID])
-	{
-		Data[0] = 1;
-	}
-	*/
 }
 
 
@@ -900,7 +892,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Counter-Strike: Tee Time 1.31");
+				SendChatTarget(ClientID, "Engine version 1.4");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -2282,6 +2274,7 @@ void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)
 
 void CGameContext::OnShutdown()
 {
+	KickBots();
 	delete m_pController;
 	m_pController = 0;
 	Clear();

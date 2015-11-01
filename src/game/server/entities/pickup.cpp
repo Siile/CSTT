@@ -15,11 +15,10 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
 	Reset();
 
 	GameWorld()->InsertEntity(this);
-	m_SkipAutoRespawn = true;
+	m_SkipAutoRespawn = false;
 	
 	m_Dropable = false;
 	m_Life = 0;
-	m_Static = false;
 	m_Vel = vec2(0, 0);
 }
 
@@ -34,7 +33,6 @@ void CPickup::Reset()
 			
 		m_Flashing = false;
 		m_FlashTimer = 0;
-		m_Static = false;
 	}
 }
 
@@ -91,7 +89,7 @@ void CPickup::Tick()
 	
 	
 	// physics
-	if (!m_Static)
+	if (m_Dropable)
 	{
 		m_Vel.y += 0.5f;
 		
@@ -112,7 +110,7 @@ void CPickup::Tick()
 	
 	// Check if a player intersected us
 	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
-	if(pChr && pChr->IsAlive() && !pChr->GetPlayer()->m_pAI)
+	if(pChr && pChr->IsAlive()) // && !pChr->GetPlayer()->m_pAI)
 	{
 		// player picked us up, is someone was hooking us, let them go
 		int RespawnTime = -1;
@@ -151,7 +149,7 @@ void CPickup::Tick()
 						break;
 					}
 					
-					if (pChr->GiveCustomWeapon(m_Subtype, 0.075f + frandom()*0.225f))
+					if (pChr->GiveCustomWeapon(m_Subtype, 0.2f + frandom()*0.3f))
 					{
 						if(Parent == WEAPON_GRENADE)
 							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);

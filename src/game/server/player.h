@@ -178,7 +178,7 @@ public:
 	// warm welcome
 	bool m_Welcomed;
 	
-	
+	void SetRandomSkin();
 	
 	
 private:

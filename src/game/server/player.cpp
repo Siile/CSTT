@@ -66,7 +66,6 @@ CPlayer::~CPlayer()
 	m_pCharacter = 0;
 }
 
-
 void CPlayer::NewRound()
 {
 	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
@@ -449,6 +448,42 @@ void CPlayer::TryRespawn()
 }
 
 
+void CPlayer::SetRandomSkin()
+{
+	switch (rand()%10)
+	{
+	case 0:
+		str_copy(m_TeeInfos.m_SkinName, "bluekitty", 64); break;
+	case 1:
+		str_copy(m_TeeInfos.m_SkinName, "bluestripe", 64); break;
+	case 2:
+		str_copy(m_TeeInfos.m_SkinName, "brownbear", 64); break;
+	case 3:
+		str_copy(m_TeeInfos.m_SkinName, "cammo", 64); break;
+	case 4:
+		str_copy(m_TeeInfos.m_SkinName, "cammostripes", 64); break;
+	case 5:
+		str_copy(m_TeeInfos.m_SkinName, "coala", 64); break;
+	case 6:
+		str_copy(m_TeeInfos.m_SkinName, "limekitty", 64); break;
+	case 7:
+		str_copy(m_TeeInfos.m_SkinName, "pinky", 64); break;
+	case 8:
+		str_copy(m_TeeInfos.m_SkinName, "redbopp", 64); break;
+	case 9:
+		str_copy(m_TeeInfos.m_SkinName, "redstripe", 64); break;
+	case 10:
+		str_copy(m_TeeInfos.m_SkinName, "saddo", 64); break;
+	case 11:
+		str_copy(m_TeeInfos.m_SkinName, "toptri", 64); break;
+	case 12:
+		str_copy(m_TeeInfos.m_SkinName, "twinbop", 64); break;
+	case 13:
+		str_copy(m_TeeInfos.m_SkinName, "twintri", 64); break;
+	case 14:
+		str_copy(m_TeeInfos.m_SkinName, "warpaint", 64); break;
+	}
+}
 
 
 void CPlayer::AITick()

@@ -1074,7 +1074,7 @@ void CCharacter::ShowArmor()
 
 void CCharacter::AutoWeaponChange()
 {
-	if (HasAmmo() && frandom()*100 > 5)
+	if (HasAmmo() && frandom()*100 > 5 && m_ActiveCustomWeapon != HAMMER_BASIC)
 		return;
 	
 	// -1 because smoke grenade shouldn't be included
@@ -1319,9 +1319,13 @@ void CCharacter::Tick()
 		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameLayerClipped(m_Pos))
 	{
-		//Die(m_pPlayer->GetCID(), WEAPON_WORLD);
-		m_DeathTileTimer = 10;
-		TakeDeathtileDamage();
+		if (g_Config.m_SvInstaDeathTiles)
+			Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		else
+		{
+			m_DeathTileTimer = 10;
+			TakeDeathtileDamage();
+		}
 	}
 	
 	

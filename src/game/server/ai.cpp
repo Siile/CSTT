@@ -13,6 +13,7 @@ CAI::CAI(CGameContext *pGameServer, CPlayer *pPlayer)
 {
 	m_pGameServer = pGameServer;
 	m_pPlayer = pPlayer;
+	m_pTargetPlayer = 0;
 	
 	m_pPath = 0;
 	m_pVisible = 0;
@@ -59,12 +60,15 @@ void CAI::Reset()
 	m_HookTimer = 0;
 	m_HookReleaseTimer = 0;
 	
+	m_pTargetPlayer = 0;
 	m_PlayerPos = vec2(0, 0);
 	m_TargetPos = vec2(0, 0);
 	m_PlayerSpotTimer = 0;
 	m_PlayerSpotCount = 0;
 	
 	m_TurnSpeed = 0.2f;
+	
+	m_DontMoveTick = 0;
 	
 	m_OldTargetPos = vec2(0, 0);
 }
@@ -651,7 +655,10 @@ void CAI::ShootAtClosestEnemy()
 		if(!pPlayer)
 			continue;
 		
-		if (pPlayer->GetTeam() == Player()->GetTeam())
+		if (pPlayer == Player())
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam() && GameServer()->m_pController->IsTeamplay())
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -664,7 +671,6 @@ void CAI::ShootAtClosestEnemy()
 		int Distance = distance(pCharacter->m_Pos, m_LastPos);
 		if (Distance < 800 && 
 			!GameServer()->Collision()->FastIntersectLine(pCharacter->m_Pos, m_LastPos))
-			//!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
 		{
 			if (!pClosestCharacter || Distance < ClosestDistance)
 			{
@@ -687,16 +693,13 @@ void CAI::ShootAtClosestEnemy()
 		if (m_AttackTimer++ > g_Config.m_SvBotReactTime)
 		{
 			if (ClosestDistance < WeaponShootRange() && abs(atan2(m_Direction.x, m_Direction.y) - atan2(AttackDirection.x, AttackDirection.y)) < PI / 4.0f)
+			{
 				m_Attack = 1;
+				if (frandom()*30 < 2 && !Player()->GetCharacter()->UsingMeleeWeapon())
+					m_DontMoveTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*(1+frandom());
+			}
 		}
 	}
-	
-	// ammo check
-	/*
-		if (Player()->GetCharacter()->m_ActiveCustomWeapon != HAMMER_BASIC && Player()->GetCharacter()->m_ActiveCustomWeapon != SWORD_KATANA &&
-			!Player()->GetCharacter()->HasAmmo())
-			Player()->GetCharacter()->SetCustomWeapon(HAMMER_BASIC);
-		*/
 		
 	Player()->GetCharacter()->AutoWeaponChange();
 }
@@ -713,6 +716,93 @@ void CAI::RandomlyStopShooting()
 }
 
 
+bool CAI::SeekRandomEnemy()
+{
+	if (m_pTargetPlayer && m_pTargetPlayer->GetCharacter() && m_pTargetPlayer->GetCharacter()->IsAlive())
+	{
+		m_PlayerDirection = m_pTargetPlayer->GetCharacter()->m_Pos - m_Pos;
+		m_PlayerPos = m_pTargetPlayer->GetCharacter()->m_Pos;
+		m_PlayerDistance = distance(m_pTargetPlayer->GetCharacter()->m_Pos, m_Pos);
+		return true;
+	}
+	
+	int i = 0;
+	while (i++ < 9)
+	{
+		int p = rand()%MAX_CLIENTS;
+		
+		CPlayer *pPlayer = GameServer()->m_apPlayers[p];
+		if(!pPlayer)
+			continue;
+		
+		if (pPlayer == Player())
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam() && GameServer()->m_pController->IsTeamplay())
+			continue;
+
+		CCharacter *pCharacter = pPlayer->GetCharacter();
+		if (!pCharacter)
+			continue;
+		
+		if (!pCharacter->IsAlive())
+			continue;
+		
+		m_pTargetPlayer = pPlayer;
+		m_PlayerDirection = m_pTargetPlayer->GetCharacter()->m_Pos - m_Pos;
+		m_PlayerPos = m_pTargetPlayer->GetCharacter()->m_Pos;
+		m_PlayerDistance = distance(m_pTargetPlayer->GetCharacter()->m_Pos, m_Pos);
+		return true;
+	}
+	
+	return false;
+}
+
+
+
+bool CAI::SeekClosestFriend()
+{
+	CCharacter *pClosestCharacter = NULL;
+	int ClosestDistance = 0;
+	
+	// FIRST_BOT_ID, fix
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		
+		if (pPlayer == Player())
+			continue;
+		
+		if (pPlayer->GetTeam() != Player()->GetTeam() || !GameServer()->m_pController->IsTeamplay())
+			continue;
+
+		CCharacter *pCharacter = pPlayer->GetCharacter();
+		if (!pCharacter)
+			continue;
+		
+		if (!pCharacter->IsAlive())
+			continue;
+			
+		int Distance = distance(pCharacter->m_Pos, m_LastPos);
+		if ((!pClosestCharacter || Distance < ClosestDistance))
+		{
+			pClosestCharacter = pCharacter;
+			ClosestDistance = Distance;
+			m_PlayerDirection = pCharacter->m_Pos - m_LastPos;
+			m_PlayerPos = pCharacter->m_Pos;
+		}
+	}
+	
+	if (pClosestCharacter)
+	{
+		m_PlayerDistance = ClosestDistance;
+		return true;
+	}
+
+	return false;
+}
 
 
 bool CAI::SeekClosestEnemy()
@@ -727,7 +817,10 @@ bool CAI::SeekClosestEnemy()
 		if(!pPlayer)
 			continue;
 		
-		if (pPlayer->GetTeam() == Player()->GetTeam())
+		if (pPlayer == Player())
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam() && GameServer()->m_pController->IsTeamplay())
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -738,7 +831,7 @@ bool CAI::SeekClosestEnemy()
 			continue;
 			
 		int Distance = distance(pCharacter->m_Pos, m_LastPos);
-		if (!pClosestCharacter || Distance < ClosestDistance)
+		if ((!pClosestCharacter || Distance < ClosestDistance))
 		{
 			pClosestCharacter = pCharacter;
 			ClosestDistance = Distance;
@@ -762,6 +855,8 @@ bool CAI::SeekClosestEnemyInSight()
 	CCharacter *pClosestCharacter = NULL;
 	int ClosestDistance = 0;
 	
+	m_EnemiesInSight = 0;
+	
 	// FIRST_BOT_ID, fix
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -769,7 +864,10 @@ bool CAI::SeekClosestEnemyInSight()
 		if(!pPlayer)
 			continue;
 		
-		if (pPlayer->GetTeam() == Player()->GetTeam())
+		if (pPlayer == Player())
+			continue;
+		
+		if (pPlayer->GetTeam() == Player()->GetTeam() && GameServer()->m_pController->IsTeamplay())
 			continue;
 
 		CCharacter *pCharacter = pPlayer->GetCharacter();
@@ -784,6 +882,8 @@ bool CAI::SeekClosestEnemyInSight()
 			!GameServer()->Collision()->FastIntersectLine(pCharacter->m_Pos, m_LastPos))
 			//!GameServer()->Collision()->IntersectLine(pCharacter->m_Pos, m_LastPos, NULL, NULL))
 		{
+			m_EnemiesInSight++;
+			
 			if (!pClosestCharacter || Distance < ClosestDistance)
 			{
 				pClosestCharacter = pCharacter;
@@ -793,6 +893,9 @@ bool CAI::SeekClosestEnemyInSight()
 			}
 		}
 	}
+	
+	if (m_EnemiesInSight == 0)
+		m_DontMoveTick = 0;
 	
 	if (pClosestCharacter)
 	{
@@ -846,6 +949,13 @@ void CAI::Tick()
 		m_NextReaction = m_ReactionTime;
 	
 		DoBehavior();
+		
+		if (m_DontMoveTick > GameServer()->Server()->Tick())
+		{
+			m_Move = 0;
+			m_Hook = m_LastHook;
+			m_Jump = 0;
+		}
 		
 		if (m_pPlayer->GetCharacter())
 			m_LastPos = m_pPlayer->GetCharacter()->m_Pos;

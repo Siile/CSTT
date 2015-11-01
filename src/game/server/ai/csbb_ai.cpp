@@ -90,7 +90,7 @@ void CAIcsbb::DoBehavior()
 	SeekClosestEnemyInSight();
 	
 	// if we see a player
-	if (m_PlayerSpotCount > 0)
+	if (m_EnemiesInSight > 0)
 	{
 		// jump at random times
 		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
@@ -98,10 +98,20 @@ void CAIcsbb::DoBehavior()
 
 		ShootAtClosestEnemy();
 		ReactToPlayer();
+		
+		if (m_EnemiesInSight > 1)
+		{
+			// distance to the player
+			if (m_PlayerPos.x < m_Pos.x)
+				m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+			else
+				m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+		}
 	}
 	else
 		m_AttackTimer = 0;
-
+	
+	int f = 400+m_EnemiesInSight*100;
 	
 	
 	// main logic
@@ -131,9 +141,7 @@ void CAIcsbb::DoBehavior()
 			if (!m_WayFound || (distance(m_Pos, m_TargetPos) < g_Config.m_SvBaseCaptureDistance/2))
 			{
 				if (SeekClosestEnemy())
-				{
 					m_TargetPos = m_PlayerPos;
-				}
 			}
 		}
 		else

@@ -48,6 +48,17 @@ public:
 	void ResetInput();
 	void FireWeapon();
 
+	bool UsingMeleeWeapon()
+	{
+		int t = aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType;
+		if (t == PROJTYPE_HAMMER ||
+			t == PROJTYPE_FLYHAMMER ||
+			t == PROJTYPE_SWORD)
+			return true;
+		
+		return false;
+	}
+	
 	void Die(int Killer, int Weapon, bool SkipKillMessage = false);
 	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
 	void TakeDeathtileDamage();

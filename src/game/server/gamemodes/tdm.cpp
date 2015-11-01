@@ -4,18 +4,34 @@
 
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
+#include <game/server/gamecontext.h>
+
 #include "tdm.h"
+
+#include <game/server/ai.h>
+#include <game/server/ai/tdm_ai.h>
+
 
 CGameControllerTDM::CGameControllerTDM(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
-	m_pGameType = "TDM";
+	m_pGameType = "TDM++";
 	m_GameFlags = GAMEFLAG_TEAMS;
+}
+
+void CGameControllerTDM::OnCharacterSpawn(CCharacter *pChr, bool RequestAI)
+{
+	IGameController::OnCharacterSpawn(pChr);
+	
+	// init AI
+	if (RequestAI)
+		pChr->GetPlayer()->m_pAI = new CAItdm(GameServer(), pChr->GetPlayer());
+
+	GameServer()->ResetVotes();
 }
 
 int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
 	IGameController::OnCharacterDeath(pVictim, pKiller, Weapon);
-
 
 	if(pKiller && Weapon != WEAPON_GAME)
 	{
@@ -46,7 +62,11 @@ void CGameControllerTDM::Snap(int SnappingClient)
 	pGameDataObj->m_FlagCarrierBlue = 0;
 }
 
+
+
 void CGameControllerTDM::Tick()
 {
 	IGameController::Tick();
+	AutoBalance();
+	GameServer()->UpdateAI();
 }

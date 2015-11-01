@@ -8,6 +8,8 @@ class CGameControllerDM : public IGameController
 {
 public:
 	CGameControllerDM(class CGameContext *pGameServer);
+	
+	void OnCharacterSpawn(class CCharacter *pChr, bool RequestAI = false);
 	virtual void Tick();
 };
 #endif

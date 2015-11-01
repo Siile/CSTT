@@ -292,7 +292,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GUN_FIRE,
 		GUN_PISTOL, // require
 		50, // cost
-		8, // damage
+		7, // damage
 		0, // extra1
 		true, // autofire
 		0.2f, // bullet spread

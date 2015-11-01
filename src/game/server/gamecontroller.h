@@ -5,6 +5,9 @@
 
 #include <base/vmath.h>
 
+#define MAX_PICKUPS 1024
+#define MAX_DROPPABLES 50
+
 /*
 	Class: Game Controller
 		Controls the main game logic. Keeping track of team and player score,
@@ -18,10 +21,31 @@ class IGameController
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;
 
+	
+	
+	// store pickup pointers
+	class CPickup *m_apPickup[MAX_PICKUPS];
+	int m_PickupCount;
+	bool m_DroppablesCreated;
+	
+	// for item drops
+	int m_PickupDropCount;
+	
+	void CreateDroppables();
+
+	
 protected:
+
+	void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype);
+
+	void AutoBalance();
+	
+	void RespawnPickups();
+	void FlashPickups();
+	void ClearPickups();
+
 	// CSTT & CSBB
 	int m_Round;
-
 	int m_GameState;
 	
 	

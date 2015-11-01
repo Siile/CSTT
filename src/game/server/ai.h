@@ -16,6 +16,8 @@ class CAI
 	class CGameContext *m_pGameServer;
 	class CPlayer *m_pPlayer;
 	
+	class CPlayer *m_pTargetPlayer;
+	
 	int m_UnstuckCount;
 	vec2 m_StuckPos;
 	
@@ -48,6 +50,7 @@ protected:
 	float m_TargetAngle;
 	float m_TurnSpeed;
 	
+	int m_DontMoveTick;
 	
 	vec2 m_Pos;
 	vec2 m_LastPos;
@@ -80,6 +83,7 @@ protected:
 	int m_PlayerDistance;
 	int m_PlayerSpotTimer;
 	int m_PlayerSpotCount;
+	int m_EnemiesInSight;
 	
 	vec2 m_OldTargetPos;
 	vec2 m_TargetPos;
@@ -112,6 +116,11 @@ protected:
 	
 	void RandomlyStopShooting();
 	
+	bool SeekRandomEnemy();
+	bool SeekClosestFriend();
+	bool SeekClosestEnemy();
+	bool SeekClosestEnemyInSight();
+	
 	void ShootAtClosestEnemy();
 	int WeaponShootRange();
 	
@@ -127,8 +136,6 @@ public:
 	bool SeekBombArea();
 	bool SeekBomb();
 	
-	bool SeekClosestEnemy();
-	bool SeekClosestEnemyInSight();
 	
 	bool m_InputChanged;
 	
