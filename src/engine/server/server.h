@@ -243,6 +243,7 @@ public:
 	void SnapSetStaticsize(int ItemType, int Size);
 	
 	virtual void AddZombie();
+	void KickBots();
 };
 
 #endif

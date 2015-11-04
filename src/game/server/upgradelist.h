@@ -81,6 +81,7 @@ enum CustomWeapons
 	SWORD_KATANA,
 	SWORD_LIGHTNING,
 	HAMMER_BASIC,
+	HAMMER_THUNDER,
 	SHOTGUN_DOUBLEBARREL,
 	SHOTGUN_COMBAT,
 	GUN_PISTOL,
@@ -106,6 +107,7 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	430, // SWORD_KATANA,
 	410, // SWORD_LIGHTNING,
 	120, // HAMMER_BASIC,
+	300, // HAMMER_THUNDER,
 	400, // SHOTGUN_DOUBLEBARREL,
 	400, // SHOTGUN_COMBAT,
 	750, // GUN_PISTOL,
@@ -217,6 +219,28 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0, // max ammo
 		0, // bullet life
 		170, // bullet reload time
+		0, // clip reload time
+		1.0f, // knockback
+		0.0f // self knockback
+		),
+	CWeapon(
+		"Thunder hammer",
+		"/buy thunderhammer",
+		WEAPON_HAMMER,
+		PROJTYPE_FLYHAMMER,
+		SOUND_HAMMER_FIRE,
+		HAMMER_BASIC, // require
+		100, // cost
+		20, // damage
+		ELECTRIC, // extra1
+		false, // autofire
+		1.0f, // bullet spread
+		1, // shot spread
+		0, // clip size
+		0, // powerup size
+		0, // max ammo
+		2.0f, // bullet life
+		400, // bullet reload time
 		0, // clip reload time
 		1.0f, // knockback
 		0.0f // self knockback

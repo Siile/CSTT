@@ -376,40 +376,93 @@ void CCharacter::HandleNinja()
 	{
 		// reset velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir*m_Ninja.m_OldVelAmount;
-		
-		// special effect for mjölnir
-		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
-		{
-			for (int i = 0; i < 9; i++)
-			{
-				float a = frandom()*360 * RAD;
-				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 2, 1);
-			}
-		}
 	}
 
 	if (m_Ninja.m_CurrentMoveTime > 0)
 	{
 		// special effect for lightng sword
-		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
+		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD) // && aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
 		{
 			float a = GetAngle(m_Ninja.m_ActivationDir);
 			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 			new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 50, 50, m_pPlayer->GetCID(), 5, 1);
 		}
 		
+		
+		// special effect for mjölnir
+		if (aCustomWeapon[m_ActiveCustomWeapon].m_Extra1 == ELECTRIC && 
+			aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER &&
+			Server()->Tick()%2 == 1)
+		{
+			float a = GetAngle(m_Core.m_Vel);
+			a += (frandom()-frandom()) * 1.0f;
+					
+			vec2 To = m_Pos + vec2(cosf(a), sinf(a))*140;
+			vec2 Start = m_Pos;// + vec2(cosf(a), sinf(a))*30;
+			GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
+				
+			// character collision
+			vec2 At;
+			CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 100.0f, At, this);
+			if(pHit)
+			{
+				To = pHit->m_Pos;
+				pHit->ElectroShock();
+				pHit->TakeDamage(m_Core.m_Vel, 3, GetPlayer()->GetCID(), WEAPON_HAMMER);
+			}
+			
+			int A = distance(m_Pos, To) / 100;
+					
+			if (A > 4)
+				A = 4;
+					
+			if (A < 2)
+				A = 2;
+			
+			new CElectro(GameWorld(), m_Pos, To, vec2(0, 0), A);
+		}	
+		
+		
 		// Set velocity
 		if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
 			m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		else
-			m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity * 0.4f;
+			m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity * 0.3f;
 		
+		
+		if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
+		{
+			vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+			
+			m_Ninja.m_ActivationDir = normalize(m_Ninja.m_ActivationDir);
+			
+			Direction *= 1 / 6.0f;
+			m_Ninja.m_ActivationDir *= 5 / 6.0f;
+			
+			
+			m_Ninja.m_ActivationDir += Direction;
+			//m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife * Server()->TickSpeed() / 1000;
+			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
+			
+			
+		}
 		
 		vec2 OldPos = m_Pos;
 		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 
+		if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
+		{
+			m_ReloadTimer = aCustomWeapon[m_ActiveCustomWeapon].m_BulletReloadTime * Server()->TickSpeed() / 1000;
+			
+			if (GameServer()->Collision()->TestBox(m_Pos + m_Ninja.m_ActivationDir*20, vec2(16, 16)))
+				m_Ninja.m_CurrentMoveTime = 0;
+		}
+		
 		// reset velocity so the client doesn't predict stuff
-		m_Core.m_Vel = vec2(0.f, 0.f);
+		if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD)
+			m_Core.m_Vel = vec2(0.f, 0.f);
+		else
+			m_Core.m_Vel /= 2.0f;
 
 		// check if we Hit anything along the way
 		{
@@ -452,7 +505,7 @@ void CCharacter::HandleNinja()
 				vec2 Force = vec2(0, -4.0f);
 				
 				if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
-					Force = m_Ninja.m_ActivationDir * 20.0f;
+					Force = m_Ninja.m_ActivationDir * 30.0f + vec2(0, -3);
 				
 				
 				int Parent = WEAPON_NINJA;
@@ -460,6 +513,9 @@ void CCharacter::HandleNinja()
 					Parent = WEAPON_HAMMER;
 				
 				aEnts[i]->TakeDamage(Force, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, m_pPlayer->GetCID(), Parent);
+				
+				if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
+					m_Ninja.m_CurrentMoveTime = 0;
 			}
 		}
 
@@ -642,7 +698,7 @@ void CCharacter::FireWeapon()
 	
 	
 	// sword requires standing on ground before it can be reused
-	if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD && !m_SwordReady)
+	if ((aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_SWORD || aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER) && !m_SwordReady)
 		return;
 	
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
@@ -723,6 +779,7 @@ void CCharacter::FireWeapon()
 			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
 			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_SKID);
+			m_SwordReady = false;
 		} break;
 		
 		

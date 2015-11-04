@@ -405,6 +405,20 @@ void CServer::Kick(int ClientID, const char *pReason)
 	m_NetServer.Drop(ClientID, pReason);
 }
 
+
+void CServer::KickBots()
+{
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if (m_aClients[i].m_State != CClient::STATE_EMPTY && m_NetServer.m_SlotTakenByBot[i])
+		{
+			m_NetServer.m_SlotTakenByBot[i] = false;
+			m_NetServer.Drop(i, "");
+		}
+	}
+}
+
+
 /*int CServer::Tick()
 {
 	return m_CurrentGameTick;
@@ -1249,6 +1263,8 @@ char *CServer::GetMapName()
 
 int CServer::LoadMap(const char *pMapName)
 {
+	KickBots();
+	
 	//DATAFILE *df;
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
