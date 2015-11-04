@@ -99,6 +99,10 @@ public:
 	
 	int m_BombStatus;
 	
+	void ElectroShock()
+	{
+		m_Core.m_Vel /= 1.5f;
+	}
 	
 	// custom weapon system
 	int m_ActiveCustomWeapon;
@@ -181,6 +185,8 @@ private:
 	bool m_Alive;
 	
 	CCharacter *m_LockedTo;
+	
+	int m_PainSoundTimer;
 	
 	// weapon info
 	CEntity *m_apHitObjects[10];

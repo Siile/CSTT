@@ -86,12 +86,13 @@ enum CustomWeapons
 	GUN_PISTOL,
 	GUN_UZI,
 	GUN_MAGNUM,
-	GUN_STORM,
+	GUN_TASER,
 	RIFLE_ASSAULTRIFLE,
 	RIFLE_HEAVYRIFLE,
 	RIFLE_LIGHTNINGRIFLE,
 	RIFLE_STORMRIFLE,
 	RIFLE_LASERRIFLE,
+	RIFLE_ELECTRO,
 	RIFLE_DOOMRAY,
 	GRENADE_GRENADELAUNCHER,
 	GRENADE_DOOMLAUNCHER,
@@ -116,6 +117,7 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	430, // RIFLE_LIGHTNINGRIFLE,
 	650, // RIFLE_STORMRIFLE,
 	740, // RIFLE_LASERRIFLE,
+	650, // RIFLE_ELECTRO,
 	740, // RIFLE_DOOMRAY,
 	520, // GRENADE_GRENADELAUNCHER,
 	//500, // GRENADE_HEAVYLAUNCHER,
@@ -134,6 +136,7 @@ enum ProjectileTypes
 	PROJTYPE_PELLET,
 	PROJTYPE_LASER,
 	PROJTYPE_LIGHTNING,
+	PROJTYPE_ELECTRO,
 	PROJTYPE_GRENADE,
 	PROJTYPE_MINE
 };
@@ -315,7 +318,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		GUN_PISTOL, // require
 		40, // cost
 		19, // damage
-		0.03f, // extra1
+		0, // extra1
 		false, // autofire
 		0, // bullet spread
 		1, // shot spread
@@ -329,23 +332,23 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		2.0f // self knockback
 		),
 	CWeapon(
-		"Lightning pistol",
-		"/upg lightningpistol",
+		"Taser",
+		"/upg taser",
 		WEAPON_GUN,
-		PROJTYPE_LIGHTNING,
+		PROJTYPE_ELECTRO,
 		SOUND_RIFLE_FIRE,
 		GUN_PISTOL, // require
 		40, // cost
-		7, // damage
-		ELECTRIC, // extra1
-		false, // autofire
+		8, // damage
+		0, // extra1
+		true, // autofire
 		0, // bullet spread
 		1, // shot spread
-		8, // clip size
-		16, // powerup size
-		80, // max ammo
-		0, // bullet life
-		200, // bullet reload time
+		10, // clip size
+		20, // powerup size
+		100, // max ammo
+		190, // bullet life
+		100, // bullet reload time
 		700, // clip reload time
 		0.0f, // bullet knockback
 		0.0f // self knockback
@@ -457,6 +460,28 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0, // bullet life
 		275, // bullet reload time
 		1200, // clip reload time
+		0.0f, // bullet knockback
+		0.0f // self knockback
+		),
+	CWeapon(
+		"Electro rifle",
+		"/upg electro",
+		WEAPON_RIFLE,
+		PROJTYPE_ELECTRO,
+		SOUND_RIFLE_FIRE,
+		RIFLE_LASERRIFLE, // require
+		100, // cost
+		8, // damage
+		0, // extra1
+		true, // autofire
+		0, // bullet spread
+		2, // shot spread
+		20, // clip size
+		20, // powerup size
+		100, // max ammo
+		400, // bullet life
+		175, // bullet reload time
+		1400, // clip reload time
 		0.0f, // bullet knockback
 		0.0f // self knockback
 		),

@@ -39,10 +39,14 @@ protected:
 	
 	void ReactToPlayer();
 	
+	// emotions
 	float m_aAnger[16]; // MAX_CLIENTS
 	float m_aAttachment[16]; // MAX_CLIENTS
 	
 	float m_TotalAnger;
+	
+	void Panic();
+	int m_PanicTick;
 	
 	void ClearEmotions();
 	void HandleEmotions();

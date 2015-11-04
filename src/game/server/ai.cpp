@@ -110,6 +110,19 @@ void CAI::Stun(int Time)
 }
 
 
+void CAI::Panic()
+{
+	Player()->GetCharacter()->SetEmoteFor(EMOTE_PAIN, 10, 10, false);
+	m_DontMoveTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*1;
+	
+	if (frandom()*10 < 6)
+		m_Attack = 1;
+	else
+		m_Attack = 0;
+}
+
+
+
 void CAI::StandStill(int Time)
 {
 	m_Sleep = Time;
@@ -312,8 +325,6 @@ void CAI::HookMove()
 	{
 		vec2 HookDir = m_WaypointPos - m_Pos;
 		vec2 HookPos;
-		float Angle = atan2(HookDir.x, HookDir.y);
-	
 	
 		bool TryHooking = false;
 		
@@ -554,6 +565,9 @@ void CAI::ReceiveDamage(int CID, int Dmg)
 		m_aAnger[CID] *= 1.1f;
 		
 		m_aAttachment[CID] *= 0.9f;
+		
+		if (frandom()*20 < 2 && m_EnemiesInSight > 1)
+			m_PanicTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*(3+frandom()*3);
 	}
 	else
 	{
@@ -582,9 +596,10 @@ void CAI::HandleEmotions()
 	}
 	
 	if (m_TotalAnger > 35.0f)
-	{
 		Player()->GetCharacter()->SetEmoteFor(EMOTE_ANGRY, 40, 40, false);
-	}
+	
+	if (m_PanicTick > GameServer()->Server()->Tick())
+		Panic();
 }
 
 
@@ -592,6 +607,8 @@ void CAI::HandleEmotions()
 
 void CAI::ClearEmotions()
 {
+	m_PanicTick = 0;
+	
 	for (int i = 0; i < 16; i++)
 	{
 		m_aAnger[i] = 0.0f;

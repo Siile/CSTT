@@ -8,6 +8,7 @@
 #include "character.h"
 #include "laser.h"
 #include "lightning.h"
+#include "electro.h"
 #include "projectile.h"
 #include "superexplosion.h"
 #include "landmine.h"
@@ -58,6 +59,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_MaxHealth = 10;
 	m_Health = 0;
 	m_Armor = 0;
+	m_PainSoundTimer = 0;
 }
 
 bool CCharacter::Hooking()
@@ -102,6 +104,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedCustomWeapon = -1;
 
+	m_PainSoundTimer = 0;
+	
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
@@ -896,6 +900,81 @@ void CCharacter::FireWeapon()
 			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 		} break;
 		
+		
+		case PROJTYPE_ELECTRO:
+		{
+			GetPlayer()->m_InterestPoints += 40;
+			vec2 Start = m_Pos;
+			
+			if (aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon == WEAPON_GUN)
+				Start += Direction*30;
+			if (aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon == WEAPON_RIFLE)
+				Start += Direction*50;
+			
+			if (aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread == 1)
+			{
+				float a = GetAngle(Direction);
+				
+				vec2 To = m_Pos + vec2(cosf(a), sinf(a))*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife;
+				GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
+				
+				// character collision
+				vec2 At;
+				CCharacter *pHit = GameServer()->m_World.IntersectCharacter(Start, To, 70.0f, At, this);
+				if(pHit)
+				{
+					To = pHit->m_Pos;
+					pHit->ElectroShock();
+					pHit->TakeDamage(Direction, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
+				}
+			
+					int A = distance(Start, To) / 100;
+					
+					if (A > 4)
+						A = 4;
+					
+					if (A < 2)
+						A = 2;
+			
+				new CElectro(GameWorld(), Start, To, vec2(0, 0), A);
+			}
+			else
+			{
+				for (int i = -1; i < 2; i += 2)
+				{
+					
+					float a = GetAngle(Direction);
+					a += (i + frandom()-frandom()) / 10.0f;
+					//a += i / 10.0f;
+					vec2 To = m_Pos + vec2(cosf(a), sinf(a))*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife;
+					
+					GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
+					
+					// character collision
+					vec2 At;
+					CCharacter *pHit = GameServer()->m_World.IntersectCharacter(Start, To, 70.0f, At, this);
+					if(pHit)
+					{
+						To = pHit->m_Pos;
+						pHit->ElectroShock();
+						pHit->TakeDamage(Direction, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
+					}
+			
+					int A = distance(Start, To) / 100;
+					
+					if (A > 4)
+						A = 4;
+					
+					if (A < 2)
+						A = 2;
+			
+					new CElectro(GameWorld(), Start, To, vec2(cosf(a+i*1.2f), sinf(a+i*1.2f))*40, A);
+				}
+			}
+			break;
+		}
+			
+			
 		case PROJTYPE_LIGHTNING:
 		{
 			GetPlayer()->m_InterestPoints += 10;
@@ -1229,9 +1308,9 @@ void CCharacter::SetEmoteFor(int Emote, int Ticks, int LockEmote, bool UseTime)
 	}
 	else
 	{
-		m_EmoteStop = Server()->Tick() + Ticks * Server()->TickSpeed();
+		m_EmoteStop = Server()->Tick() + Ticks;
 		if (LockEmote > 0)
-			m_EmoteLockStop = Server()->Tick() + LockEmote * Server()->TickSpeed();
+			m_EmoteLockStop = Server()->Tick() + LockEmote;
 	}
 }
 
@@ -1285,6 +1364,9 @@ void CCharacter::ResetInput()
 
 void CCharacter::Tick()
 {
+	if (m_PainSoundTimer > 0)
+		m_PainSoundTimer--;
+	
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
@@ -1656,10 +1738,14 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		return false;
 	}
 
-	if (Dmg > 2)
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
-	else
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
+	if (m_PainSoundTimer <= 0)
+	{
+		if (Dmg > 10 || frandom()*10 < 3)
+			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		else
+			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
+		m_PainSoundTimer = 2;
+	}
 
 	SetEmote(EMOTE_PAIN, Server()->Tick() + 500 * Server()->TickSpeed() / 1000);
 	//m_EmoteType = EMOTE_PAIN;
