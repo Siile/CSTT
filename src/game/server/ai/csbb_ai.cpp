@@ -92,10 +92,6 @@ void CAIcsbb::DoBehavior()
 	// if we see a player
 	if (m_EnemiesInSight > 0)
 	{
-		// jump at random times
-		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-			m_Jump = 1;
-
 		ShootAtClosestEnemy();
 		ReactToPlayer();
 		
@@ -103,9 +99,9 @@ void CAIcsbb::DoBehavior()
 		{
 			// distance to the player
 			if (m_PlayerPos.x < m_Pos.x)
-				m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.5f+frandom()*1.0f);
 			else
-				m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.5f+frandom()*1.0f);
 		}
 	}
 	else
@@ -159,7 +155,7 @@ void CAIcsbb::DoBehavior()
 	
 	if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
 	{
-		MoveTowardsWaypoint(10);
+		MoveTowardsWaypoint(20);
 		HookMove();
 		AirJump();
 		

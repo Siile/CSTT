@@ -92,12 +92,12 @@ void CCollision::ClearWaypoints()
 }
 
 
-void CCollision::AddWaypoint(vec2 Position)
+void CCollision::AddWaypoint(vec2 Position, bool InnerCorner)
 {
 	if (m_WaypointCount >= MAX_WAYPOINTS)
 		return;
 	
-	m_apWaypoint[m_WaypointCount] = new CWaypoint(Position);
+	m_apWaypoint[m_WaypointCount] = new CWaypoint(Position, InnerCorner);
 	m_WaypointCount++;
 }
 
@@ -130,7 +130,7 @@ void CCollision::GenerateWaypoints()
 			if ((IsTileSolid((x+1)*32, y*32) || IsTileSolid((x-1)*32, y*32)) && (IsTileSolid(x*32, (y+1)*32) || IsTileSolid(x*32, (y+1)*32)))
 			{
 				// inner corner found -> create a waypoint
-				AddWaypoint(vec2(x, y));
+				AddWaypoint(vec2(x, y), true);
 			}
 		}
 	}
@@ -272,8 +272,14 @@ void CCollision::ConnectWaypoints()
 	// connect to near, visible waypoints
 	for (int i = 0; i < m_WaypointCount; i++)
 	{
+		if (m_apWaypoint[i] && m_apWaypoint[i]->m_InnerCorner)
+			continue;
+		
 		for (int j = 0; j < m_WaypointCount; j++)
 		{
+			if (m_apWaypoint[j] && m_apWaypoint[j]->m_InnerCorner)
+				continue;
+			
 			if (m_apWaypoint[i] && m_apWaypoint[j] && !m_apWaypoint[i]->Connected(m_apWaypoint[j]))
 			{
 				float Dist = distance(m_apWaypoint[i]->m_Pos, m_apWaypoint[j]->m_Pos);

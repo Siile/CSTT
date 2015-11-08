@@ -112,10 +112,10 @@ void CAI::Stun(int Time)
 
 void CAI::Panic()
 {
-	Player()->GetCharacter()->SetEmoteFor(EMOTE_PAIN, 10, 10, false);
+	Player()->GetCharacter()->SetEmoteFor(EMOTE_PAIN, 2, 2, false);
 	m_DontMoveTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*1;
 	
-	if (frandom()*10 < 6)
+	if (frandom()*10 < 7)
 		m_Attack = 1;
 	else
 		m_Attack = 0;
@@ -158,7 +158,7 @@ void CAI::AirJump()
 
 void CAI::DoJumping()
 {
-	if (abs(m_Pos.x - m_WaypointPos.x) < 20 && m_Pos.y > m_WaypointPos.y + 20)
+	if (abs(m_Pos.x - m_WaypointPos.x) < 20 && m_Pos.y > m_WaypointPos.y + 30)
 		m_Jump = 1;
 
 	if (Player()->GetCharacter()->IsGrounded() && 
@@ -170,7 +170,7 @@ void CAI::DoJumping()
 
 bool CAI::UpdateWaypoint(int EnemyWeight)
 {
-	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*1 < GameServer()->Server()->Tick())
+	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*5 < GameServer()->Server()->Tick())
 		m_WaypointUpdateNeeded = true;
 	
 	
@@ -330,17 +330,17 @@ void CAI::HookMove()
 		
 		float Distance = distance(m_Pos, m_WaypointPos);
 		
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 6; i++)
 		{
 			HookPos = m_Pos;
 			
-			vec2 Random = vec2(frandom()-frandom(), frandom()-frandom()) * (Distance / 3.0f);
+			vec2 Random = vec2(frandom()-frandom(), frandom()-frandom()) * (Distance / 2.0f);
 			
 			int C = GameServer()->Collision()->IntersectLine(m_Pos, m_WaypointPos+Random, &HookPos, NULL);
 			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
 			{
 				float Dist = distance(m_Pos, HookPos);
-				if (abs(Dist - 220) < 120)
+				if (abs(Dist - 220) < 180)
 				{
 					TryHooking = true;
 					break;
@@ -362,12 +362,11 @@ void CAI::HookMove()
 	
 			if (TryHooking)
 			{
-				if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 6.0f &&
-					m_DisplayDirection.y < 0)
+				//if (abs(atan2(m_Direction.x, m_Direction.y) - atan2(m_DisplayDirection.x, m_DisplayDirection.y)) < PI / 6.0f &&
+				if (m_DisplayDirection.y < 0)
 				{
 					m_Hook = 1;
 					m_HookTick = GameServer()->Server()->Tick();
-					m_HookMoveLock = frandom()*10 < 5;
 				
 					m_Direction = HookPos - m_Pos;
 				}
@@ -381,12 +380,13 @@ void CAI::HookMove()
 	}
 	
 	
+	vec2 Vel = Player()->GetCharacter()->GetVel();
+	vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
+
 	// lock move direction
-	if (m_Hook != 0 && Player()->GetCharacter()->Hooking()) // && m_HookMoveLock)
+	//if (m_Hook != 0 && Player()->GetCharacter()->Hooking()) // && m_HookMoveLock)
+	if (m_Hook != 0) // && m_HookMoveLock)
 	{
-		vec2 CorePos = Player()->GetCharacter()->GetCore().m_Pos;
-		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
-		vec2 Vel = Player()->GetCharacter()->GetVel();
 
 		// check hook point's surroundings
 		for (int y = -2; y < 2; y++)
@@ -394,21 +394,45 @@ void CAI::HookMove()
 			if (GameServer()->Collision()->IsTileSolid(HookPos.x + 32, HookPos.y + y*32) && 
 				GameServer()->Collision()->IsTileSolid(HookPos.x + 64, HookPos.y + y*32) &&
 				GameServer()->Collision()->IsTileSolid(HookPos.x + 96, HookPos.y + y*32))
-				m_Move = HookPos.y < CorePos.y ? -1 : 1;
+				m_Move = HookPos.y < m_Pos.y ? -1 : 1;
 			if (GameServer()->Collision()->IsTileSolid(HookPos.x - 32, HookPos.y + y*32) && 
 				GameServer()->Collision()->IsTileSolid(HookPos.x - 64, HookPos.y + y*32) &&
 				GameServer()->Collision()->IsTileSolid(HookPos.x - 96, HookPos.y + y*32))
-				m_Move = HookPos.y < CorePos.y ? 1 : -1;
+				m_Move = HookPos.y < m_Pos.y ? 1 : -1;
 		}
 	}
 	
 	
-	// release hook
-	if (m_Hook == 1)
+	// check if we're next to a wall mid air
+	if (!GameServer()->Collision()->IsTileSolid(m_Pos.x, m_Pos.y + 32) && 
+		Vel.y > -5.0f)
 	{
-		vec2 HookPos = Player()->GetCharacter()->GetCore().m_HookPos;
+		/*
+		if (GameServer()->Collision()->IsTileSolid(m_Pos.x + 48, m_Pos.y - 32) && 
+			GameServer()->Collision()->IsTileSolid(m_Pos.x + 48, m_Pos.y + 0 ) &&
+			GameServer()->Collision()->IsTileSolid(m_Pos.x + 48, m_Pos.y + 32))
+			m_Move = -1;
 			
-		if (m_Pos.y < HookPos.y ||
+		if (GameServer()->Collision()->IsTileSolid(m_Pos.x - 48, m_Pos.y - 32) && 
+			GameServer()->Collision()->IsTileSolid(m_Pos.x - 48, m_Pos.y + 0 ) &&
+			GameServer()->Collision()->IsTileSolid(m_Pos.x - 48, m_Pos.y + 32))
+			m_Move = 1;
+			*/
+			
+		if (GameServer()->Collision()->IsTileSolid(m_Pos.x + 48, m_Pos.y - 16) && 
+			GameServer()->Collision()->IsTileSolid(m_Pos.x + 48, m_Pos.y + 16 ))
+			m_Move = -1;
+			
+		if (GameServer()->Collision()->IsTileSolid(m_Pos.x - 48, m_Pos.y - 16) && 
+			GameServer()->Collision()->IsTileSolid(m_Pos.x - 48, m_Pos.y + 16))
+			m_Move = 1;
+	}
+	
+	
+	// release hook
+	if (m_Hook == 1 && Player()->GetCharacter()->Hooking())
+	{
+		if ((distance(m_Pos, HookPos) < 50 && Vel.y > 0) || m_Pos.y < HookPos.y ||
 			m_HookTick + GameServer()->Server()->TickSpeed()*1 < GameServer()->Server()->Tick())
 		{
 			m_Hook = 0;
@@ -566,8 +590,8 @@ void CAI::ReceiveDamage(int CID, int Dmg)
 		
 		m_aAttachment[CID] *= 0.9f;
 		
-		if (frandom()*20 < 2 && m_EnemiesInSight > 1)
-			m_PanicTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*(3+frandom()*3);
+		if (frandom()*25 < 2 && m_EnemiesInSight > 1)
+			m_PanicTick = GameServer()->Server()->Tick() + GameServer()->Server()->TickSpeed()*(2+frandom()*2);
 	}
 	else
 	{

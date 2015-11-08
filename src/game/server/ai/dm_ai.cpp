@@ -12,6 +12,7 @@ CAIdm::CAIdm(CGameContext *pGameServer, CPlayer *pPlayer)
 : CAI(pGameServer, pPlayer)
 {
 	m_SkipMoveUpdate = 0;
+	pPlayer->SetRandomSkin();
 }
 
 
@@ -22,11 +23,7 @@ void CAIdm::OnCharacterSpawn(CCharacter *pChr)
 	m_WaypointDir = vec2(0, 0);
 	
 	if (g_Config.m_SvRandomWeapons)
-	{
 		pChr->GiveRandomWeapon();
-	}
-	
-	pChr->GetPlayer()->SetRandomSkin();
 }
 
 
@@ -44,10 +41,6 @@ void CAIdm::DoBehavior()
 	// if we see a player
 	if (m_EnemiesInSight > 0)
 	{
-		// jump at random times
-		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-			m_Jump = 1;
-		
 		ShootAtClosestEnemy();
 		ReactToPlayer();
 	}
@@ -64,16 +57,16 @@ void CAIdm::DoBehavior()
 		{
 			// distance to the player
 			if (m_PlayerPos.x < m_Pos.x)
-				m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				m_TargetPos.x = m_PlayerPos.x + WeaponShootRange()/2*(0.5f+frandom()*1.0f);
 			else
-				m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.75f+frandom()*0.5f);
+				m_TargetPos.x = m_PlayerPos.x - WeaponShootRange()/2*(0.5f+frandom()*1.0f);
 		}
 	}
 
 	
 	if (UpdateWaypoint())
 	{
-		MoveTowardsWaypoint(10);
+		MoveTowardsWaypoint(20);
 		HookMove();
 		AirJump();
 		

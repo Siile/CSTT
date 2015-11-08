@@ -663,6 +663,9 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr, bool RequestAI)
 	pChr->SetHealth(100);
 
 	pChr->GiveCustomWeapon(GUN_PISTOL);
+	
+	if (pChr->GetPlayer()->m_pAI)
+		pChr->GetPlayer()->m_pAI->Reset();
 }
 
 
@@ -883,8 +886,9 @@ int IGameController::GetAutoTeam(int NotThisID)
 	{
 		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
-			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
-				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
+			//if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
+			if(GameServer()->m_apPlayers[i]->m_WantedTeam >= TEAM_RED && GameServer()->m_apPlayers[i]->m_WantedTeam <= TEAM_BLUE)
+				aNumplayers[GameServer()->m_apPlayers[i]->m_WantedTeam]++;
 		}
 	}
 
@@ -899,6 +903,8 @@ int IGameController::GetAutoTeam(int NotThisID)
 
 bool IGameController::CanJoinTeam(int Team, int NotThisID)
 {
+	return true;
+	
 	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS))
 		return true;
 

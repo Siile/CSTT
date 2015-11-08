@@ -72,7 +72,7 @@ void CLightning::DoBounce()
 			m_Pos = TempPos;
 			m_Dir = normalize(TempDir);
 			
-			m_Energy = -1;
+			m_Energy -= m_StepEnergy;
 		}
 	}
 	else

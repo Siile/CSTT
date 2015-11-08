@@ -42,7 +42,15 @@ public:
 	void Respawn();
 	void SetTeam(int Team, bool DoChatMsg=true);
 	void SetWantedTeam(int Team, bool DoChatMsg=true);
-	int GetTeam() const { return m_Team; };
+	//int GetTeam() const { return m_Team; };
+	
+	int GetTeam()
+	{
+		if (m_Team != TEAM_SPECTATORS);
+			return m_Team;
+		return m_WantedTeam;
+	};
+	
 	int GetCID() const { return m_ClientID; };
 
 	void Tick();
@@ -66,6 +74,10 @@ public:
 		m_pCharacter = Character;
 	}
 	
+	// bomb planting & defusing
+	int m_ActionTimer;
+	
+	int m_DeathTick;
 	
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
@@ -111,6 +123,9 @@ public:
 	bool m_CanShop;
 	
 	void DisableShopping();
+	void EnableShopping();
+	
+	void BuyRandomWeapon();
 	
 	float m_InterestPoints;
 	
@@ -156,6 +171,7 @@ public:
 	bool GotWeapon(int CustomWeapon);
 	void SaveWeapons();
 	void GiveSavedWeapons();
+	void EraseWeapons();
 	
 	bool WeaponDisabled(int CustomWeapon)
 	{

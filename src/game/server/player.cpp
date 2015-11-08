@@ -29,6 +29,9 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_Score = 0;
 	m_Money = g_Config.m_SvStartMoney;
 	
+	m_DeathTick = 0;
+	m_ActionTimer = 0;
+	
 	m_CanShop = false;
 	GameServer()->ClearShopVotes(ClientID);
 	
@@ -78,6 +81,15 @@ void CPlayer::NewRound()
 	m_InterestPoints = 0;
 }
 
+void CPlayer::EnableShopping()
+{
+	if (m_CanShop)
+		return;
+	
+	m_CanShop = true;
+	GameServer()->ResetVotes();
+}
+
 void CPlayer::DisableShopping()
 {
 	if (!m_CanShop)
@@ -98,6 +110,9 @@ void CPlayer::Tick()
 		return;
 
 	Server()->SetClientScore(m_ClientID, m_Score);
+	
+	if (m_Team != TEAM_SPECTATORS)
+		m_WantedTeam = m_Team;
 	
 	// do latency stuff
 	{
@@ -221,7 +236,12 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_Local = 0;
 	pPlayerInfo->m_ClientID = m_ClientID;
 	pPlayerInfo->m_Score = m_Score;
-	pPlayerInfo->m_Team = m_Team;
+	//pPlayerInfo->m_Team = m_Team;
+	
+	if (SnappingClient == GetCID())
+		pPlayerInfo->m_Team = m_Team;
+	else
+		pPlayerInfo->m_Team = m_WantedTeam;
 
 	if(m_ClientID == SnappingClient)
 		pPlayerInfo->m_Local = 1;
@@ -392,6 +412,8 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	KillCharacter();
 
 	m_Team = Team;
+	if (Team != TEAM_SPECTATORS)
+		m_WantedTeam = Team;
 	m_LastActionTick = Server()->Tick();
 	m_SpectatorID = SPEC_FREEVIEW;
 	// we got to wait 0.5 secs before respawning
@@ -503,6 +525,12 @@ bool CPlayer::AIInputChanged()
 
 
 
+void CPlayer::EraseWeapons()
+{
+	for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
+		m_aSavedWeapon[i] = false;
+}
+
 void CPlayer::GiveSavedWeapons()
 {
 	if (!GetCharacter())
@@ -547,6 +575,28 @@ bool CPlayer::GotWeapon(int CustomWeapon)
 	return m_pCharacter->GotWeapon(CustomWeapon);
 }
 
+
+
+void CPlayer::BuyRandomWeapon()
+{
+	if (!m_CanShop)
+		return;
+	
+	if (!m_pCharacter)
+		return;
+	
+	int i = 0;
+	int w = rand()%(NUM_CUSTOMWEAPONS-1);
+	
+	while (!BuyWeapon(w))
+	{
+		w = rand()%(NUM_CUSTOMWEAPONS-1);
+		if (i++ > 5)
+			return;
+	}
+	
+	m_pCharacter->SetCustomWeapon(w);
+}
 
 
 bool CPlayer::BuyableWeapon(int i)

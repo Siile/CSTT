@@ -25,11 +25,12 @@ enum WinStatus
 
 CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
+	/*
 	GameServer()->Collision()->GenerateWaypoints();
 	
 	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "%d waypoints generated, %d connections created", GameServer()->Collision()->WaypointCount(), GameServer()->Collision()->ConnectionCount());
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
-	
+	*/
 	
 	m_pGameType = "CSTT";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
@@ -37,8 +38,8 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 	//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
 	//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
 		
-	for (int i = 0; i < MAX_PICKUPS; i++)
-		m_apPickup[i] = NULL;
+	//for (int i = 0; i < MAX_PICKUPS; i++)
+	//	m_apPickup[i] = NULL;
 	
 	for (int i = 0; i < MAX_BOMBAREAS; i++)
 		m_apBombArea[i] = NULL;
@@ -47,9 +48,9 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 	
 	m_pBomb = NULL;
 	
-	m_PickupCount = 0;
-	m_PickupDropCount = 0;
-	m_DroppablesCreated = false;
+	//m_PickupCount = 0;
+	//m_PickupDropCount = 0;
+	//m_DroppablesCreated = false;
 	
 	m_NewGame = false;
 	
@@ -63,6 +64,7 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 
 
 
+/*
 void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype)
 {
 	for (int i = 0; i < m_PickupCount; i++)
@@ -79,6 +81,7 @@ void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, vec2 Force, int P
 		}
 	}
 }
+*/
 
 
 
@@ -88,11 +91,15 @@ void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, vec2 Force, int P
 	
 bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 {
+	/*
 	if(IGameController::OnNonPickupEntity(Index, Pos))
 		return true;
+	*/
 
+	/*
 	if (!m_DroppablesCreated)
 		CreateDroppables();
+	*/
 
 
 	// create bomb if not created
@@ -123,10 +130,13 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 		return true;
 	}
 	
+	if(IGameController::OnEntity(Index, Pos))
+		return true;
+	
 	return false;
 }
 
-
+/*
 void CGameControllerCSTT::CreateDroppables()
 {
 	for (int i = 0; i < MAX_DROPPABLES; i++)
@@ -152,6 +162,7 @@ void CGameControllerCSTT::CreateDroppables()
 	
 	m_DroppablesCreated = true;
 }
+*/
 	
 	
 int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
@@ -159,23 +170,31 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	//IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
 	
 	int HadBomb = 0;
-	
+	pVictim->GetPlayer()->m_DeathTick = Server()->Tick();
 	pVictim->GetPlayer()->m_InterestPoints = 0;
 	
-	int DropWeapon = pVictim->m_ActiveCustomWeapon;
+	// weapon drops
+	if (g_Config.m_SvWeaponDrops)
+	{
+		int DropWeapon = pVictim->m_ActiveCustomWeapon;
+		
+		if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL)
+			DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
+	}
 	
-	if (DropWeapon != HAMMER_BASIC && DropWeapon != GUN_PISTOL) // g_Config.m_SvWeaponDrops == 1 && 
+	// pickup drops
+	if (g_Config.m_SvPickupDrops)
 	{
-		DropPickup(pVictim->m_Pos, POWERUP_WEAPON, pVictim->m_LatestHitVel, DropWeapon);
+		for (int i = 0; i < 2; i++)
+		{
+			if (frandom()*10 < 4)
+				DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+			else
+				DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel+vec2(frandom()*6.0-frandom()*6.0, frandom()*6.0-frandom()*6.0), 0);
+		}
 	}
-	else
-	{
-		// drop pickup
-		if (pVictim->HasAmmo())
-			DropPickup(pVictim->m_Pos, POWERUP_ARMOR, pVictim->m_LatestHitVel, 0);
-		else
-			DropPickup(pVictim->m_Pos, POWERUP_HEALTH, pVictim->m_LatestHitVel, 0);
-	}
+	
+
 
 	// drop flags
 	CBomb *B = m_pBomb;
@@ -213,6 +232,13 @@ void CGameControllerCSTT::OnCharacterSpawn(CCharacter *pChr, bool RequestAI)
 {
 	IGameController::OnCharacterSpawn(pChr);
 	
+	if (m_GameState == GAMESTATE_NEWGAME)
+		pChr->GetPlayer()->DisableShopping();
+	else
+		pChr->GetPlayer()->EnableShopping();
+	
+	pChr->GetPlayer()->m_ActionTimer = 0;
+	
 	// init AI
 	if (RequestAI)
 		pChr->GetPlayer()->m_pAI = new CAIcstt(GameServer(), pChr->GetPlayer());
@@ -229,7 +255,14 @@ CBomb *CGameControllerCSTT::GetBomb()
 
 bool CGameControllerCSTT::CanCharacterSpawn(int ClientID)
 {
-	return GameServer()->m_CanRespawn;
+	if (g_Config.m_SvSurvivalMode)
+		return GameServer()->m_CanRespawn;
+
+	if (GameServer()->m_apPlayers[ClientID] &&
+		GameServer()->m_apPlayers[ClientID]->m_DeathTick < Server()->Tick() - Server()->TickSpeed()*g_Config.m_SvRespawnDelayCSTT)
+		return true;
+		
+	return false;
 }
 
 void CGameControllerCSTT::DoWincheck()
@@ -268,7 +301,7 @@ void CGameControllerCSTT::Snap(int SnappingClient)
 }
 
 
-
+/*
 void CGameControllerCSTT::ClearPickups()
 {
 	for (int i = 0; i < m_PickupCount; i++)
@@ -295,7 +328,7 @@ void CGameControllerCSTT::FlashPickups()
 			m_apPickup[i]->m_Flashing = true;
 	}
 }
-
+*/
 
 
 
@@ -393,7 +426,7 @@ int CGameControllerCSTT::CheckLose()
 	if (m_pBomb && m_pBomb->m_Status == BOMB_PLANTED)
 	{
 		// bomb planted and ready to explode
-		if(m_Timeout || Blue == 0)
+		if(m_Timeout || (Blue == 0 && g_Config.m_SvSurvivalMode))
 		{
 			return TERRORISTS_WIN;
 		}
@@ -419,15 +452,18 @@ int CGameControllerCSTT::CheckLose()
 			return COUNTERTERRORISTS_WIN;
 		}
 		
-		// check tees left only if bomb isn't planted
-		if (Red > 0 && Blue == 0)
-			return TERRORISTS_WIN;
-		
-		if (Red == 0 && Blue > 0)
-			return COUNTERTERRORISTS_WIN;
+		if (g_Config.m_SvSurvivalMode)
+		{
+			// check tees left only if bomb isn't planted
+			if (Red > 0 && Blue == 0)
+				return TERRORISTS_WIN;
+			
+			if (Red == 0 && Blue > 0)
+				return COUNTERTERRORISTS_WIN;
 
-		if (Red == 0 && Blue == 0)
-			return DRAW;
+			if (Red == 0 && Blue == 0)
+				return DRAW;
+		}
 	}
 	
 	return 0;
@@ -609,6 +645,7 @@ void CGameControllerCSTT::StartCountdown()
 	m_ResetTime = true; // gamecontroller
 	
 	ClearPickups();
+	RespawnPickups();
 
 	m_GameState = GAMESTATE_STARTING;
 	m_RoundTick = 0;
@@ -727,14 +764,17 @@ void CGameControllerCSTT::AutoBalance()
 		if(!pPlayer)
 			continue;
 
+		/*
 		CCharacter *pCharacter = pPlayer->GetCharacter();
 		if (!pCharacter)
 			continue;
 			
 		if (!pCharacter->IsAlive())
 			continue;
+		*/
 		
-		if (pPlayer->GetTeam() == TEAM_RED || pPlayer->m_WantedTeam == TEAM_RED)
+		//if (pPlayer->GetTeam() == TEAM_RED || pPlayer->m_WantedTeam == TEAM_RED)
+		if (pPlayer->m_WantedTeam == TEAM_RED)
 		{
 			if (!pPlayer->m_IsBot)
 				Red++;
@@ -745,7 +785,8 @@ void CGameControllerCSTT::AutoBalance()
 			}
 		}
 		
-		if (pPlayer->GetTeam() == TEAM_BLUE || pPlayer->m_WantedTeam == TEAM_BLUE)
+		//if (pPlayer->GetTeam() == TEAM_BLUE || pPlayer->m_WantedTeam == TEAM_BLUE)
+		if (pPlayer->m_WantedTeam == TEAM_BLUE)
 		{
 			if (!pPlayer->m_IsBot)
 				Blue++;
@@ -757,18 +798,39 @@ void CGameControllerCSTT::AutoBalance()
 		}
 	}
 	
-	if (Red+Blue == 0)
-		return;
+	//if (Red+Blue == 0)
+	//	return;
 	
 
 	// not enough players
+	/*
 	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
 	{
 		GameServer()->AddBot();
 		GameServer()->AddBot();
 	}
+	*/
+	
+	// too many bots
+	if (Red+RedBots > g_Config.m_SvPreferredTeamSize && RedBots > 0)
+	{
+		GameServer()->KickBot(RedBotID);
+		return;
+	}
+	if (Blue+BlueBots > g_Config.m_SvPreferredTeamSize && BlueBots > 0)
+	{
+		GameServer()->KickBot(BlueBotID);
+		return;
+	}
+	
+	
+	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize || (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
+		GameServer()->AddBot();
+	
+	
 	
 	// add bots when needed, as many as needed
+	/*
 	if (abs((Red+RedBots) - (Blue+BlueBots)) > 0)
 	{
 		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++)
@@ -777,16 +839,7 @@ void CGameControllerCSTT::AutoBalance()
 		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Adding %d bots for balance", abs((Red+RedBots) - (Blue+BlueBots)));
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	}
-	else
-	// too many bots
-	if ((Red+RedBots) > g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) > g_Config.m_SvPreferredTeamSize)
-	{
-		if (RedBots > 1 && BlueBots > 1)
-		{
-			GameServer()->KickBot(BlueBotID);
-			GameServer()->KickBot(RedBotID);
-		}
-	}
+	*/
 }
 
 
@@ -816,6 +869,8 @@ void CGameControllerCSTT::Tick()
 	}
 	else
 	{
+		
+			AutoBalance();
 		// first player join or new game
 		if (m_GameState == GAMESTATE_NEWGAME)
 		{
@@ -840,7 +895,8 @@ void CGameControllerCSTT::Tick()
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-2)*Server()->TickSpeed())
 			{				
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "Round %d / %d", m_Round, g_Config.m_SvNumRounds);
+				//str_format(aBuf, sizeof(aBuf), "Round %d / %d", m_Round, g_Config.m_SvNumRounds);
+				str_format(aBuf, sizeof(aBuf), "Round %d", m_Round);
 				GameServer()->SendBroadcast(aBuf, -1, true);
 				
 				GiveBombToPlayer();
@@ -869,7 +925,8 @@ void CGameControllerCSTT::Tick()
 			// new round starting
 			if (m_RoundTick >= 300)
 			{
-				if (m_Round >= g_Config.m_SvNumRounds)
+				//if (m_Round >= g_Config.m_SvNumRounds)
+				if (m_aTeamscore[TEAM_RED] >= g_Config.m_SvNumRounds || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvNumRounds)
 				{
 					EndTheShit();
 					return;
@@ -1007,17 +1064,27 @@ void CGameControllerCSTT::Tick()
 				
 				pPlayer->m_InterestPoints += 7;
 							
-				if (m_BombDefuseTimer == 0)
-				{
+				if (pPlayer->m_ActionTimer++ == 0)
 					GameServer()->SendBroadcast("Defusing bomb", pPlayer->GetCID());
-					//GameServer()->CreateSoundGlobal(SOUND_CTF_DROP, pPlayer->GetCID());
+				
+				if (pPlayer->m_ActionTimer >= g_Config.m_SvBombDefuseTime*Server()->TickSpeed())
+				{
+					B->m_Hide = true;
+					m_BombDefused = true;
+					GameServer()->SendBroadcast("Bomb defused!", -1, true);
+					GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
+								
+					m_RoundTimeLimit = 0; // gamecontroller
+					m_ResetTime = true; // gamecontroller
+					pPlayer->m_ActionTimer = 0;
+					break;
 				}
 			}
 			else
 			{
-				if (m_aDefusing[i])
+				if (pPlayer->m_ActionTimer > 0)
 				{
-					m_aDefusing[i] = false;
+					pPlayer->m_ActionTimer = 0;
 					GameServer()->SendBroadcast("", pPlayer->GetCID());
 				}
 			}
@@ -1032,6 +1099,7 @@ void CGameControllerCSTT::Tick()
 				GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
 			}
 			
+			/*
 			if (++m_BombDefuseTimer >= g_Config.m_SvBombDefuseTime*Server()->TickSpeed())
 			{
 				B->m_Hide = true;
@@ -1042,6 +1110,7 @@ void CGameControllerCSTT::Tick()
 				m_RoundTimeLimit = 0; // gamecontroller
 				m_ResetTime = true; // gamecontroller
 			}
+			*/
 		}
 		else
 		{
@@ -1057,6 +1126,8 @@ void CGameControllerCSTT::Tick()
 	{
 		bool BombPlantable = false;
 		
+		CPlayer *pPlayer = B->m_pCarryingCharacter->GetPlayer();
+		
 		// check if carrying tee is planting the bomb
 		for (int i = 0; i < MAX_BOMBAREAS; i++)
 		{
@@ -1071,10 +1142,10 @@ void CGameControllerCSTT::Tick()
 					if (B->m_Status == BOMB_CARRYING)
 					{
 						B->m_Status = BOMB_PLANTING;
+						pPlayer->m_ActionTimer = 0;
 						B->m_Timer = 0;
 						
-						GameServer()->SendBroadcast("Planting bomb", B->m_pCarryingCharacter->GetPlayer()->GetCID());
-						//GameServer()->CreateSoundGlobal(SOUND_CTF_DROP, B->m_pCarryingCharacter->GetPlayer()->GetCID());
+						GameServer()->SendBroadcast("Planting bomb", pPlayer->GetCID());
 					}
 					else if (B->m_Status == BOMB_PLANTING)
 					{
@@ -1085,14 +1156,15 @@ void CGameControllerCSTT::Tick()
 							GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
 						}
 						
-						B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 6;
+						pPlayer->m_InterestPoints += 6;
 						
-						if (++B->m_Timer >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
+						if (++pPlayer->m_ActionTimer >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
 						{
-							B->m_pCarryingCharacter->GetPlayer()->m_InterestPoints += 120;
+							pPlayer->m_InterestPoints += 120;
 							
 							B->m_pCarryingCharacter = NULL;
 							B->m_Status = BOMB_PLANTED;
+							pPlayer->m_ActionTimer = 0;
 							B->m_Timer = 0;
 							GameServer()->SendBroadcast("Bomb planted!", -1, true);
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
@@ -1110,7 +1182,7 @@ void CGameControllerCSTT::Tick()
 		if (!BombPlantable && B->m_Status == BOMB_PLANTING)
 		{
 			B->m_Status = BOMB_CARRYING;
-			B->m_Timer = 0;
+			pPlayer->m_ActionTimer = 0;
 			GameServer()->SendBroadcast("", B->m_pCarryingCharacter->GetPlayer()->GetCID());
 		}
 	}

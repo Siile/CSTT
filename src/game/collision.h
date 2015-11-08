@@ -23,7 +23,7 @@ class CCollision
 	int m_ConnectionCount;
 	
 	void ClearWaypoints();
-	void AddWaypoint(vec2 Position);
+	void AddWaypoint(vec2 Position, bool InnerCorner = false);
 	CWaypoint *GetWaypointAt(int x, int y);
 	void ConnectWaypoints();
 	CWaypoint *GetClosestWaypoint(vec2 Pos);

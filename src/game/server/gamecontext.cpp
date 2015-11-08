@@ -445,9 +445,18 @@ void CGameContext::SwapTeams()
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
+		/*
 		if(m_apPlayers[i] && m_apPlayers[i]->m_WantedTeam != TEAM_SPECTATORS)
 			m_apPlayers[i]->SetWantedTeam(m_apPlayers[i]->m_WantedTeam^1, false);
 			//m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
+			*/
+		if(m_apPlayers[i] && m_apPlayers[i]->m_WantedTeam != TEAM_SPECTATORS)
+		{
+			int t = m_apPlayers[i]->m_WantedTeam^1;
+			m_apPlayers[i]->SetTeam(t, false);
+			m_apPlayers[i]->SetWantedTeam(t, false);
+			
+		}
 	}
 
 	(void)m_pController->CheckTeamBalance();
@@ -892,7 +901,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Engine version 1.41");
+				SendChatTarget(ClientID, "Engine version 1.5");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -906,11 +915,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendChatTarget(ClientID, "/dwc - Disable / enable weapon chat (Using: ...)");
 				SendChatTarget(ClientID, "/dwb - Disable / enable weapon broadcast");
 				SendChatTarget(ClientID, "/das - Disable / enable auto spectating");
-				SendChatTarget(ClientID, "/deg - Disable / enable throwing grenades with emoticons");
-				SendChatTarget(ClientID, "/grenade - Throw a grenade");
+				//SendChatTarget(ClientID, "/deg - Disable / enable throwing grenades with emoticons");
+				//SendChatTarget(ClientID, "/grenade - Throw a grenade");
 				SkipSending = true;
 			}
 			
+			/*
 			if (strcmp(pMsg->m_pMessage, "/grenade") == 0)
 			{
 				if (pPlayer->GetCharacter())
@@ -918,6 +928,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				
 				SkipSending = true;
 			}
+			*/
 			
 			if (strcmp(pMsg->m_pMessage, "/dwc") == 0)
 			{
@@ -1357,6 +1368,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			
 			
 			// throwing grenades
+			/*
 			//if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
 			{
 				if (pPlayer->GetCharacter() && pPlayer->m_EnableEmoticonGrenades)
@@ -1364,6 +1376,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					pPlayer->GetCharacter()->ThrowGrenade(pMsg->m_Emoticon*(360.0f / NUM_EMOTICONS));
 				}
 			}
+			*/
 			
 
 			SendEmoticon(ClientID, pMsg->m_Emoticon);

@@ -21,7 +21,7 @@ enum GameStateCSTT
 class CGameControllerCSTT : public IGameController
 {
 private:
-	bool m_DroppablesCreated;
+	//bool m_DroppablesCreated;
 	
 	//int m_GameState;
 	int m_RoundTick;
@@ -70,6 +70,7 @@ private:
 	void GiveBombToPlayer();
 	
 	// store pickup pointers
+	/*
 	class CPickup *m_apPickup[MAX_PICKUPS];
 	int m_PickupCount;
 	
@@ -80,6 +81,7 @@ private:
 	
 	void RespawnPickups();
 	void ClearPickups();
+	*/
 	
 	
 public:
@@ -90,7 +92,7 @@ public:
 	virtual void Snap(int SnappingClient);
 	virtual void Tick();
 	
-	virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
+	//virtual void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype = -1);
 	void FlashPickups();
 	
 	

@@ -15,6 +15,8 @@ CWaypointPath *CWaypointPath::GetVisible(CGameContext *pGameServer, vec2 Pos)
 			return m_pNext->GetVisible(pGameServer, Pos);
 	}
 	
+	return this;
+	
 	if (!pGameServer->Collision()->FastIntersectLine(m_Pos, Pos))
 	{
 		return this;

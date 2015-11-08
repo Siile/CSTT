@@ -113,13 +113,13 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	750, // GUN_PISTOL,
 	750, // GUN_UZI,
 	750, // GUN_MAGNUM,
-	750, // GUN_STORM,
+	250, // GUN_TASER,
 	780, // RIFLE_ASSAULTRIFLE,
 	780, // RIFLE_HEAVYRIFLE,
 	430, // RIFLE_LIGHTNINGRIFLE,
 	650, // RIFLE_STORMRIFLE,
 	740, // RIFLE_LASERRIFLE,
-	650, // RIFLE_ELECTRO,
+	500, // RIFLE_ELECTRO,
 	740, // RIFLE_DOOMRAY,
 	520, // GRENADE_GRENADELAUNCHER,
 	//500, // GRENADE_HEAVYLAUNCHER,
@@ -230,7 +230,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_FLYHAMMER,
 		SOUND_HAMMER_FIRE,
 		HAMMER_BASIC, // require
-		100, // cost
+		75, // cost
 		20, // damage
 		ELECTRIC, // extra1
 		false, // autofire
@@ -473,7 +473,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_RIFLE_FIRE,
 		-1, // require
 		100, // cost
-		18, // damage
+		19, // damage
 		0, // extra1
 		true, // autofire
 		0, // bullet spread

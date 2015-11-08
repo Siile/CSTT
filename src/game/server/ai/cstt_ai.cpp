@@ -15,6 +15,7 @@ CAIcstt::CAIcstt(CGameContext *pGameServer, CPlayer *pPlayer)
 {
 	m_SkipMoveUpdate = 0;
 	m_TargetBombArea = NULL;
+	pPlayer->SetRandomSkin();
 }
 
 
@@ -22,60 +23,18 @@ void CAIcstt::OnCharacterSpawn(CCharacter *pChr)
 {
 	CAI::OnCharacterSpawn(pChr);
 	
-	
 	m_WaypointDir = vec2(0, 0);
 	m_TargetBombArea = NULL;
 	
-	int Round = GameServer()->m_pController->GetRound();
-	
-	
 	if (g_Config.m_SvRandomWeapons)
-	{
 		pChr->GiveRandomWeapon();
-	}
 	else
-	{
-		int Weapon = GUN_PISTOL;
-			
-		if (frandom()*8 < (Round-1)*3)
-		{
-			
-			if (frandom()*12 < 2)
-				Weapon = SWORD_KATANA;
-			else if (frandom()*12 < 2)
-				Weapon = GUN_MAGNUM;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_ASSAULTRIFLE;
-			else if (frandom()*12 < 3)
-				Weapon = GRENADE_GRENADELAUNCHER;
-			else if (frandom()*12 < 3)
-				Weapon = SHOTGUN_DOUBLEBARREL;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_LIGHTNINGRIFLE;
-			else if (frandom()*12 < 3)
-				Weapon = RIFLE_LASERRIFLE;
-			else if (Round > 3)
-			{
-				if (frandom()*12 < 3)
-					Weapon = SHOTGUN_COMBAT;
-				else if (frandom()*12 < 3)
-					Weapon = RIFLE_STORMRIFLE;
-				else if (frandom()*12 < 3)
-					Weapon = RIFLE_DOOMRAY;
-				else if (frandom()*12 < 3)
-					Weapon = GRENADE_DOOMLAUNCHER;
-				else if (frandom()*12 < 3)
-					Weapon = RIFLE_HEAVYRIFLE;
-			}
-		}
-		pChr->GiveCustomWeapon(Weapon);
-		pChr->SetCustomWeapon(Weapon);
-	}
+		pChr->GetPlayer()->BuyRandomWeapon();
 	
-	//pChr->SetHealth(100);
-	
-	str_copy(pChr->GetPlayer()->m_TeeInfos.m_SkinName, "bluestripe", 64);
-
+	if (frandom()*10 < 5)
+		m_Mission = 1; // protect flag carrier
+	else
+		m_Mission = 0; // seek and destroy
 }
 
 
@@ -99,10 +58,6 @@ void CAIcstt::DoBehavior()
 	// if we see a player
 	if (m_PlayerSpotCount > 0)
 	{
-		// jump at random times
-		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-			m_Jump = 1;
-		
 		ShootAtClosestEnemy();
 		ReactToPlayer();
 	}
@@ -142,7 +97,7 @@ void CAIcstt::DoBehavior()
 		}
 		else
 		{
-			if (Bomb && Bomb->m_Status == BOMB_CARRYING && distance(m_Pos, Bomb->m_Pos) > 400)
+			if (Bomb && Bomb->m_Status == BOMB_CARRYING && distance(m_Pos, Bomb->m_Pos) > 400 && m_Mission == 1)
 				m_TargetPos = Bomb->m_Pos;
 			else
 			if (SeekClosestEnemy())
@@ -200,7 +155,7 @@ void CAIcstt::DoBehavior()
 	
 	if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
 	{
-		MoveTowardsWaypoint(10);
+		MoveTowardsWaypoint(20);
 		HookMove();
 		AirJump();
 		

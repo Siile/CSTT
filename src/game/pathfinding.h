@@ -63,6 +63,8 @@ public:
 	int m_X, m_Y; // tileset position
 	vec2 m_Pos; // world position
 	
+	bool m_InnerCorner;
+	
 	CWaypoint *m_apConnection[MAX_WAYPOINTCONNECTIONS];
 	int m_ConnectionCount;
 	
@@ -72,8 +74,9 @@ public:
 	// preventing loops and finding the shortest way to target
 	int m_PathDistance;
 	
-	CWaypoint(vec2 Pos)
+	CWaypoint(vec2 Pos, bool InnerCorner = false)
 	{
+		m_InnerCorner = InnerCorner;
 		m_PathDistance = 0;
 		m_X = Pos.x;
 		m_Y = Pos.y;

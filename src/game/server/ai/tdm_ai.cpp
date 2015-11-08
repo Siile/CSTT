@@ -12,6 +12,7 @@ CAItdm::CAItdm(CGameContext *pGameServer, CPlayer *pPlayer)
 : CAI(pGameServer, pPlayer)
 {
 	m_SkipMoveUpdate = 0;
+	pPlayer->SetRandomSkin();
 }
 
 
@@ -22,11 +23,7 @@ void CAItdm::OnCharacterSpawn(CCharacter *pChr)
 	m_WaypointDir = vec2(0, 0);
 	
 	if (g_Config.m_SvRandomWeapons)
-	{
 		pChr->GiveRandomWeapon();
-	}
-	
-	pChr->GetPlayer()->SetRandomSkin();
 }
 
 
@@ -45,10 +42,6 @@ void CAItdm::DoBehavior()
 	// if we see a player
 	if (m_EnemiesInSight > 0)
 	{
-		// jump at random times
-		if (Player()->GetCharacter()->IsGrounded() && frandom()*20 < 3)
-			m_Jump = 1;
-		
 		ShootAtClosestEnemy();
 		ReactToPlayer();
 	}

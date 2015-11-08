@@ -408,7 +408,7 @@ void CCharacter::HandleNinja()
 			{
 				To = pHit->m_Pos;
 				pHit->ElectroShock();
-				pHit->TakeDamage(m_Core.m_Vel, 3, GetPlayer()->GetCID(), WEAPON_HAMMER);
+				pHit->TakeDamage(m_Core.m_Vel, 4, GetPlayer()->GetCID(), WEAPON_HAMMER);
 			}
 			
 			int A = distance(m_Pos, To) / 100;
@@ -1210,7 +1210,7 @@ void CCharacter::ShowArmor()
 
 void CCharacter::AutoWeaponChange()
 {
-	if (HasAmmo() && frandom()*100 > 5 && m_ActiveCustomWeapon != HAMMER_BASIC)
+	if (HasAmmo() && frandom()*100 > 10 && m_ActiveCustomWeapon != HAMMER_BASIC)
 		return;
 	
 	// -1 because smoke grenade shouldn't be included
@@ -1649,6 +1649,9 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 	// we got to wait 0.5 secs before respawning
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	
+	if (Weapon != WEAPON_GAME)
+		m_pPlayer->EraseWeapons();
+	
 	if (Killer == m_pPlayer->GetCID() && (Weapon == WEAPON_HAMMER || Weapon == WEAPON_GAME))
 		SkipKillMessage = true;
 	
@@ -1725,7 +1728,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	
 	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
 		return false;
-
+	
 		
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
@@ -1734,27 +1737,25 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_DamageTaken++;
 
 
-		// create healthmod indicator
-		if(Server()->Tick() < m_DamageTakenTick+25)
-		{
-			// make sure that the damage indicators doesn't group together
-			//GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
-			GameServer()->CreateDamageInd(m_Pos, GetAngle(-Force), Dmg);
-		}
-		else
-		{
-			m_DamageTaken = 0;
-			//GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
-			GameServer()->CreateDamageInd(m_Pos, GetAngle(-Force), Dmg);
-		}
+	// create healthmod indicator
+	if(Server()->Tick() < m_DamageTakenTick+25)
+	{
+		GameServer()->CreateDamageInd(m_Pos, GetAngle(-Force), Dmg);
+	}
+	else
+	{
+		m_DamageTaken = 0;
+		GameServer()->CreateDamageInd(m_Pos, GetAngle(-Force), Dmg);
+	}
 
-	// bottom part of boss doesn't take damage
+	
 	if(Dmg)
 	{
 		m_HiddenHealth -= Dmg;
 		m_LatestHitVel = Force;
 	}
 	
+	GetPlayer()->m_ActionTimer = 0;
 	GetPlayer()->m_InterestPoints += Dmg * 4;
 
 	m_DamageTakenTick = Server()->Tick();
