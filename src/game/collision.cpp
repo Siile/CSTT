@@ -237,8 +237,8 @@ void CCollision::ConnectWaypoints()
 			
 			if (W)
 			{
-				m_ConnectionCount++;
-				m_apWaypoint[i]->Connect(W);
+				if (m_apWaypoint[i]->Connect(W))
+					m_ConnectionCount++;
 				break;
 			}
 			
@@ -259,8 +259,8 @@ void CCollision::ConnectWaypoints()
 			
 			if (W)
 			{
-				m_ConnectionCount++;
-				m_apWaypoint[i]->Connect(W);
+				if (m_apWaypoint[i]->Connect(W))
+					m_ConnectionCount++;
 				break;
 			}
 			
@@ -286,8 +286,8 @@ void CCollision::ConnectWaypoints()
 				
 				if (Dist < 600 && !IntersectLine(m_apWaypoint[i]->m_Pos, m_apWaypoint[j]->m_Pos, NULL, NULL))
 				{
-					m_ConnectionCount++;
-					m_apWaypoint[i]->Connect(m_apWaypoint[j]);
+					if (m_apWaypoint[i]->Connect(m_apWaypoint[j]))
+						m_ConnectionCount++;
 				}
 			}
 		}

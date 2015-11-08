@@ -153,7 +153,8 @@ void CAIcstt::DoBehavior()
 		}
 	}
 	
-	if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
+	//if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
+	if (UpdateWaypoint(0))
 	{
 		MoveTowardsWaypoint(20);
 		HookMove();

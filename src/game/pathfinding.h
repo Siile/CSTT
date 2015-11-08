@@ -5,7 +5,7 @@
 
 
 #define MAX_WAYPOINTS 10000
-#define MAX_WAYPOINTCONNECTIONS 10
+#define MAX_WAYPOINTCONNECTIONS 8
 
 
 class CWaypointPath
@@ -121,14 +121,14 @@ public:
 	
 	
 	// create a two way connection between this and given waypoint
-	void Connect(CWaypoint *Waypoint)
+	bool Connect(CWaypoint *Waypoint)
 	{
 		if (!Waypoint || Waypoint == this || m_ConnectionCount >= MAX_WAYPOINTCONNECTIONS)
-			return;
+			return false;
 		
 		// check if we're connected already
 		if (Connected(Waypoint))
-			return;
+			return false;
 		
 		// connect
 		m_apConnection[m_ConnectionCount] = Waypoint;
@@ -136,6 +136,7 @@ public:
 		m_ConnectionCount++;
 		
 		Waypoint->Connect(this);
+		return true;
 	}
 	
 	
