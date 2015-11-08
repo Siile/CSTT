@@ -870,6 +870,7 @@ void CGameControllerCSTT::Tick()
 	else
 	{
 		
+		if (Server()->Tick()%40 == 1)
 			AutoBalance();
 		// first player join or new game
 		if (m_GameState == GAMESTATE_NEWGAME)
@@ -886,11 +887,13 @@ void CGameControllerCSTT::Tick()
 		else
 		if (m_GameState == GAMESTATE_STARTING)
 		{
+			/*
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-3)*Server()->TickSpeed() ||
 				m_RoundTick == (g_Config.m_SvPreroundTime-2.5f)*Server()->TickSpeed())
 			{
 				AutoBalance();
 			}
+			*/
 		
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-2)*Server()->TickSpeed())
 			{				

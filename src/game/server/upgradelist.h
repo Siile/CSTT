@@ -242,7 +242,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		2.0f, // bullet life
 		400, // bullet reload time
 		0, // clip reload time
-		1.0f, // knockback
+		0.75f, // knockback
 		0.0f // self knockback
 		),
 	CWeapon(
@@ -264,7 +264,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.17f, // bullet life
 		225, // bullet reload time
 		750, // clip reload time
-		7.0f, // bullet knockback
+		5.0f, // bullet knockback
 		6.0f // self knockback
 		),
 	CWeapon(
@@ -286,7 +286,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.2f, // bullet life
 		215, // bullet reload time
 		1200, // clip reload time
-		6.0f, // bullet knockback
+		5.0f, // bullet knockback
 		3.0f // self knockback
 		),
 	CWeapon(
@@ -308,7 +308,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.3f, // bullet life
 		160, // bullet reload time
 		650, // clip reload time
-		10.0f, // bullet knockback
+		7.0f, // bullet knockback
 		0.5f // self knockback
 		),
 	CWeapon(
@@ -330,7 +330,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.3f, // bullet life
 		100, // bullet reload time
 		650, // clip reload time
-		7.0f, // bullet knockback
+		5.0f, // bullet knockback
 		0.5f // self knockback
 		),
 	CWeapon(
@@ -352,7 +352,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.35f, // bullet life
 		160, // bullet reload time
 		700, // clip reload time
-		15.0f, // bullet knockback
+		12.0f, // bullet knockback
 		2.0f // self knockback
 		),
 	CWeapon(
@@ -396,7 +396,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.45f, // bullet life
 		120, // bullet reload time
 		1200, // clip reload time
-		12.0f, // bullet knockback
+		9.0f, // bullet knockback
 		2.0f // self knockback
 		),
 	CWeapon(
@@ -418,7 +418,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.45f, // bullet life
 		120, // bullet reload time
 		1200, // clip reload time
-		17.0f, // bullet knockback
+		13.0f, // bullet knockback
 		3.0f // self knockback
 		),
 	CWeapon(

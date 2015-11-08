@@ -184,6 +184,8 @@ private:
 
 	bool m_Alive;
 	
+	vec2 m_Recoil;
+	
 	CCharacter *m_LockedTo;
 	
 	int m_PainSoundTimer;

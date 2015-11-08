@@ -86,6 +86,7 @@ void CCharacter::Reset()
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
 	m_Grenades = 2;
+	m_Recoil = vec2(0, 0);
 	
 	m_SwordReady = false;
 	
@@ -739,7 +740,8 @@ void CCharacter::FireWeapon()
 	}
 	
 	// weapon knockback to self
-	m_Core.m_Vel -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
+	//m_Core.m_Vel -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
+	m_Recoil -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
 	
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
@@ -948,8 +950,6 @@ void CCharacter::FireWeapon()
 		case PROJTYPE_LASER:
 		{
 			GetPlayer()->m_InterestPoints += 40;
-			
-			m_Core.m_Vel -= Direction * aCustomWeapon[m_ActiveCustomWeapon].m_SelfKnockback;
 			
 			float a = GetAngle(Direction);
 			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
@@ -1438,6 +1438,9 @@ void CCharacter::Tick()
 	
 	m_Core.m_Input = m_Input;
 	
+	m_Core.m_Vel += m_Recoil*0.7f;
+	m_Recoil *= 0.5f;
+	
 	m_Core.Tick(true);
 	
 	if (IsGrounded())
@@ -1720,7 +1723,8 @@ void CCharacter::Cry()
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {	
-	m_Core.m_Vel += Force;
+	//m_Core.m_Vel += Force;
+	m_Recoil += Force;
 
 	// signal AI
 	if (Dmg > 0 && GetPlayer()->m_pAI && Weapon >= 0)
