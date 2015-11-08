@@ -1071,7 +1071,12 @@ void CGameControllerCSTT::Tick()
 				{
 					B->m_Hide = true;
 					m_BombDefused = true;
-					GameServer()->SendBroadcast("Bomb defused!", -1, true);
+					
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "%s defused the bomb!", Server()->ClientName(pPlayer->GetCID()));
+					GameServer()->SendBroadcast(aBuf, -1, true);
+					
+					//GameServer()->SendBroadcast("Bomb defused!", -1, true);
 					GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
 								
 					m_RoundTimeLimit = 0; // gamecontroller
@@ -1166,7 +1171,10 @@ void CGameControllerCSTT::Tick()
 							B->m_Status = BOMB_PLANTED;
 							pPlayer->m_ActionTimer = 0;
 							B->m_Timer = 0;
-							GameServer()->SendBroadcast("Bomb planted!", -1, true);
+							char aBuf[128];
+							str_format(aBuf, sizeof(aBuf), "%s planted the bomb!", Server()->ClientName(pPlayer->GetCID()));
+							GameServer()->SendBroadcast(aBuf, -1, true);
+							//GameServer()->SendBroadcast("Bomb planted!", -1, true);
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, -1);
 							
 							m_RoundTimeLimit = g_Config.m_SvBombTime; // gamecontroller
