@@ -187,6 +187,8 @@ public:
 	virtual const char *Version();
 	virtual const char *NetVersion();
 	
+	bool GotAbility(int ClientID, int Ability);
+	
 	void AddBot();
 	void KickBots();
 	void KickBot(int ClientID);

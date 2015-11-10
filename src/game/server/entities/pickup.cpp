@@ -3,9 +3,11 @@
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "pickup.h"
+#include "electro.h"
+#include "superexplosion.h"
 
 
-CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
+CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType, int Owner)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP)
 {
 	m_Type = Type;
@@ -17,6 +19,7 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
 	GameWorld()->InsertEntity(this);
 	m_SkipAutoRespawn = false;
 	
+	m_Owner = Owner;
 	m_Dropable = false;
 	m_Life = 0;
 	m_Vel = vec2(0, 0);
@@ -33,6 +36,7 @@ void CPickup::Reset()
 			
 		m_Flashing = false;
 		m_FlashTimer = 0;
+		m_Owner = -1;
 	}
 }
 
@@ -117,7 +121,40 @@ void CPickup::Tick()
 		switch (m_Type)
 		{
 			case POWERUP_HEALTH:
+				if (m_Subtype > 0 && m_Owner >= 0 && m_Owner < MAX_CLIENTS && GameServer()->m_apPlayers[m_Owner])
+				{
+					int Team = GameServer()->m_apPlayers[m_Owner]->GetTeam();
+					
+					if (Team != pChr->GetPlayer()->GetTeam())
+					{
+						if (m_Subtype == 1)
+							GameServer()->CreateExplosion(m_Pos, m_Owner, WEAPON_HAMMER, false, false);
+						
+						if (m_Subtype == 2)
+						{
+							CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_Pos, m_Owner, WEAPON_HAMMER, 1);
+							GameServer()->m_World.InsertEntity(S);
+						}
+
+						GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+						m_Life = 0;
+						m_Flashing = false;
+						m_Subtype = 0;
+						break;
+					}
+				}
+				
+				
 				if(pChr->IncreaseHealth(10))
+				{
+					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+					m_Life = 0;
+					m_Flashing = false;
+				}
+				else
+				if (pChr->GetPlayer()->GotAbility(STORE_HEALTH) && pChr->StoreHealth())
 				{
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
 					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;

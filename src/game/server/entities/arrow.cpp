@@ -49,13 +49,16 @@ void CArrow::TickPaused()
 
 void CArrow::Snap(int SnappingClient)
 {
-	if (SnappingClient < 0 || SnappingClient >= MAX_CLIENTS || m_Hide)
+	if (SnappingClient < 0 || SnappingClient >= MAX_CLIENTS)
 		return;
 	
 	CPlayer *pPlayer = GameServer()->m_apPlayers[SnappingClient];
 	if(!pPlayer)
 		return;
-		
+	
+	if (!pPlayer->GotAbility(BOMBRADAR))
+		return;
+	
 	CCharacter *pCharacter = pPlayer->GetCharacter();
 	if (!pCharacter)
 		return;

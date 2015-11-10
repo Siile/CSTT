@@ -62,7 +62,7 @@ IGameController::~IGameController()
 
 
 
-void IGameController::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype)
+void IGameController::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype, int Owner)
 {
 	for (int i = 0; i < m_PickupCount; i++)
 	{
@@ -70,10 +70,13 @@ void IGameController::DropPickup(vec2 Pos, int PickupType, vec2 Force, int Picku
 		{
 			m_apPickup[i]->m_Pos = Pos;
 			m_apPickup[i]->RespawnDropable();
-			if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
+			//if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
 				m_apPickup[i]->SetSubtype(PickupSubtype);
 			
 			m_apPickup[i]->m_Vel = Force;
+			
+			if (Owner != -1)
+				m_apPickup[i]->m_Owner = Owner;
 			return;
 		}
 	}

@@ -10,13 +10,15 @@ const int PickupPhysSize = 14;
 class CPickup : public CEntity
 {
 public:
-	CPickup(CGameWorld *pGameWorld, int Type, int SubType = 0);
+	CPickup(CGameWorld *pGameWorld, int Type, int SubType = 0, int Owner = -1);
 
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
+	int m_Owner;
+	
 	void Respawn()
 	{
 		if (!m_Dropable)
@@ -34,6 +36,7 @@ public:
 		m_Dropable = true;
 		m_Flashing = false;
 		m_FlashTimer = 0;
+		m_Subtype = 0;
 	}
 	
 	void Hide()
@@ -42,6 +45,7 @@ public:
 		m_Life = 0;
 		m_Flashing = false;
 		m_FlashTimer = 0;
+		m_Subtype = 0;
 	}
 	
 	bool m_SkipAutoRespawn;

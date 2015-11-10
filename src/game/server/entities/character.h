@@ -10,6 +10,7 @@
 #include <game/gamecore.h>
 
 #include <game/server/upgradelist.h>
+#include <game/server/classabilities.h>
 
 enum
 {
@@ -60,7 +61,7 @@ public:
 	}
 	
 	void Die(int Killer, int Weapon, bool SkipKillMessage = false);
-	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
+	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon, bool Lifesteal = false);
 	void TakeDeathtileDamage();
 
 	vec2 m_SpawnPos;
@@ -70,7 +71,14 @@ public:
 	
 	void Teleport(vec2 Pos);
 
+	// ability STORE_HEALTH
+	int m_HealthStored;
+	
+	bool m_UseMedkit;
+	int m_MedkitTimer;
+	
 	bool IncreaseHealth(int Amount);
+	bool StoreHealth();
 	bool IncreaseArmor(int Amount);
 	
 	void SetHealth(int Health);

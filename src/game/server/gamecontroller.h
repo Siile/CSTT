@@ -36,7 +36,6 @@ class IGameController
 	
 protected:
 
-	void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype);
 
 	void AutoBalance();
 	
@@ -102,6 +101,7 @@ public:
 
 	virtual int GetDefendingTeam();
 	
+	void DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype, int Owner = -1);
 	
 	int GetTimeLeft();
 	

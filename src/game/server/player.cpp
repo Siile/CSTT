@@ -6,6 +6,7 @@
 #include "player.h"
 
 #include <game/server/upgradelist.h>
+#include <game/server/classabilities.h>
 
 
 
@@ -45,6 +46,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_IsBot = false;
 	m_pAI = NULL;
 	
+	ResetClass();
+	
 	m_WantedTeam = m_Team;
 	//m_Team = TEAM_SPECTATORS;
 	
@@ -58,6 +61,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	
 	// warm welcome awaits
 	m_Welcomed = false;
+	
+	GameServer()->ResetVotes();
 }
 
 CPlayer::~CPlayer()
@@ -77,8 +82,47 @@ void CPlayer::NewRound()
 	m_Score = 0;
 	m_Money = g_Config.m_SvStartMoney;
 	
+	ResetClass();
+	
 	DisableShopping();
 	m_InterestPoints = 0;
+}
+
+
+void CPlayer::ResetClass()
+{
+	m_Class = -1;
+	m_AbilityPoints = 0;
+	
+	for (int i = 0; i < NUM_ABILITIES; i++)
+		m_aAbility[i] = false;
+}
+
+
+bool CPlayer::SelectClass(int Class)
+{
+	if (Class < 0 || Class > NUM_CLASSES)
+		return false;
+	
+	if (m_Class != -1)
+		return false;
+	
+	m_Class = Class;
+	m_AbilityPoints += 2;
+	return true;
+}
+
+bool CPlayer::SelectAbility(int Ability)
+{
+	if (Ability < 0 || Ability >= NUM_ABILITIES)
+		return false;
+	
+	if (m_aAbility[Ability] || m_AbilityPoints < aAbilities[Ability].m_Cost)
+		return false;
+	
+	m_aAbility[Ability] = true;
+	m_AbilityPoints -= aAbilities[Ability].m_Cost;
+	return true;
 }
 
 void CPlayer::EnableShopping()
@@ -674,7 +718,9 @@ bool CPlayer::BuyWeapon(int CustomWeapon)
 		return false;
 	}
 	
-	if (m_Money < aCustomWeapon[CustomWeapon].m_Cost)
+	int Cost = aCustomWeapon[CustomWeapon].m_Cost;
+	
+	if (m_Money < Cost)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "Not enough money for %s", aCustomWeapon[CustomWeapon].m_Name);
@@ -683,8 +729,7 @@ bool CPlayer::BuyWeapon(int CustomWeapon)
 	}
 	
 	m_pCharacter->GiveCustomWeapon(CustomWeapon);
-	//m_pCharacter->SetCustomWeapon(CustomWeapon);
-	m_Money -= aCustomWeapon[CustomWeapon].m_Cost;
+	m_Money -= Cost;
 
 	if (CustomWeapon != HAMMER_BASIC)
 	{

@@ -60,6 +60,7 @@ MACRO_CONFIG_INT(GfxNoclip, gfx_noclip, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "D
 
 MACRO_CONFIG_INT(SvRandomWeapons, sv_randomweapons, 0, 0, 1, CFGFLAG_SERVER, "Enable random weapons")
 MACRO_CONFIG_INT(SvSurvivalMode, sv_survivalmode, 0, 0, 1, CFGFLAG_SERVER, "Survival mode")
+MACRO_CONFIG_INT(SvAbilities, sv_abilities, 0, 0, 1, CFGFLAG_SERVER, "Enable classes & abilities")
 MACRO_CONFIG_INT(SvPickupDrops, sv_pickupdrops, 1, 0, 1, CFGFLAG_SERVER, "Pickup drops")
 MACRO_CONFIG_INT(SvVanillaPickups, sv_vanillapickups, 1, 0, 1, CFGFLAG_SERVER, "Enable vanilla's pickups")
 MACRO_CONFIG_INT(SvInstaDeathTiles, sv_instadeathtiles, 0, 0, 1, CFGFLAG_SERVER, "Instakill death tiles")
@@ -84,7 +85,7 @@ MACRO_CONFIG_INT(SvBombDefuseTime, sv_bombdefusetime, 4, 2, 20, CFGFLAG_SERVER, 
 
 MACRO_CONFIG_INT(SvSpectatorUpdateTime, sv_spectatorupdatetime, 2, 1, 20, CFGFLAG_SERVER, "Time between spectator view changes to spectators")
 
-MACRO_CONFIG_INT(SvRespawnDelayCSTT, sv_respawn_delay_cstt, 4, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in cstt gametype")
+MACRO_CONFIG_INT(SvRespawnDelayCSTT, sv_respawn_delay_cstt, 5, 0, 20, CFGFLAG_SERVER, "Time needed to respawn after death in cstt gametype")
 
 
 MACRO_CONFIG_INT(SvBroadcastLock, sv_broadcastlock, 3, 0, 5, CFGFLAG_SERVER, "Broadcast lock time (seconds)")

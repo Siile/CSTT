@@ -23,6 +23,17 @@
 #include <game/server/ai_protocol.h>
 #include <game/server/ai.h>
 
+
+
+
+const char *aClassName[NUM_CLASSES] = 
+{
+	"Soldier",
+	"Medic",
+	"Technician"
+};
+
+
 enum
 {
 	RESET,
@@ -139,6 +150,16 @@ void CGameContext::GenerateArrows()
 
 
 
+bool CGameContext::GotAbility(int ClientID, int Ability)
+{
+	if (ClientID < 0 || ClientID >= MAX_CLIENTS)
+		return false;
+	
+	if (m_apPlayers[ClientID] && m_apPlayers[ClientID]->GotAbility(Ability))
+		return true;
+	
+	return false;
+}
 
 
 
@@ -172,8 +193,17 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			if (Superdamage)
 				Dmg *= 5;
 			
-			if((int)Dmg)
-				apEnts[i]->TakeDamage(ForceDir*Dmg, (int)Dmg, Owner, Weapon);
+			if (apEnts[i]->GetPlayer()->GotAbility(ANTIEXPLOSIONARMOR))
+				Dmg -= 1.0f;
+			
+			if (Owner > 0 && Owner < MAX_CLIENTS)
+			{
+				if (m_apPlayers[Owner] && m_apPlayers[Owner]->GotAbility(EXPLOSION_DAMAGE1))
+					Dmg += 1.0f;
+			}
+			
+			if((int)Dmg && Dmg > 0.0f)
+				apEnts[i]->TakeDamage(ForceDir*Dmg*0.9f, (int)Dmg, Owner, Weapon);
 		}
 	}
 }
@@ -1200,7 +1230,37 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 	
 
-			// buying & upgrading
+			// class selecting
+			for (int i = 0; i < NUM_CLASSES; i++)
+			{
+				if (str_comp(aCmd, aClassName[i]) == 0)
+				{
+					if (m_apPlayers[ClientID]->SelectClass(i))
+						Server()->SetClientClan(ClientID, aClassName[i]);
+					ResetVotes();
+					return;
+				}
+			}
+
+			// class abilities
+			for (int i = 0; i < NUM_ABILITIES; i++)
+			{
+				if (str_comp(aCmd, aAbilities[i].m_aName) == 0)
+				{
+					if (m_apPlayers[ClientID]->SelectAbility(i))
+					//char aBuf[256];
+					//str_format(aBuf, sizeof(aBuf), "Not enough money for %s", aCustomWeapon[CustomWeapon].m_Name);
+						SendChatTarget(ClientID, aAbilities[i].m_aChatMsg);
+					else
+						SendChatTarget(ClientID, "Not enough ability points.");
+						
+					ResetVotes();
+					return;
+				}
+			}
+
+			
+			// buying
 			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 			{
 				if (str_comp(aCmd, aCustomWeapon[i].m_BuyCmd) == 0)
@@ -1378,6 +1438,36 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 			*/
 			
+			if (pMsg->m_Emoticon == EMOTICON_HEARTS)
+			{
+				if (pPlayer->GetCharacter() && pPlayer->GotAbility(STORE_HEALTH))
+				{
+					pPlayer->GetCharacter()->m_UseMedkit = true;
+					/*
+					int Explode = 0;
+					if (pPlayer->GotAbility(EXPLOSIVE_HEARTS))
+						Explode = 1;
+					
+					switch (pPlayer->GetCharacter()->m_HealthStored)
+					{
+						case 1:
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(0, -12.0f), Explode, pPlayer->GetCID());
+							break;
+						case 2:
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(-4, -11.0f), Explode, pPlayer->GetCID());
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(4, -11.0f), Explode, pPlayer->GetCID());
+							break;
+						case 3:
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(-5, -10.0f), Explode, pPlayer->GetCID());
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(0, -12.0f), Explode, pPlayer->GetCID());
+							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(5, -10.0f), Explode, pPlayer->GetCID());
+							break;
+					};
+					
+					pPlayer->GetCharacter()->m_HealthStored = 0;
+					*/
+				}
+			}
 
 			SendEmoticon(ClientID, pMsg->m_Emoticon);
 		}
@@ -2038,7 +2128,12 @@ enum VoteTypes
 	VOTE_ALL,
 	VOTE_WEAPON,
 	VOTE_WEAPONDESC,
-	VOTE_MONEY
+	VOTE_MONEY,
+	VOTE_CLASS,
+	VOTE_CLASSDESC,
+	VOTE_ABILITY,
+	VOTE_ABILITYPOINTS,
+	VOTE_ABILITYDESC,
 };
 
 
@@ -2054,19 +2149,32 @@ void CGameContext::ResetVotes()
 
 
 	
+	if (g_Config.m_SvAbilities)
+	{
+		AddCustomVote("PICK A CLASS", "null", VOTE_CLASSDESC);
+		for (int i = 0; i < NUM_CLASSES; i++)
+			AddCustomVote(aClassName[i], aClassName[i], VOTE_CLASS, i);
+		AddCustomVote("", "null", VOTE_CLASSDESC);
+		
+		AddCustomVote("", "null", VOTE_ABILITYPOINTS); // Pick abilities - x point(s) left
+		for (int i = 0; i < NUM_ABILITIES; i++)
+			AddCustomVote(aAbilities[i].m_aName, aAbilities[i].m_aName, VOTE_ABILITY, i);
+		AddCustomVote("", "null", VOTE_ABILITYDESC);
+	}
+	
 	if (!g_Config.m_SvRandomWeapons)
 	{
 		AddCustomVote("", "null", VOTE_MONEY); // Money: x
-		AddCustomVote("", "null", VOTE_WEAPONDESC);
+		//AddCustomVote("", "null", VOTE_WEAPONDESC);
 		
-		AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
+		//AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
 		
 		for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		{
 			if (aCustomWeapon[i].m_Cost > 0)
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "%s - %d points", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
+				str_format(aBuf, sizeof(aBuf), "%s - ♪%d", aCustomWeapon[i].m_Name, aCustomWeapon[i].m_Cost);
 
 				AddCustomVote(aBuf, aCustomWeapon[i].m_BuyCmd, VOTE_WEAPON, i);
 			}
@@ -2149,7 +2257,7 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 				char aBuf[256];
 				
 				if (m_apPlayers[i]->m_CanShop || str_comp(g_Config.m_SvGametype, "csbb") == 0)
-					str_format(aBuf, sizeof(aBuf), "Money: %d ", m_apPlayers[i]->m_Money);
+					str_format(aBuf, sizeof(aBuf), "WEAPON SHOP  -  money: ♪%d ", m_apPlayers[i]->m_Money);
 				else
 					str_format(aBuf, sizeof(aBuf), "Can't shop right now");
 				
@@ -2193,6 +2301,97 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				if (!m_apPlayers[i]->m_CanShop && str_comp(g_Config.m_SvGametype, "cstt") == 0)
+					continue;
+				
+				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+			}
+		}
+	}
+		
+
+	if (Type == VOTE_CLASSDESC || Type == VOTE_CLASS)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if (m_apPlayers[i] && !IsBot(i))
+			{
+				if (m_apPlayers[i]->GetClass() != -1)
+					continue;
+				
+				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+			}
+		}
+	}
+
+
+	if (Type == VOTE_ABILITYDESC)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if (m_apPlayers[i] && !IsBot(i))
+			{
+				if (m_apPlayers[i]->GetClass() == -1 || !m_apPlayers[i]->GetAbilityPoints())
+					continue;
+				
+				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+			}
+		}
+	}
+	
+		
+	if (Type == VOTE_ABILITYPOINTS)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if (m_apPlayers[i] && !IsBot(i))
+			{
+				int c = m_apPlayers[i]->GetClass();
+				
+				if (c == -1)
+					continue;
+				
+				int Points = m_apPlayers[i]->GetAbilityPoints();
+				
+				if (!Points)
+					continue;
+				
+				char aBuf[256];
+				
+				if (Points > 1)
+					str_format(aBuf, sizeof(aBuf), "PICK ABILITIES - %d skill points left", Points);
+				else
+					str_format(aBuf, sizeof(aBuf), "PICK ABILITIES - 1 skill point left");
+				
+				str_copy(pOption->m_aDescription, aBuf, sizeof(pOption->m_aDescription));
+				
+				OptionMsg.m_pDescription = pOption->m_aDescription;
+				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
+			}
+		}
+	}
+
+	if (Type == VOTE_ABILITY)
+	{
+		CNetMsg_Sv_VoteOptionAdd OptionMsg;
+		OptionMsg.m_pDescription = pOption->m_aDescription;
+		
+		for (int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if (m_apPlayers[i] && !IsBot(i))
+			{
+				int c = m_apPlayers[i]->GetClass();
+				if (c == -1)
+					continue;
+				
+				if (!m_apPlayers[i]->GetAbilityPoints() || !m_apPlayers[i]->AbilityAvailable(WeaponIndex))
 					continue;
 				
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);

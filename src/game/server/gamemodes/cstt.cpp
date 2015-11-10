@@ -7,6 +7,7 @@
 #include <game/server/entities/character.h>
 #include <game/server/entities/pickup.h>
 #include <game/server/entities/superexplosion.h>
+#include <game/server/entities/arrow.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
 #include "cstt.h"
@@ -113,6 +114,8 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 		B->m_Hide = true;
 		m_pBomb = B;
 		GameServer()->m_World.InsertEntity(B);
+		
+		GameServer()->GenerateArrows();
 	}
 	
 	
@@ -258,8 +261,13 @@ bool CGameControllerCSTT::CanCharacterSpawn(int ClientID)
 	if (g_Config.m_SvSurvivalMode)
 		return GameServer()->m_CanRespawn;
 
+	float RespawnDelay = Server()->TickSpeed()*g_Config.m_SvRespawnDelayCSTT;
+
+	if (GameServer()->m_apPlayers[ClientID]->GotAbility(FAST_RESPAWN))
+		RespawnDelay /= 1.33f;
+	
 	if (GameServer()->m_apPlayers[ClientID] &&
-		GameServer()->m_apPlayers[ClientID]->m_DeathTick < Server()->Tick() - Server()->TickSpeed()*g_Config.m_SvRespawnDelayCSTT)
+		GameServer()->m_apPlayers[ClientID]->m_DeathTick < Server()->Tick() - RespawnDelay)
 		return true;
 		
 	return false;
@@ -478,6 +486,9 @@ void CGameControllerCSTT::RoundRewards(int WinningTeam)
 		if(!pPlayer)
 			continue;
 
+		
+		pPlayer->m_AbilityPoints++;
+		
 		if (pPlayer->m_WantedTeam == WinningTeam)
 			pPlayer->m_Money += g_Config.m_SvWinMoney;
 		else
@@ -869,6 +880,8 @@ void CGameControllerCSTT::Tick()
 	}
 	else
 	{
+		if (m_pBomb)
+			GameServer()->m_pArrow->m_Target = m_pBomb->m_Pos;
 		
 		if (Server()->Tick()%40 == 1)
 			AutoBalance();
@@ -1070,7 +1083,12 @@ void CGameControllerCSTT::Tick()
 				if (pPlayer->m_ActionTimer++ == 0)
 					GameServer()->SendBroadcast("Defusing bomb", pPlayer->GetCID());
 				
-				if (pPlayer->m_ActionTimer >= g_Config.m_SvBombDefuseTime*Server()->TickSpeed())
+				int Time = g_Config.m_SvBombDefuseTime*Server()->TickSpeed();
+				
+				if (pPlayer->GotAbility(FAST_BOMB_ACTION))
+					Time /= 1.33f;
+				
+				if (pPlayer->m_ActionTimer >= Time)
 				{
 					B->m_Hide = true;
 					m_BombDefused = true;
@@ -1166,7 +1184,13 @@ void CGameControllerCSTT::Tick()
 						
 						pPlayer->m_InterestPoints += 6;
 						
-						if (++pPlayer->m_ActionTimer >= g_Config.m_SvBombPlantTime*Server()->TickSpeed())
+						
+						int Time = g_Config.m_SvBombPlantTime*Server()->TickSpeed();
+				
+						if (pPlayer->GotAbility(FAST_BOMB_ACTION))
+							Time /= 1.33f;
+						
+						if (++pPlayer->m_ActionTimer >= Time)
 						{
 							pPlayer->m_InterestPoints += 120;
 							

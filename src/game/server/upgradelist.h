@@ -165,7 +165,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_HAMMER_FIRE,
 		HAMMER_BASIC, // require
 		75, // cost
-		20, // damage
+		22, // damage
 		0, // extra1
 		false, // autofire
 		0, // bullet spread
@@ -187,7 +187,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_HAMMER_FIRE,
 		SWORD_KATANA, // require
 		100, // cost
-		20, // damage
+		22, // damage
 		ELECTRIC, // extra1
 		false, // autofire
 		0, // bullet spread
@@ -274,7 +274,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_PELLET,
 		SOUND_SHOTGUN_FIRE,
 		SHOTGUN_DOUBLEBARREL, // require
-		100, // cost
+		110, // cost
 		7, // damage
 		0, // extra1
 		true, // autofire
@@ -406,7 +406,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_BULLET,
 		SOUND_GUN_FIRE,
 		RIFLE_ASSAULTRIFLE, // require
-		100, // cost
+		120, // cost
 		22, // damage
 		0, // extra1
 		true, // autofire
@@ -428,7 +428,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_LIGHTNING,
 		SOUND_RIFLE_FIRE,
 		-1, // require
-		100, // cost
+		80, // cost
 		8, // damage
 		0, // extra1
 		true, // autofire
@@ -450,7 +450,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_LIGHTNING,
 		SOUND_RIFLE_FIRE,
 		RIFLE_LIGHTNINGRIFLE, // require
-		100, // cost
+		120, // cost
 		7, // damage
 		ELECTRIC, // extra1
 		true, // autofire
@@ -472,7 +472,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_LASER,
 		SOUND_RIFLE_FIRE,
 		-1, // require
-		100, // cost
+		90, // cost
 		19, // damage
 		0, // extra1
 		true, // autofire
@@ -494,7 +494,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_ELECTRO,
 		SOUND_RIFLE_FIRE,
 		RIFLE_LASERRIFLE, // require
-		100, // cost
+		130, // cost
 		8, // damage
 		0, // extra1
 		true, // autofire
@@ -516,7 +516,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_LASER,
 		SOUND_RIFLE_FIRE,
 		RIFLE_LASERRIFLE, // require
-		150, // cost
+		130, // cost
 		15, // damage
 		DOOMROCKETS, // extra1
 		false, // autofire

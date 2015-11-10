@@ -15,6 +15,7 @@
 #include "electromine.h"
 
 #include <game/server/upgradelist.h>
+#include <game/server/classabilities.h>
 #include <game/server/gamemodes/cstt.h>
 #include <game/server/gamemodes/csbb.h>
 
@@ -87,6 +88,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
 	m_Grenades = 2;
 	m_Recoil = vec2(0, 0);
+	
+	m_HealthStored = 0;
 	
 	m_SwordReady = false;
 	
@@ -409,7 +412,12 @@ void CCharacter::HandleNinja()
 			{
 				To = pHit->m_Pos;
 				pHit->ElectroShock();
-				pHit->TakeDamage(m_Core.m_Vel, 4, GetPlayer()->GetCID(), WEAPON_HAMMER);
+				
+				int Damage = 4;
+				if (GetPlayer()->GotAbility(ELECTRO_DAMAGE1))
+					Damage++;
+				
+				pHit->TakeDamage(m_Core.m_Vel, Damage, GetPlayer()->GetCID(), WEAPON_HAMMER);
 			}
 			
 			int A = distance(m_Pos, To) / 100;
@@ -513,7 +521,13 @@ void CCharacter::HandleNinja()
 				if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
 					Parent = WEAPON_HAMMER;
 				
-				aEnts[i]->TakeDamage(Force, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, m_pPlayer->GetCID(), Parent);
+				int Damage = aCustomWeapon[m_ActiveCustomWeapon].m_Damage;
+				if (GetPlayer()->GotAbility(MELEE_DAMAGE1))
+					Damage += 2;
+				if (GetPlayer()->GotAbility(MELEE_DAMAGE2))
+					Damage += 2;
+				
+				aEnts[i]->TakeDamage(Force, Damage, m_pPlayer->GetCID(), Parent, GetPlayer()->GotAbility(MELEE_LIFESTEAL));
 				
 				if (aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType == PROJTYPE_FLYHAMMER)
 					m_Ninja.m_CurrentMoveTime = 0;
@@ -750,11 +764,20 @@ void CCharacter::FireWeapon()
 	if (aCustomWeapon[m_ActiveCustomWeapon].m_Sound >= 0)
 		GameServer()->CreateSound(m_Pos, aCustomWeapon[m_ActiveCustomWeapon].m_Sound);
 	
+	
+	int Damage = aCustomWeapon[m_ActiveCustomWeapon].m_Damage;
+	
+	m_ReloadTimer = aCustomWeapon[m_ActiveCustomWeapon].m_BulletReloadTime * Server()->TickSpeed() / 1000;
+	
+	
 	// create the projectile
 	switch(aCustomWeapon[m_ActiveCustomWeapon].m_ProjectileType)
 	{
 		case PROJTYPE_SWORD:
 		{
+			if (GetPlayer()->GotAbility(MELEE_SPEED1))
+				m_ReloadTimer /= 1.33f;
+			
 			GetPlayer()->m_InterestPoints += 30;
 			
 			// reset Hit objects
@@ -772,6 +795,11 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_FLYHAMMER:
 		{
+			if (GetPlayer()->GotAbility(MELEE_SPEED1))
+				m_ReloadTimer /= 1.33f;
+			
+			GetPlayer()->m_InterestPoints += 40;
+			
 			// reset Hit objects
 			m_NumObjectsHit = 0;
 
@@ -788,6 +816,14 @@ void CCharacter::FireWeapon()
 		// todo: clean this
 		case PROJTYPE_HAMMER:
 		{
+			if (GetPlayer()->GotAbility(MELEE_SPEED1))
+				m_ReloadTimer /= 1.33f;
+			
+			if (GetPlayer()->GotAbility(MELEE_DAMAGE1))
+				Damage += 2;
+			if (GetPlayer()->GotAbility(MELEE_DAMAGE2))
+				Damage += 2;
+			
 			GetPlayer()->m_InterestPoints += 10;
 			
 			// reset objects Hit
@@ -819,8 +855,8 @@ void CCharacter::FireWeapon()
 
 
 				
-				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f * aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, aCustomWeapon[m_ActiveCustomWeapon].m_Damage,
-					m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f * aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, Damage,
+					m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon, GetPlayer()->GotAbility(MELEE_LIFESTEAL));
 				Hits++;
 			}
 
@@ -832,6 +868,11 @@ void CCharacter::FireWeapon()
 		
 		case PROJTYPE_BULLET:
 		{
+			if (GetPlayer()->GotAbility(BULLET_DAMAGE1))
+				Damage++;
+			if (GetPlayer()->GotAbility(BULLET_DAMAGE2))
+				Damage++;
+			
 			GetPlayer()->m_InterestPoints += 10;	
 			
 			float a = GetAngle(Direction);
@@ -842,7 +883,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				vec2(cosf(a), sinf(a)),
 				(int)(Server()->TickSpeed()*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife),
-				aCustomWeapon[m_ActiveCustomWeapon].m_Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
+				Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -866,6 +907,8 @@ void CCharacter::FireWeapon()
 			// Msg.AddInt(ShotSpread*2+1);
 
 			int ShotSpread = aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread / 2;
+			if (GetPlayer()->GotAbility(SHOTGUN_SPREAD1))
+				ShotSpread++;
 			
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread);
@@ -886,7 +929,7 @@ void CCharacter::FireWeapon()
 						vec2(cosf(a), sinf(a))*Speed,
 						//(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_ShotgunLifetime), // 0.2f
 						(int)(Server()->TickSpeed()*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife),
-						aCustomWeapon[m_ActiveCustomWeapon].m_Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
+						Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
 					
 					// pack the Projectile and send it to the client Directly
 					CNetObj_Projectile p;
@@ -911,7 +954,7 @@ void CCharacter::FireWeapon()
 						ProjStartPos,
 						vec2(cosf(a), sinf(a))*Speed,
 						(int)(Server()->TickSpeed()*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife),
-						aCustomWeapon[m_ActiveCustomWeapon].m_Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
+						Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
 					
 					// pack the Projectile and send it to the client Directly
 					CNetObj_Projectile p;
@@ -934,7 +977,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				Direction,
 				(int)(Server()->TickSpeed()*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife),
-				aCustomWeapon[m_ActiveCustomWeapon].m_Damage, true, 0, SOUND_GRENADE_EXPLODE, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
+				Damage, true, 0, SOUND_GRENADE_EXPLODE, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -954,12 +997,15 @@ void CCharacter::FireWeapon()
 			float a = GetAngle(Direction);
 			a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 			
-			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
+			new CLaser(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), Damage, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 		} break;
 		
 		
 		case PROJTYPE_ELECTRO:
 		{
+			if (GetPlayer()->GotAbility(ELECTRO_DAMAGE1))
+				Damage++;
+			
 			GetPlayer()->m_InterestPoints += 40;
 			vec2 Start = m_Pos;
 			
@@ -968,11 +1014,16 @@ void CCharacter::FireWeapon()
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon == WEAPON_RIFLE)
 				Start += Direction*50;
 			
+			float Reach = aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife;
+			
+			if (GetPlayer()->GotAbility(ELECTRO_REACH1))
+				Reach *= 1.33f;
+			
 			if (aCustomWeapon[m_ActiveCustomWeapon].m_ShotSpread == 1)
 			{
 				float a = GetAngle(Direction);
 				
-				vec2 To = m_Pos + vec2(cosf(a), sinf(a))*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife;
+				vec2 To = m_Pos + vec2(cosf(a), sinf(a))*Reach;
 				GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
 				
 				// character collision
@@ -982,7 +1033,7 @@ void CCharacter::FireWeapon()
 				{
 					To = pHit->m_Pos;
 					pHit->ElectroShock();
-					pHit->TakeDamage(Direction, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
+					pHit->TakeDamage(Direction, Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
 				}
 			
 					int A = distance(Start, To) / 100;
@@ -1003,7 +1054,7 @@ void CCharacter::FireWeapon()
 					float a = GetAngle(Direction);
 					a += (i + frandom()-frandom()) / 10.0f;
 					//a += i / 10.0f;
-					vec2 To = m_Pos + vec2(cosf(a), sinf(a))*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife;
+					vec2 To = m_Pos + vec2(cosf(a), sinf(a))*Reach;
 					
 					GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
 					
@@ -1014,7 +1065,7 @@ void CCharacter::FireWeapon()
 					{
 						To = pHit->m_Pos;
 						pHit->ElectroShock();
-						pHit->TakeDamage(Direction, aCustomWeapon[m_ActiveCustomWeapon].m_Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
+						pHit->TakeDamage(Direction, Damage, GetPlayer()->GetCID(), WEAPON_RIFLE);
 					}
 			
 					int A = distance(Start, To) / 100;
@@ -1048,7 +1099,7 @@ void CCharacter::FireWeapon()
 				float a = GetAngle(Direction);
 				a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 
-				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+				new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), Damage, Desc);
 			}
 			else
 			{
@@ -1062,7 +1113,7 @@ void CCharacter::FireWeapon()
 						a += Spreading[i+2];
 						a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 
-						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), Damage, Desc);
 					}
 				}
 				else
@@ -1074,7 +1125,7 @@ void CCharacter::FireWeapon()
 						a += Spreading[i+3];
 						a += (frandom()-frandom())*aCustomWeapon[m_ActiveCustomWeapon].m_BulletSpread;
 						
-						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), aCustomWeapon[m_ActiveCustomWeapon].m_Damage, Desc);
+						new CLightning(GameWorld(), m_Pos, vec2(cosf(a), sinf(a)), 200, 100, m_pPlayer->GetCID(), Damage, Desc);
 					}
 				}
 			}
@@ -1103,10 +1154,12 @@ void CCharacter::FireWeapon()
 	if(m_aWeapon[m_ActiveCustomWeapon].m_Ammo > 0 && aCustomWeapon[m_ActiveCustomWeapon].m_ClipSize)
 		m_aWeapon[m_ActiveCustomWeapon].m_Ammo--;
 
+	/*
 	if(m_ReloadTimer <= 0)
 	{
 		m_ReloadTimer = aCustomWeapon[m_ActiveCustomWeapon].m_BulletReloadTime * Server()->TickSpeed() / 1000;
 	}
+	*/
 	
 }
 
@@ -1123,6 +1176,8 @@ void CCharacter::DoReloading(bool SkipAmmoCheck)
 		if (aCustomWeapon[m_ActiveCustomWeapon].m_ClipReloadTime > 0)
 		{
 			m_ClipReloadTimer = aCustomWeapon[m_ActiveCustomWeapon].m_ClipReloadTime * Server()->TickSpeed() / 1000;
+			if (GetPlayer()->GotAbility(FAST_RELOAD))
+				m_ClipReloadTimer /= 1.33f;
 		}
 	}
 	
@@ -1424,6 +1479,30 @@ void CCharacter::Tick()
 	if (m_PainSoundTimer > 0)
 		m_PainSoundTimer--;
 	
+	// medkit ability
+	if (m_UseMedkit && GetPlayer()->GotAbility(STORE_HEALTH))
+	{
+		if (m_HealthStored > 0)
+		{
+			if (m_MedkitTimer-- <= 0)
+			{
+				int Subtype = 0;
+				if (GetPlayer()->GotAbility(EXPLOSIVE_HEARTS1))
+					Subtype++;
+				if (GetPlayer()->GotAbility(EXPLOSIVE_HEARTS2))
+					Subtype++;
+				
+				m_MedkitTimer = 5;
+				GameServer()->m_pController->DropPickup(m_Pos+vec2(0, -32), POWERUP_HEALTH,
+										vec2((frandom()-frandom())*4.0f, -11.0f), Subtype, GetPlayer()->GetCID());
+				m_HealthStored--;
+			}
+		}
+		else
+			m_UseMedkit = false;
+	}
+	
+	/*
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
@@ -1432,13 +1511,18 @@ void CCharacter::Tick()
 
 		m_pPlayer->m_ForceBalanced = false;
 	}
+	*/
 
 	if (GameServer()->m_FreezeCharacters)
 		ResetInput();
 	
 	m_Core.m_Input = m_Input;
 	
-	m_Core.m_Vel += m_Recoil*0.7f;
+	if (GetPlayer()->GotAbility(ANTIIMPACTARMOR))
+		m_Core.m_Vel += m_Recoil*0.42f;
+	else
+		m_Core.m_Vel += m_Recoil*0.7f;
+	
 	m_Recoil *= 0.5f;
 	
 	m_Core.Tick(true);
@@ -1603,6 +1687,16 @@ bool CCharacter::IncreaseHealth(int Amount)
 	return true;
 }
 
+bool CCharacter::StoreHealth()
+{
+	if(m_HealthStored >= GetPlayer()->MedkitSize())
+		return false;
+	
+	m_HealthStored++;
+	GetPlayer()->m_InterestPoints += 40;
+	return true;
+}
+
 
 // use armor points as clips
 bool CCharacter::AddClip()
@@ -1660,6 +1754,13 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 	
 	if (!SkipKillMessage)
 	{
+		// explosive belt
+		if (GetPlayer()->GotAbility(EXPLOSIVE_BELT))
+		{
+			CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_Pos, GetPlayer()->GetCID(), WEAPON_HAMMER, 3);
+			GameServer()->m_World.InsertEntity(S);
+		}
+
 		int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
 		char aBuf[256];
@@ -1721,11 +1822,17 @@ void CCharacter::Cry()
 #define RAD 0.017453292519943295769236907684886f
 
 
-bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
+bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon, bool Lifesteal)
 {	
 	//m_Core.m_Vel += Force;
 	m_Recoil += Force;
 
+	if (GetPlayer()->GotAbility(BODYARMOR))
+		Dmg--;
+	if (GetPlayer()->GotAbility(HEAVYBODYARMOR))
+		Dmg--;
+	
+	
 	// signal AI
 	if (Dmg > 0 && GetPlayer()->m_pAI && Weapon >= 0)
 		GetPlayer()->m_pAI->ReceiveDamage(From, Dmg);
@@ -1757,6 +1864,9 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	{
 		m_HiddenHealth -= Dmg;
 		m_LatestHitVel = Force;
+		
+		if (Lifesteal && GameServer()->m_apPlayers[From] && GameServer()->m_apPlayers[From]->GetCharacter())
+			GameServer()->m_apPlayers[From]->GetCharacter()->IncreaseHealth(Dmg * 0.33f);
 	}
 	
 	GetPlayer()->m_ActionTimer = 0;

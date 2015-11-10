@@ -9,6 +9,7 @@
 #include "ai.h"
 
 #include <game/server/upgradelist.h>
+#include <game/server/classabilities.h>
 
 
 
@@ -197,7 +198,64 @@ public:
 	void SetRandomSkin();
 	
 	
+	
+	int GetClass() { return m_Class; }
+	int m_AbilityPoints;
+	int GetAbilityPoints() { return m_AbilityPoints; }
+	
+	void ResetClass();
+	bool SelectClass(int Class);
+	bool SelectAbility(int Ability);
+	
+	bool SetClass(int WantedClass)
+	{
+		if (m_Class != -1)
+			return false;
+		
+		m_Class = WantedClass;
+		return true;
+	}
+	
+	bool AbilityAvailable(int Ability)
+	{
+		if (Ability < 0 || Ability >= NUM_ABILITIES)
+			return false;
+		
+		if (m_Class == -1)
+			return false;
+		
+		if (m_aAbility[Ability] || (aAbilities[Ability].m_Class != -1 && aAbilities[Ability].m_Class != m_Class))
+			return false;
+	
+		int Require = aAbilities[Ability].m_Require;
+		if (Require != -1 && !m_aAbility[Require])
+			return false;
+
+		return true;
+	}
+	
+	bool GotAbility(int Ability)
+	{
+		if (Ability < 0 || Ability >= NUM_ABILITIES)
+			return false;
+		
+		return m_aAbility[Ability];
+	}
+	
+	int MedkitSize()
+	{
+		int Size = 0;
+		if (GotAbility(STORE_HEALTH))
+			Size += 3;
+		if (GotAbility(MEDKIT_EXPANSION))
+			Size += 3;
+		return Size;
+	}
+	
 private:
+	int m_Class;
+	bool m_aAbility[NUM_ABILITIES];
+
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
 

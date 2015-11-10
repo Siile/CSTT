@@ -3,8 +3,11 @@
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "projectile.h"
+#include "electro.h"
 #include "superexplosion.h"
 #include "smokescreen.h"
+
+#include <game/server/classabilities.h>
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon, int ExtraInfo)
@@ -23,6 +26,8 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_Explosive = Explosive;
 	m_ExtraInfo = ExtraInfo;
 
+	m_ElectroTimer = 0;
+	
 	GameWorld()->InsertEntity(this);
 }
 
@@ -72,6 +77,55 @@ void CProjectile::Tick()
 	
 	//if (m_ExtraInfo == SMOKE)
 	//	GameServer()->CreateDeath(CurPos, -1);
+
+
+	// grenade electricity
+	if(m_Explosive && OwnerChar && GameServer()->GotAbility(m_Owner, ELECTRO_GRENADES) && m_ElectroTimer++ > 2)
+	{
+		m_ElectroTimer = 0;
+		float Reach = 110.0f;
+		if (GameServer()->GotAbility(m_Owner, ELECTRO_REACH1))
+			Reach *= 1.33f;
+		vec2 Dir = normalize(vec2(frandom()-frandom(), frandom()-frandom()));
+		
+		for (int i = -1; i <= 1; i += 2)
+		{
+			vec2 To = CurPos + Dir * Reach * i;
+			vec2 Start = CurPos;
+			GameServer()->Collision()->IntersectLine(Start, To, 0x0, &To);
+					
+			// character collision
+			vec2 At;
+			CCharacter *Owner = NULL;
+			
+			if (GameServer()->m_apPlayers[m_Owner])
+				Owner = GameServer()->m_apPlayers[m_Owner]->GetCharacter();
+			
+			CCharacter *pHit = GameServer()->m_World.IntersectCharacter(CurPos, To, 60.0f, At, Owner);
+			if(pHit)
+			{
+				To = pHit->m_Pos;
+				pHit->ElectroShock();
+					
+				int Damage = 4;
+				if (GameServer()->GotAbility(m_Owner, ELECTRO_DAMAGE1))
+					Damage++;
+					
+				pHit->TakeDamage(vec2(0, 0), Damage, m_Owner, WEAPON_GRENADE);
+			}
+				
+			int A = distance(CurPos, To) / 100;
+						
+			if (A > 4)
+				A = 4;
+						
+			if (A < 2)
+				A = 2;
+				
+			new CElectro(GameWorld(), CurPos, To, vec2(0, 0), A);
+		}
+	}
+
 
 	if(TargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 	{

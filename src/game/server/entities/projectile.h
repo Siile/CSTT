@@ -36,6 +36,8 @@ private:
 	int m_StartTick;
 	bool m_Explosive;
 	int m_ExtraInfo;
+	
+	int m_ElectroTimer;
 };
 
 #endif
