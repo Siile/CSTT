@@ -190,6 +190,23 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								break;
 							}
 						}
+						
+						// kick bot if a real player want's to join
+						if(!Found)
+						{
+							for(int i = 0; i < MaxClients(); i++)
+							{
+								if(m_SlotTakenByBot[i])
+								{
+									Drop(i, "Making room for a real player.");
+									Found = true;
+									m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+									if(m_pfnNewClient)
+										m_pfnNewClient(i, m_UserPtr);
+									break;
+								}
+							}
+						}
 
 						if(!Found)
 						{
@@ -238,6 +255,10 @@ int CNetServer::Send(CNetChunk *pChunk)
 		dbg_assert(pChunk->m_ClientID >= 0, "errornous client id");
 		dbg_assert(pChunk->m_ClientID < MaxClients(), "errornous client id");
 
+		// might crash, fatal error
+		if (m_SlotTakenByBot[pChunk->m_ClientID])
+			return 0;
+		
 		if(pChunk->m_Flags&NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;
 

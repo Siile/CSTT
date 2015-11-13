@@ -35,10 +35,10 @@ bool CLightning::HitCharacter(vec2 From, vec2 To)
 	m_Pos = At;
 	m_Energy = -1;
 	
-	if (pOwnerChar)
-		pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
-	else
-		pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
+	//vec2 d = normalize(m_Pos-From) * 0.1f;
+
+	//pHit->TakeDamage(d, m_Damage, m_Owner, WEAPON_RIFLE);
+	pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
 		
 	return true;
 }

@@ -35,20 +35,12 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	if (pOwnerChar)
-	{
-		pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
-	}
-	else
-		pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
+
+	//vec2 Dir = normalize(m_Pos-From) * 0.1f;
 	
-	/*
-	if (m_ExtraInfo == DOOMROCKETS)
-	{
-		CSuperexplosion *S = new CSuperexplosion(&GameServer()->m_World, m_Pos, m_Owner, WEAPON_RIFLE, 2);
-		GameServer()->m_World.InsertEntity(S);
-	}
-	*/
+	//pHit->TakeDamage(Dir, m_Damage, m_Owner, WEAPON_RIFLE);
+	pHit->TakeDamage(vec2(0.f, 0.f), m_Damage, m_Owner, WEAPON_RIFLE);
+
 	
 	return true;
 }

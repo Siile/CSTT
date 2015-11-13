@@ -71,14 +71,15 @@ void CAI::Reset()
 	m_DontMoveTick = 0;
 	
 	m_OldTargetPos = vec2(0, 0);
+	ClearEmotions();
 }
 
 
 void CAI::OnCharacterSpawn(class CCharacter *pChr)
 {
 	pChr->SetCustomWeapon(GUN_PISTOL);
+	Reset();
 	m_WaypointPos = pChr->m_Pos;
-	ClearEmotions();
 }
 
 
