@@ -27,6 +27,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	m_LastActionTick = Server()->Tick();
 	m_TeamChangeTick = Server()->Tick();
 	
+	m_Spectate = false;
+	
 	m_Score = 0;
 	m_Money = g_Config.m_SvStartMoney;
 	
@@ -48,7 +50,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	
 	ResetClass();
 	
-	m_WantedTeam = m_Team;
+	//m_WantedTeam = m_Team;
 	//m_Team = TEAM_SPECTATORS;
 	
 	if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
@@ -155,8 +157,8 @@ void CPlayer::Tick()
 
 	Server()->SetClientScore(m_ClientID, m_Score);
 	
-	if (m_Team != TEAM_SPECTATORS)
-		m_WantedTeam = m_Team;
+	//if (m_Team != TEAM_SPECTATORS)
+	//	m_WantedTeam = m_Team;
 	
 	// do latency stuff
 	{
@@ -181,6 +183,13 @@ void CPlayer::Tick()
 
 	if (m_ForceToSpectators)
 		ForceToSpectators();
+	
+	if(!m_pCharacter && m_DieTick+Server()->TickSpeed()*1 <= Server()->Tick())
+	{
+		m_Spectate = true;
+	}
+	else
+		m_Spectate = false;
 
 	
 	if (m_IsBot)
@@ -248,7 +257,8 @@ void CPlayer::PostTick()
 	}
 
 	// update view pos for spectators
-	if(m_Team == TEAM_SPECTATORS && m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID])
+	//if(m_Team == TEAM_SPECTATORS && m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID])
+	if(m_Spectate && m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[m_SpectatorID])
 		m_ViewPos = GameServer()->m_apPlayers[m_SpectatorID]->m_ViewPos;
 }
 
@@ -282,15 +292,27 @@ void CPlayer::Snap(int SnappingClient)
 	pPlayerInfo->m_Score = m_Score;
 	//pPlayerInfo->m_Team = m_Team;
 	
+	if (SnappingClient != GetCID())
+		pPlayerInfo->m_Team = m_Team;
+	else
+	{
+		if (GetCharacter())
+			pPlayerInfo->m_Team = m_Team;
+		else
+			pPlayerInfo->m_Team = TEAM_SPECTATORS;
+	}
+	
+	/*
 	if (SnappingClient == GetCID())
 		pPlayerInfo->m_Team = m_Team;
 	else
 		pPlayerInfo->m_Team = m_WantedTeam;
+	*/
 
 	if(m_ClientID == SnappingClient)
 		pPlayerInfo->m_Local = 1;
 
-	if(m_ClientID == SnappingClient && m_Team == TEAM_SPECTATORS)
+	if(m_ClientID == SnappingClient && pPlayerInfo->m_Team == TEAM_SPECTATORS)
 	{
 		CNetObj_SpectatorInfo *pSpectatorInfo = static_cast<CNetObj_SpectatorInfo *>(Server()->SnapNewItem(NETOBJTYPE_SPECTATORINFO, m_ClientID, sizeof(CNetObj_SpectatorInfo)));
 		if(!pSpectatorInfo)
@@ -395,7 +417,7 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
-	if(m_Team != TEAM_SPECTATORS || m_WantedTeam != TEAM_SPECTATORS)
+	if(m_Team != TEAM_SPECTATORS)
 		m_Spawning = true;
 }
 
@@ -403,25 +425,30 @@ void CPlayer::Respawn()
 
 void CPlayer::ForceToSpectators()
 {
+	/*
 	m_ForceToSpectators = false;
 	SetTeam(TEAM_SPECTATORS, false);
 	m_TeamChangeTick = Server()->Tick();
+	*/
 }
 	
 	
 void CPlayer::JoinTeam()
 {
+	/*
 	if (m_WantedTeam != m_Team)
 	{
 		SetTeam(m_WantedTeam, false);
 		m_TeamChangeTick = Server()->Tick();
 	}
+	*/
 }
 	
 
 
 void CPlayer::SetWantedTeam(int Team, bool DoChatMsg)
 {
+	/*
 	if (Team == m_WantedTeam)
 		return;
 	
@@ -433,6 +460,7 @@ void CPlayer::SetWantedTeam(int Team, bool DoChatMsg)
 	}
 	
 	m_WantedTeam = Team;
+	*/
 }
 	
 	
@@ -456,8 +484,8 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	KillCharacter();
 
 	m_Team = Team;
-	if (Team != TEAM_SPECTATORS)
-		m_WantedTeam = Team;
+	//if (Team != TEAM_SPECTATORS)
+	//	m_WantedTeam = Team;
 	m_LastActionTick = Server()->Tick();
 	m_SpectatorID = SPEC_FREEVIEW;
 	// we got to wait 0.5 secs before respawning
@@ -497,11 +525,13 @@ void CPlayer::TryRespawn()
 	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
 		return;
 	
+	/*
 	m_ForceToSpectators = false;
 
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "joining the %s", GameServer()->m_pController->GetTeamName(m_WantedTeam));
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", aBuf);
+	*/
 	
 	m_Spawning = false;
 	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);

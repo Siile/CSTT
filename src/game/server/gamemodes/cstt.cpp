@@ -489,7 +489,7 @@ void CGameControllerCSTT::RoundRewards(int WinningTeam)
 		
 		pPlayer->m_AbilityPoints++;
 		
-		if (pPlayer->m_WantedTeam == WinningTeam)
+		if (pPlayer->GetTeam() == WinningTeam)
 			pPlayer->m_Money += g_Config.m_SvWinMoney;
 		else
 			pPlayer->m_Money += g_Config.m_SvLoseMoney;
@@ -785,7 +785,7 @@ void CGameControllerCSTT::AutoBalance()
 		*/
 		
 		//if (pPlayer->GetTeam() == TEAM_RED || pPlayer->m_WantedTeam == TEAM_RED)
-		if (pPlayer->m_WantedTeam == TEAM_RED)
+		if (pPlayer->GetTeam() == TEAM_RED)
 		{
 			if (!pPlayer->m_IsBot)
 				Red++;
@@ -797,7 +797,7 @@ void CGameControllerCSTT::AutoBalance()
 		}
 		
 		//if (pPlayer->GetTeam() == TEAM_BLUE || pPlayer->m_WantedTeam == TEAM_BLUE)
-		if (pPlayer->m_WantedTeam == TEAM_BLUE)
+		if (pPlayer->GetTeam() == TEAM_BLUE)
 		{
 			if (!pPlayer->m_IsBot)
 				Blue++;
@@ -858,7 +858,6 @@ void CGameControllerCSTT::Tick()
 {
 	IGameController::Tick();
 
-	GameServer()->UpdateSpectators();
 	
 	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;	

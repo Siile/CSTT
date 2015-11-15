@@ -750,6 +750,8 @@ void IGameController::Tick()
 		if(!m_Warmup)
 			StartRound();
 	}
+	
+	GameServer()->UpdateSpectators();
 
 	if(m_GameOverTick != -1)
 	{
@@ -890,8 +892,8 @@ int IGameController::GetAutoTeam(int NotThisID)
 		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
 			//if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
-			if(GameServer()->m_apPlayers[i]->m_WantedTeam >= TEAM_RED && GameServer()->m_apPlayers[i]->m_WantedTeam <= TEAM_BLUE)
-				aNumplayers[GameServer()->m_apPlayers[i]->m_WantedTeam]++;
+			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
+				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
 		}
 	}
 

@@ -188,7 +188,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			if(l)
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
-			float Dmg = 15 * l;
+			float Dmg = 14 * l;
 			
 			if (Superdamage)
 				Dmg *= 5;
@@ -480,9 +480,9 @@ void CGameContext::SwapTeams()
 			m_apPlayers[i]->SetWantedTeam(m_apPlayers[i]->m_WantedTeam^1, false);
 			//m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
 			*/
-		if(m_apPlayers[i] && m_apPlayers[i]->m_WantedTeam != TEAM_SPECTATORS)
+		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 		{
-			int t = m_apPlayers[i]->m_WantedTeam^1;
+			int t = m_apPlayers[i]->GetTeam()^1;
 			m_apPlayers[i]->SetTeam(t, false);
 			m_apPlayers[i]->SetWantedTeam(t, false);
 			
@@ -574,7 +574,8 @@ void CGameContext::UpdateSpectators()
 	// update the spectator views
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && !m_apPlayers[i]->m_IsBot)
+		//if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && !m_apPlayers[i]->m_IsBot)
+		if(m_apPlayers[i] && (m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || !m_apPlayers[i]->GetCharacter()) && !m_apPlayers[i]->m_IsBot)
 		{
 			if (!m_apPlayers[i]->m_LastSetSpectatorMode)
 				m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick() - Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime;
@@ -583,20 +584,33 @@ void CGameContext::UpdateSpectators()
 				if (m_apPlayers[i]->m_LastSetSpectatorMode+Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime < Server()->Tick())	
 				{
 					int WantedPlayer = -1;
-						
-					int Team = m_apPlayers[i]->m_WantedTeam;
-						
-					// get the correct player
-					if (Team == TEAM_RED || Team == TEAM_BLUE)
+					
+					/*
+					if (!m_pController->IsTeamplay())
 					{
-						WantedPlayer = m_aMostInterestingPlayer[Team];
-							
-						// update the view
-						if (WantedPlayer >= 0 && m_apPlayers[i]->m_SpectatorID != WantedPlayer && Found[Team])
+						if (m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 						{
-							m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick();
-							m_apPlayers[i]->m_SpectatorID = WantedPlayer;
-							Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", "Spectator id changed");
+							
+							
+							
+						}
+					}
+					else*/
+					{
+						int Team = m_apPlayers[i]->GetTeam();
+							
+						// get the correct player
+						if (Team == TEAM_RED || Team == TEAM_BLUE)
+						{
+							WantedPlayer = m_aMostInterestingPlayer[Team];
+								
+							// update the view
+							if (WantedPlayer >= 0 && m_apPlayers[i]->m_SpectatorID != WantedPlayer && Found[Team])
+							{
+								m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick();
+								m_apPlayers[i]->m_SpectatorID = WantedPlayer;
+								Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", "Spectator id changed");
+							}
 						}
 					}
 				}

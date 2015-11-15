@@ -4,8 +4,8 @@
 #include <base/vmath.h>
 
 
-#define MAX_WAYPOINTS 10000
-#define MAX_WAYPOINTCONNECTIONS 8
+#define MAX_WAYPOINTS 1000
+#define MAX_WAYPOINTCONNECTIONS 10
 
 
 class CWaypointPath
@@ -17,6 +17,14 @@ public:
 	CWaypointPath *m_pNext;
 	CWaypointPath *m_pParent;
 	vec2 m_Pos;
+	
+	void PushBack(CWaypointPath *P)
+	{
+		if (m_pNext)
+			m_pNext->PushBack(P);
+		else
+			m_pNext = P;		
+	}
 	
 	CWaypointPath(vec2 Pos, CWaypointPath *Next = 0)
 	{
@@ -63,6 +71,35 @@ public:
 	int m_X, m_Y; // tileset position
 	vec2 m_Pos; // world position
 	
+	// for A*
+	bool m_Opened, m_Closed;
+	int m_F, m_G, m_H;
+	CWaypoint *m_pParent;
+	
+	int GetGScore(CWaypoint* P)
+	{
+		if (!P)
+			return 0;
+		return P->m_G + (m_Pos.y > P->m_Pos.y - 40 ? 200 : 300);
+	}
+	
+	void ComputeScores(vec2 TargetPos)
+	{
+		m_G = GetGScore(m_pParent);
+		m_H = distance(m_Pos, TargetPos);
+		
+		m_F = m_H + m_G;
+	}
+	
+	
+	void ClearForAStar()
+	{
+		m_F = m_G = m_H = 0;
+		m_Opened = false; m_Closed = false;
+		m_pParent = 0;
+	}
+	
+	
 	bool m_InnerCorner;
 	
 	CWaypoint *m_apConnection[MAX_WAYPOINTCONNECTIONS];
@@ -76,6 +113,11 @@ public:
 	
 	CWaypoint(vec2 Pos, bool InnerCorner = false)
 	{
+		// A*
+		m_F = m_G = m_H = 0;
+		m_Opened = false; m_Closed = false;
+		m_pParent = 0;
+		
 		m_InnerCorner = InnerCorner;
 		m_PathDistance = 0;
 		m_X = Pos.x;

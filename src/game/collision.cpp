@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+
 #include <base/system.h>
 #include <base/math.h>
 #include <base/vmath.h>
@@ -130,7 +131,8 @@ void CCollision::GenerateWaypoints()
 			if ((IsTileSolid((x+1)*32, y*32) || IsTileSolid((x-1)*32, y*32)) && (IsTileSolid(x*32, (y+1)*32) || IsTileSolid(x*32, (y+1)*32)))
 			{
 				// inner corner found -> create a waypoint
-				AddWaypoint(vec2(x, y), true);
+				//AddWaypoint(vec2(x, y), true);
+				AddWaypoint(vec2(x, y));
 			}
 		}
 	}
@@ -253,10 +255,15 @@ void CCollision::ConnectWaypoints()
 		y = m_apWaypoint[i]->m_Y - 1;
 		
 		// find waypoints at up
+		//bool SolidFound = false;
 		while (!m_pTiles[y*m_Width+x].m_Index || m_pTiles[y*m_Width+x].m_Index >= 128)
 		{
 			CWaypoint *W = GetWaypointAt(x, y);
 			
+			//if (IsTileSolid((x+1)*32, y*32) || IsTileSolid((x+1)*32, y*32))
+			//	SolidFound = true;
+			
+			//if (W && SolidFound)
 			if (W)
 			{
 				if (m_apWaypoint[i]->Connect(W))
@@ -320,7 +327,6 @@ CWaypoint *CCollision::GetClosestWaypoint(vec2 Pos)
 	
 	return W;
 }
-
 
 
 void CCollision::SetWaypointCenter(vec2 Position)

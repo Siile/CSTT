@@ -113,7 +113,7 @@ protected:
 	void HeadToMovingDirection();
 	void JumpIfPlayerIsAbove();
 	
-	bool UpdateWaypoint(int EnemyWeight = 0);
+	bool UpdateWaypoint();
 	void HookMove();
 	void AirJump();
 	void DoJumping();

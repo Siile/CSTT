@@ -146,6 +146,7 @@ enum ProjectileTypes
 enum WeaponExtraFeature
 {
 	NO_EXTRA1,
+	EXPLOSIVE,
 	MEGAROCKETS,
 	DOOMROCKETS,
 	SLEEPEFFECT,
@@ -340,9 +341,9 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		PROJTYPE_BULLET,
 		SOUND_GUN_FIRE,
 		GUN_PISTOL, // require
-		40, // cost
-		19, // damage
-		0, // extra1
+		50, // cost
+		11, // damage
+		EXPLOSIVE, // extra1
 		false, // autofire
 		0, // bullet spread
 		1, // shot spread
@@ -352,7 +353,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.35f, // bullet life
 		160, // bullet reload time
 		700, // clip reload time
-		12.0f, // bullet knockback
+		7.0f, // bullet knockback
 		2.0f // self knockback
 		),
 	CWeapon(

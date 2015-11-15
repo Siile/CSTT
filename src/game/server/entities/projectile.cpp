@@ -25,6 +25,9 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_StartTick = Server()->Tick();
 	m_Explosive = Explosive;
 	m_ExtraInfo = ExtraInfo;
+	
+	if (m_ExtraInfo == EXPLOSIVE)
+		m_Explosive = true;
 
 	m_ElectroTimer = 0;
 	

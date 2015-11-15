@@ -464,7 +464,7 @@ void CGameControllerCSBB::RoundRewards(int WinningTeam)
 		if(!pPlayer)
 			continue;
 
-		if (pPlayer->m_WantedTeam == WinningTeam)
+		if (pPlayer->GetTeam() == WinningTeam)
 			pPlayer->m_Money += g_Config.m_SvWinMoney;
 		else
 			pPlayer->m_Money += g_Config.m_SvLoseMoney;
@@ -949,7 +949,6 @@ void CGameControllerCSBB::Tick()
 {
 	IGameController::Tick();
 
-	GameServer()->UpdateSpectators();
 	
 	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
 		return;	

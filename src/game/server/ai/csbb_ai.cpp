@@ -153,7 +153,7 @@ void CAIcsbb::DoBehavior()
 	MoveTowardsWaypoint(10);
 	*/
 	
-	if (UpdateWaypoint(Bomb->m_pCarryingCharacter == Player()->GetCharacter() ? 5000 : 0))
+	if (UpdateWaypoint())
 	{
 		MoveTowardsWaypoint(20);
 		HookMove();

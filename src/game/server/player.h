@@ -43,14 +43,16 @@ public:
 	void Respawn();
 	void SetTeam(int Team, bool DoChatMsg=true);
 	void SetWantedTeam(int Team, bool DoChatMsg=true);
-	//int GetTeam() const { return m_Team; };
+	int GetTeam() const { return m_Team; };
 	
+	/*
 	int GetTeam()
 	{
 		if (m_Team != TEAM_SPECTATORS);
 			return m_Team;
 		return m_WantedTeam;
 	};
+	*/
 	
 	int GetCID() const { return m_ClientID; };
 
@@ -185,7 +187,7 @@ public:
 	
 	bool m_ForceToSpectators;
 
-	int m_WantedTeam;
+	//int m_WantedTeam;
 	
 	// settings
 	int m_EnableWeaponInfo; // 0 = disabled, 1 = chat, 2 = broadcast
@@ -253,6 +255,8 @@ public:
 	}
 	
 private:
+	bool m_Spectate;
+
 	int m_Class;
 	bool m_aAbility[NUM_ABILITIES];
 

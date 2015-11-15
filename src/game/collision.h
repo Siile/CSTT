@@ -33,7 +33,6 @@ class CCollision
 	
 	CWaypointPath *m_pPath;
 	
-	
 public:
 	enum
 	{
@@ -52,6 +51,9 @@ public:
 	void SetWaypointCenter(vec2 Position);
 	void AddWeight(vec2 Pos, int Weight);
 	bool FindWaypointPath(vec2 TargetPos);
+	
+	//CWaypointPath *AStar(vec2 Start, vec2 End);
+	bool AStar(vec2 Start, vec2 End);
 	
 	CWaypointPath *GetPath(){ return m_pPath; }
 	void ForgetAboutThePath(){ m_pPath = 0; }

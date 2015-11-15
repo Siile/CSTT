@@ -883,7 +883,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				vec2(cosf(a), sinf(a)),
 				(int)(Server()->TickSpeed()*aCustomWeapon[m_ActiveCustomWeapon].m_BulletLife),
-				Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon);
+				Damage, 0, aCustomWeapon[m_ActiveCustomWeapon].m_Knockback, -1, aCustomWeapon[m_ActiveCustomWeapon].m_ParentWeapon, aCustomWeapon[m_ActiveCustomWeapon].m_Extra1);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -1744,7 +1744,8 @@ void CCharacter::Die(int Killer, int Weapon, bool SkipKillMessage)
 	//if (Weapon < 0)
 	//	Weapon = 0;
 	// we got to wait 0.5 secs before respawning
-	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
+	//m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
+	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*4;
 	
 	if (Weapon != WEAPON_GAME)
 		m_pPlayer->EraseWeapons();

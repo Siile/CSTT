@@ -169,42 +169,30 @@ void CAI::DoJumping()
 
 
 
-bool CAI::UpdateWaypoint(int EnemyWeight)
+bool CAI::UpdateWaypoint()
 {
 	if (m_WayPointUpdateTick + GameServer()->Server()->TickSpeed()*5 < GameServer()->Server()->Tick())
 		m_WaypointUpdateNeeded = true;
 	
 	
 	//if (distance(m_WaypointPos, m_LastPos) < 100) // || m_TargetTimer++ > 30)// && m_WayPointUpdateWait > 10)
-	if (m_TargetTimer++ > 10 && (!m_pVisible || m_WaypointUpdateNeeded))
+	if (m_TargetTimer++ > 50 && (!m_pVisible || m_WaypointUpdateNeeded))
 	{
 		m_TargetTimer = 0;
 		
 		m_WayFound = false;
 		
 		// prepare waypoints for path finding
-		GameServer()->Collision()->SetWaypointCenter(m_Pos);
-		
-		if (EnemyWeight != 0)
-		{
-			for (int i = 0; i < MAX_CLIENTS; i++)
-			{
-				CPlayer *pPlayer = GameServer()->m_apPlayers[i];
-				if(!pPlayer) continue;
-				if (pPlayer->GetTeam() == Player()->GetTeam()) continue;
+		//GameServer()->Collision()->SetWaypointCenter(m_Pos);
 
-				CCharacter *pCharacter = pPlayer->GetCharacter();
-				if (!pCharacter) continue;
-				if (!pCharacter->IsAlive()) continue;
-				
-				GameServer()->Collision()->AddWeight(pCharacter->m_Pos, EnemyWeight);
-			}
-		}
-		GameServer()->Collision()->SetWaypointCenter(m_Pos);
+
 		
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", "Starting A*");	
 		
-		if (GameServer()->Collision()->FindWaypointPath(m_TargetPos))
+		//if (GameServer()->Collision()->FindWaypointPath(m_TargetPos))
+		if (GameServer()->Collision()->AStar(m_Pos, m_TargetPos))
 		{
+			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", "A* success");	
 			if (m_pPath)
 			{
 				delete m_pPath;
@@ -212,6 +200,9 @@ bool CAI::UpdateWaypoint(int EnemyWeight)
 			}
 			m_pPath = GameServer()->Collision()->GetPath();
 			GameServer()->Collision()->ForgetAboutThePath();
+			
+			if (!m_pPath)
+				return false;
 			
 			m_pVisible = m_pPath->GetVisible(GameServer(), m_Pos-vec2(0, 16));
 			
