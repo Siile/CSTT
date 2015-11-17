@@ -93,7 +93,7 @@ void CAIcstt::DoBehavior()
 			if (m_TargetBombArea)
 				m_TargetPos = m_TargetBombArea->m_Pos;
 			else
-				m_TargetBombArea = GameServer()->m_pController->GetRandomBombArea();
+				m_TargetBombArea = GameServer()->m_pController->GetRandomBase();
 		}
 		else
 		{
@@ -178,7 +178,7 @@ void CAIcstt::DoBehavior()
 	{
 		if (Bomb && (Bomb->m_Status == BOMB_CARRYING || Bomb->m_Status == BOMB_PLANTING) && Player()->GetCharacter() == Bomb->m_pCarryingCharacter)
 		{
-			CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_Pos);
+			CFlag *BombArea = GameServer()->m_pController->GetClosestBase(m_Pos);
 	
 			if (BombArea && abs(BombArea->m_Pos.x-m_Pos.x) < 100 && abs(BombArea->m_Pos.y-m_Pos.y-50) < 100)
 			{

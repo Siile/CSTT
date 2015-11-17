@@ -96,6 +96,9 @@ MACRO_CONFIG_INT(SvBaseCaptureTime, sv_basecapturetime, 3, 1, 60, CFGFLAG_SERVER
 
 MACRO_CONFIG_INT(SvRespawnDelayCSBB, sv_respawn_delay_csbb, 3, 0, 10, CFGFLAG_SERVER, "Time needed to respawn after death in csbb gametype")
 
+// Domination++
+MACRO_CONFIG_INT(SvBaseCaptureTreshold, sv_basecapturetreshold, 100, 50, 1500, CFGFLAG_SERVER, "Base capture time(ish)")
+
 
 
 // AI

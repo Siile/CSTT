@@ -476,7 +476,7 @@ void CGameControllerCSBB::RoundRewards(int WinningTeam)
 
 
 
-CFlag *CGameControllerCSBB::GetClosestBombArea(vec2 Pos)
+CFlag *CGameControllerCSBB::GetClosestBase(vec2 Pos)
 {
 	for (int f = 0; f < MAX_BOMBAREAS; f++)
 	{

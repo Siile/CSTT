@@ -26,21 +26,9 @@ enum WinStatus
 
 CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
-	/*
-	GameServer()->Collision()->GenerateWaypoints();
-	
-	char aBuf[128]; str_format(aBuf, sizeof(aBuf), "%d waypoints generated, %d connections created", GameServer()->Collision()->WaypointCount(), GameServer()->Collision()->ConnectionCount());
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
-	*/
-	
 	m_pGameType = "CSTT";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 
-	//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Creating CSTT controller");
-	//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "cstt", aBuf);
-		
-	//for (int i = 0; i < MAX_PICKUPS; i++)
-	//	m_apPickup[i] = NULL;
 	
 	for (int i = 0; i < MAX_BOMBAREAS; i++)
 		m_apBombArea[i] = NULL;
@@ -48,10 +36,7 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 	m_BombAreaCount = 0;
 	
 	m_pBomb = NULL;
-	
-	//m_PickupCount = 0;
-	//m_PickupDropCount = 0;
-	//m_DroppablesCreated = false;
+
 	
 	m_NewGame = false;
 	
@@ -65,44 +50,10 @@ CGameControllerCSTT::CGameControllerCSTT(class CGameContext *pGameServer) : IGam
 
 
 
-/*
-void CGameControllerCSTT::DropPickup(vec2 Pos, int PickupType, vec2 Force, int PickupSubtype)
-{
-	for (int i = 0; i < m_PickupCount; i++)
-	{
-		if (m_apPickup[i] && m_apPickup[i]->m_Dropable && m_apPickup[i]->m_Life <= 0 && m_apPickup[i]->GetType() == PickupType)
-		{
-			m_apPickup[i]->m_Pos = Pos;
-			m_apPickup[i]->RespawnDropable();
-			if (m_apPickup[i]->GetType() == POWERUP_WEAPON)
-				m_apPickup[i]->SetSubtype(PickupSubtype);
-			
-			m_apPickup[i]->m_Vel = Force;
-			return;
-		}
-	}
-}
-*/
-
-
-
-
-
 	
 	
 bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 {
-	/*
-	if(IGameController::OnNonPickupEntity(Index, Pos))
-		return true;
-	*/
-
-	/*
-	if (!m_DroppablesCreated)
-		CreateDroppables();
-	*/
-
-
 	// create bomb if not created
 	if (!m_pBomb)
 	{
@@ -139,33 +90,6 @@ bool CGameControllerCSTT::OnEntity(int Index, vec2 Pos)
 	return false;
 }
 
-/*
-void CGameControllerCSTT::CreateDroppables()
-{
-	for (int i = 0; i < MAX_DROPPABLES; i++)
-	{
-		// hearts
-		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_HEALTH, 0);
-		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
-		m_apPickup[m_PickupCount]->m_Dropable = true;
-		m_PickupCount++;
-
-		// armors
-		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_ARMOR, 0);
-		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
-		m_apPickup[m_PickupCount]->m_Dropable = true;
-		m_PickupCount++;
-		
-		// weapons
-		m_apPickup[m_PickupCount] = new CPickup(&GameServer()->m_World, POWERUP_WEAPON, 0);
-		m_apPickup[m_PickupCount]->m_Pos = vec2(0, 0);
-		m_apPickup[m_PickupCount]->m_Dropable = true;
-		m_PickupCount++;
-	}
-	
-	m_DroppablesCreated = true;
-}
-*/
 	
 	
 int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
@@ -307,36 +231,6 @@ void CGameControllerCSTT::Snap(int SnappingClient)
 	else
 		pGameDataObj->m_FlagCarrierRed = FLAG_MISSING;
 }
-
-
-/*
-void CGameControllerCSTT::ClearPickups()
-{
-	for (int i = 0; i < m_PickupCount; i++)
-	{
-		if (m_apPickup[i])
-			m_apPickup[i]->Hide();
-	}
-}
-
-void CGameControllerCSTT::RespawnPickups()
-{
-	for (int i = 0; i < m_PickupCount; i++)
-	{
-		if (m_apPickup[i])
-			m_apPickup[i]->Respawn();
-	}
-}
-
-void CGameControllerCSTT::FlashPickups()
-{
-	for (int i = 0; i < m_PickupCount; i++)
-	{
-		if (m_apPickup[i] && !m_apPickup[i]->m_Dropable && m_apPickup[i]->m_SpawnTick <= 0)
-			m_apPickup[i]->m_Flashing = true;
-	}
-}
-*/
 
 
 
@@ -714,7 +608,7 @@ void CGameControllerCSTT::StartRound()
 
 
 
-CFlag *CGameControllerCSTT::GetRandomBombArea()
+CFlag *CGameControllerCSTT::GetRandomBase(int NotThisTeam)
 {
 	int i = 0;
 	while (i++ < 20)
@@ -726,7 +620,7 @@ CFlag *CGameControllerCSTT::GetRandomBombArea()
 	return NULL;
 }
 
-CFlag *CGameControllerCSTT::GetClosestBombArea(vec2 Pos)
+CFlag *CGameControllerCSTT::GetClosestBase(vec2 Pos, int Team)
 {
 	CFlag *pClosestFlag = NULL;
 	
@@ -761,12 +655,8 @@ void CGameControllerCSTT::AutoBalance()
 	int Red = 0, Blue = 0;
 	int RedBots = 0, BlueBots = 0;
 	
-	// skip
-	// return;
-	
 	int RedBotID = -1;
 	int BlueBotID = -1;
-	
 	
 	// count players
 	for (int i = 0; i < MAX_CLIENTS; i++)
@@ -775,16 +665,6 @@ void CGameControllerCSTT::AutoBalance()
 		if(!pPlayer)
 			continue;
 
-		/*
-		CCharacter *pCharacter = pPlayer->GetCharacter();
-		if (!pCharacter)
-			continue;
-			
-		if (!pCharacter->IsAlive())
-			continue;
-		*/
-		
-		//if (pPlayer->GetTeam() == TEAM_RED || pPlayer->m_WantedTeam == TEAM_RED)
 		if (pPlayer->GetTeam() == TEAM_RED)
 		{
 			if (!pPlayer->m_IsBot)
@@ -796,7 +676,6 @@ void CGameControllerCSTT::AutoBalance()
 			}
 		}
 		
-		//if (pPlayer->GetTeam() == TEAM_BLUE || pPlayer->m_WantedTeam == TEAM_BLUE)
 		if (pPlayer->GetTeam() == TEAM_BLUE)
 		{
 			if (!pPlayer->m_IsBot)
@@ -808,20 +687,7 @@ void CGameControllerCSTT::AutoBalance()
 			}
 		}
 	}
-	
-	//if (Red+Blue == 0)
-	//	return;
-	
 
-	// not enough players
-	/*
-	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize && (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
-	{
-		GameServer()->AddBot();
-		GameServer()->AddBot();
-	}
-	*/
-	
 	// too many bots
 	if (Red+RedBots > g_Config.m_SvPreferredTeamSize && RedBots > 0)
 	{
@@ -834,23 +700,8 @@ void CGameControllerCSTT::AutoBalance()
 		return;
 	}
 	
-	
 	if ((Red+RedBots) < g_Config.m_SvPreferredTeamSize || (Blue+BlueBots) < g_Config.m_SvPreferredTeamSize)
 		GameServer()->AddBot();
-	
-	
-	
-	// add bots when needed, as many as needed
-	/*
-	if (abs((Red+RedBots) - (Blue+BlueBots)) > 0)
-	{
-		for (int i = 0; i < abs((Red+RedBots) - (Blue+BlueBots)); i++)
-			GameServer()->AddBot();
-		
-		char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Adding %d bots for balance", abs((Red+RedBots) - (Blue+BlueBots)));
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	}
-	*/
 }
 
 
@@ -899,14 +750,6 @@ void CGameControllerCSTT::Tick()
 		else
 		if (m_GameState == GAMESTATE_STARTING)
 		{
-			/*
-			if (m_RoundTick == (g_Config.m_SvPreroundTime-3)*Server()->TickSpeed() ||
-				m_RoundTick == (g_Config.m_SvPreroundTime-2.5f)*Server()->TickSpeed())
-			{
-				AutoBalance();
-			}
-			*/
-		
 			if (m_RoundTick == (g_Config.m_SvPreroundTime-2)*Server()->TickSpeed())
 			{				
 				char aBuf[128];
@@ -996,7 +839,7 @@ void CGameControllerCSTT::Tick()
 		if (!pCharacter)
 			continue;
 	
-		CFlag *pClosestBombArea = GetClosestBombArea(pCharacter->m_Pos);
+		CFlag *pClosestBombArea = GetClosestBase(pCharacter->m_Pos);
 		
 		if (pClosestBombArea)
 			pClosestBombArea->m_ClosestFlagToCharacter[c] = true;

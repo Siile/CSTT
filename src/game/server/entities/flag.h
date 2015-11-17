@@ -1,5 +1,3 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_SERVER_ENTITIES_FLAG_H
 #define GAME_SERVER_ENTITIES_FLAG_H
 
@@ -20,6 +18,10 @@ public:
 	
 	bool m_Hide;
 	bool m_UseSnapping;
+	
+	// for domination
+	int m_CaptureTeam;
+	float m_CapturePoints;
 	
 	// to check if to be snapped / displayed
 	bool m_ClosestFlagToCharacter[64];

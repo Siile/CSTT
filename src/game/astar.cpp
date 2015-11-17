@@ -87,30 +87,14 @@ bool CCollision::AStar(vec2 Start, vec2 End)
 
 			if (ChildWP->m_Closed)
 				continue;
-
-			/*
-                // If we are at a corner
-                if (x != 0 && y != 0)
-                {
-                    // if the next horizontal point is not walkable or in the closed list then pass
-                    if (!pointIsWalkable(current->getX(), current->getY() + y) || getPoint(current->getX(), current->getY() + y)->closed)
-                    {
-                        continue;
-                    }
-                    // if the next vertical point is not walkable or in the closed list then pass
-                    if (!pointIsWalkable(current->getX() + x, current->getY()) || getPoint(current->getX() + x, current->getY())->closed)
-                    {
-                        continue;
-                    }
-                }
-				*/
+			
 
 			// If it's already in the openList
 			if (ChildWP->m_Opened)
 			{
 				// If it has a wroste g score than the one that pass through the current point
 				// then its path is improved when it's parent is the current point
-				if (ChildWP->m_G > ChildWP->GetGScore(CurrentWP))
+				if (ChildWP->m_G > ChildWP->GetGScore(CurrentWP, EndWP->m_Pos))
 				{
 					// Change its parent and g score
 					ChildWP->m_pParent = CurrentWP;

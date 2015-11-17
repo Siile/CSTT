@@ -179,7 +179,7 @@ void CAIcsbb::DoBehavior()
 	{
 		if (Bomb && (Bomb->m_Status == BOMB_CARRYING || Bomb->m_Status == BOMB_PLANTING))
 		{
-			CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_Pos);
+			CFlag *BombArea = GameServer()->m_pController->GetClosestBase(m_Pos);
 	
 			if (BombArea && abs(BombArea->m_Pos.x-m_Pos.x) < 100 && abs(BombArea->m_Pos.y-m_Pos.y-50) < 100)
 			{

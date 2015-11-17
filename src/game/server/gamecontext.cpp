@@ -14,6 +14,7 @@
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
+#include "gamemodes/dom.h"
 #include "gamemodes/cstt.h"
 #include "gamemodes/csbb.h"
 #include "gamemodes/mod.h"
@@ -945,7 +946,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Engine version 1.51");
+				SendChatTarget(ClientID, "Engine version 1.52");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -2074,6 +2075,8 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		m_pController = new CGameControllerMOD(this);
 	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
+	else if(str_comp(g_Config.m_SvGametype, "dom") == 0)
+		m_pController = new CGameControllerDOM(this);
 	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
 	else if(str_comp(g_Config.m_SvGametype, "cstt") == 0)

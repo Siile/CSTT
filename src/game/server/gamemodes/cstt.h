@@ -103,8 +103,8 @@ public:
 	void OnCharacterSpawn(class CCharacter *pChr, bool RequestAI = false);
 	
 	class CBomb *GetBomb();
-	class CFlag *GetClosestBombArea(vec2 Pos);
-	class CFlag *GetRandomBombArea();
+	class CFlag *GetClosestBase(vec2 Pos, int Team = -1);
+	class CFlag *GetRandomBase(int NotThisTeam = -1);
 	
 	bool CanCharacterSpawn(int ClientID);
 };

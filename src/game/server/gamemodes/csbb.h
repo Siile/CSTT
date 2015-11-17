@@ -122,7 +122,7 @@ public:
 	void OnCharacterSpawn(class CCharacter *pChr, bool RequestAI = false);
 	
 	class CBomb *GetBomb();
-	class CFlag *GetClosestBombArea(vec2 Pos);
+	class CFlag *GetClosestBase(vec2 Pos);
 	
 	bool CanCharacterSpawn(int ClientID);
 };

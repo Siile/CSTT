@@ -176,23 +176,20 @@ bool CAI::UpdateWaypoint()
 	
 	
 	//if (distance(m_WaypointPos, m_LastPos) < 100) // || m_TargetTimer++ > 30)// && m_WayPointUpdateWait > 10)
-	if (m_TargetTimer++ > 50 && (!m_pVisible || m_WaypointUpdateNeeded))
+	if (m_TargetTimer++ > 40 && (!m_pVisible || m_WaypointUpdateNeeded))
 	{
 		m_TargetTimer = 0;
 		
 		m_WayFound = false;
 		
+		// old inefficient path finding
 		// prepare waypoints for path finding
-		//GameServer()->Collision()->SetWaypointCenter(m_Pos);
-
-
-		
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", "Starting A*");	
-		
+		//GameServer()->Collision()->SetWaypointCenter(m_Pos);		
 		//if (GameServer()->Collision()->FindWaypointPath(m_TargetPos))
+			
+		
 		if (GameServer()->Collision()->AStar(m_Pos, m_TargetPos))
-		{
-			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "path", "A* success");	
+		{	
 			if (m_pPath)
 			{
 				delete m_pPath;
@@ -332,7 +329,7 @@ void CAI::HookMove()
 			if (C&CCollision::COLFLAG_SOLID && !(C&CCollision::COLFLAG_NOHOOK) && m_LastHook == 0)
 			{
 				float Dist = distance(m_Pos, HookPos);
-				if (abs(Dist - 220) < 180)
+				if (abs(Dist - 230) < 170)
 				{
 					TryHooking = true;
 					break;
@@ -491,7 +488,7 @@ void CAI::Unstuck()
 
 bool CAI::SeekBombArea()
 {
-	CFlag *BombArea = GameServer()->m_pController->GetClosestBombArea(m_LastPos);
+	CFlag *BombArea = GameServer()->m_pController->GetClosestBase(m_LastPos);
 	
 	if (BombArea)
 	{

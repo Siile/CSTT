@@ -183,9 +183,12 @@ public:
 	virtual bool CanCharacterSpawn(int ClientID);
 
 	virtual class CBomb *GetBomb();
-	virtual class CFlag *GetClosestBombArea(vec2 Pos);
-	virtual class CFlag *GetRandomBombArea();
+	virtual class CFlag *GetClosestBase(vec2 Pos, int Team = -1);
+	virtual class CFlag *GetRandomBase(int NotThisTeam = -1);
+	virtual class CFlag *GetUndefendedBase(int Team = -1);
+	virtual int Defenders(class CFlag *Base);
 	
+	virtual int CountBases(int Team = -1);
 	
 	virtual void OnPlayerInfoChange(class CPlayer *pP);
 

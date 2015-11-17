@@ -1,5 +1,4 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at ninslash.com.                */
+#include <engine/shared/config.h>
 #include <game/server/gamecontext.h>
 #include "flag.h"
 
@@ -24,6 +23,10 @@ void CFlag::Reset()
 	m_Vel = vec2(0,0);
 	m_GrabTick = 0;
 	m_Hide = false;
+	
+	// for domination
+	m_CaptureTeam = -1;
+	m_CapturePoints = 0.0f;
 	
 	ResetDistanceInfo();
 }
@@ -53,5 +56,22 @@ void CFlag::Snap(int SnappingClient)
 
 	pFlag->m_X = (int)m_Pos.x;
 	pFlag->m_Y = (int)m_Pos.y;
-	pFlag->m_Team = m_Team;
+	
+	if (str_comp(g_Config.m_SvGametype, "dom") == 0)
+	{
+		if (m_CaptureTeam == -1)
+		{
+			if (GameServer()->m_apPlayers[SnappingClient])
+			{
+				if (GameServer()->m_apPlayers[SnappingClient]->GetTeam() == TEAM_RED)
+					pFlag->m_Team = TEAM_BLUE;
+				else
+					pFlag->m_Team = TEAM_RED;
+			}
+		}
+		else
+			pFlag->m_Team = m_CaptureTeam;
+	}
+	else
+		pFlag->m_Team = m_Team;
 }

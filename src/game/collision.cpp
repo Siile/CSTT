@@ -254,9 +254,11 @@ void CCollision::ConnectWaypoints()
 		x = m_apWaypoint[i]->m_X;
 		y = m_apWaypoint[i]->m_Y - 1;
 		
+		int n = 0;
+		
 		// find waypoints at up
 		//bool SolidFound = false;
-		while (!m_pTiles[y*m_Width+x].m_Index || m_pTiles[y*m_Width+x].m_Index >= 128)
+		while ((!m_pTiles[y*m_Width+x].m_Index || m_pTiles[y*m_Width+x].m_Index >= 128) && n++ < 10)
 		{
 			CWaypoint *W = GetWaypointAt(x, y);
 			

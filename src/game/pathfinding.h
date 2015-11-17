@@ -1,6 +1,9 @@
 #ifndef GAME_WAYPOINT_H
 #define GAME_WAYPOINT_H
 
+
+#include <base/system.h>
+#include <base/math.h>
 #include <base/vmath.h>
 
 
@@ -76,16 +79,18 @@ public:
 	int m_F, m_G, m_H;
 	CWaypoint *m_pParent;
 	
-	int GetGScore(CWaypoint* P)
+	int GetGScore(CWaypoint* P, vec2 Target)
 	{
 		if (!P)
 			return 0;
-		return P->m_G + (m_Pos.y > P->m_Pos.y - 40 ? 200 : 300);
+		
+		return P->m_G + frandom()*500;
+		//return P->m_G + (m_Pos.y > P->m_Pos.y - 40 ? 200 : 300);
 	}
 	
 	void ComputeScores(vec2 TargetPos)
 	{
-		m_G = GetGScore(m_pParent);
+		m_G = GetGScore(m_pParent, TargetPos);
 		m_H = distance(m_Pos, TargetPos);
 		
 		m_F = m_H + m_G;

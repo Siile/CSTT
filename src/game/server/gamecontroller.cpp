@@ -683,12 +683,27 @@ CBomb *IGameController::GetBomb()
 	return NULL;
 }
 
-CFlag *IGameController::GetClosestBombArea(vec2 Pos)
+CFlag *IGameController::GetClosestBase(vec2 Pos, int Team)
 {
 	return NULL;
 }
 
-CFlag *IGameController::GetRandomBombArea()
+CFlag *IGameController::GetUndefendedBase(int Team)
+{
+	return NULL;
+}
+
+int IGameController::Defenders(CFlag *Base)
+{
+	return 0;
+}
+
+int IGameController::CountBases(int Team)
+{
+	return 0;
+}
+
+CFlag *IGameController::GetRandomBase(int NotThisTeam)
 {
 	return NULL;
 }

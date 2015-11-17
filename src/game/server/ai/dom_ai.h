@@ -1,12 +1,12 @@
-#ifndef GAME_SERVER_AI_CSTT_AI_H
-#define GAME_SERVER_AI_CSTT_AI_H
+#ifndef GAME_SERVER_AI_DOM_AI_H
+#define GAME_SERVER_AI_DOM_AI_H
 #include <game/server/ai.h>
 #include <game/server/gamecontext.h>
 
-class CAIcstt : public CAI
+class CAIdom : public CAI
 {
 public:
-	CAIcstt(CGameContext *pGameServer, CPlayer *pPlayer);
+	CAIdom(CGameContext *pGameServer, CPlayer *pPlayer);
 
 	virtual void DoBehavior();
 	void OnCharacterSpawn(class CCharacter *pChr);
@@ -14,9 +14,7 @@ public:
 private:
 	int m_SkipMoveUpdate;
 	
-	int m_Mission;
-	
-	class CFlag *m_TargetBombArea;
+	class CFlag *m_TargetBase;
 };
 
 #endif
