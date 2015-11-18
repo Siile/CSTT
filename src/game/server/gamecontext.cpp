@@ -946,7 +946,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Engine version 1.52");
+				SendChatTarget(ClientID, "Engine version 1.53");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");

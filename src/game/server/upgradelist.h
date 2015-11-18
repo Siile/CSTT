@@ -166,7 +166,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_HAMMER_FIRE,
 		HAMMER_BASIC, // require
 		75, // cost
-		22, // damage
+		25, // damage
 		0, // extra1
 		false, // autofire
 		0, // bullet spread
@@ -188,7 +188,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_HAMMER_FIRE,
 		SWORD_KATANA, // require
 		100, // cost
-		22, // damage
+		25, // damage
 		ELECTRIC, // extra1
 		false, // autofire
 		0, // bullet spread
@@ -540,7 +540,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GRENADE_FIRE,
 		-1, // require
 		100, // cost
-		8, // damage
+		6, // damage
 		MEGAROCKETS, // extra1
 		true, // autofire
 		0, // bullet spread
@@ -562,7 +562,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		SOUND_GRENADE_FIRE,
 		GRENADE_GRENADELAUNCHER, // require
 		120, // cost
-		12, // damage
+		9, // damage
 		DOOMROCKETS, // extra1
 		true, // autofire
 		0, // bullet spread

@@ -385,6 +385,7 @@ void CServer::SetClientScore(int ClientID, int Score)
 void CServer::Kick(int ClientID, const char *pReason)
 {
 	m_NetServer.m_SlotTakenByBot[ClientID] = false;
+	m_aClients[ClientID].m_Bot = false;
 	
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CClient::STATE_EMPTY)
 	{
@@ -567,7 +568,11 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 				}
 		}
 		else
-			m_NetServer.Send(&Packet);
+		{
+			// potential fatal error crash bug
+			if (!m_aClients[ClientID].m_Bot)
+				m_NetServer.Send(&Packet);
+		}
 	}
 	return 0;
 }
@@ -855,7 +860,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
-				m_aClients[ClientID].m_Bot = false;
+				//m_aClients[ClientID].m_Bot = false;
 				
 				SendMap(ClientID);
 			}

@@ -67,6 +67,9 @@ MACRO_CONFIG_INT(SvInstaDeathTiles, sv_instadeathtiles, 0, 0, 1, CFGFLAG_SERVER,
 MACRO_CONFIG_INT(SvWeaponDrops, sv_weapondrops, 1, 0, 1, CFGFLAG_SERVER, "Enable weapon drops")
 MACRO_CONFIG_INT(SvPreferredTeamSize, sv_preferredteamsize, 5, 1, 8, CFGFLAG_SERVER, "Preferred team size")
 
+MACRO_CONFIG_INT(SvHammerFight, sv_hammerfight, 0, 0, 1, CFGFLAG_SERVER, "Thunder hammer as a starting weapon")
+
+
 
 // CS:TT specific
 MACRO_CONFIG_INT(SvNumRounds, sv_numrounds, 7, 1, 100, CFGFLAG_SERVER, "Number of rounds")

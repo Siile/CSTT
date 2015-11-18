@@ -77,7 +77,7 @@ void CAI::Reset()
 
 void CAI::OnCharacterSpawn(class CCharacter *pChr)
 {
-	pChr->SetCustomWeapon(GUN_PISTOL);
+	pChr->SetCustomWeapon(HAMMER_BASIC);
 	Reset();
 	m_WaypointPos = pChr->m_Pos;
 }

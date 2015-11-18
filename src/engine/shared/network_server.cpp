@@ -257,7 +257,7 @@ int CNetServer::Send(CNetChunk *pChunk)
 
 		// might crash, fatal error
 		if (m_SlotTakenByBot[pChunk->m_ClientID])
-			return 0;
+			return -1;
 		
 		if(pChunk->m_Flags&NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;
