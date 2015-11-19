@@ -293,7 +293,7 @@ void CCollision::ConnectWaypoints()
 			{
 				float Dist = distance(m_apWaypoint[i]->m_Pos, m_apWaypoint[j]->m_Pos);
 				
-				if (Dist < 600 && !IntersectLine(m_apWaypoint[i]->m_Pos, m_apWaypoint[j]->m_Pos, NULL, NULL))
+				if (Dist < 600 && !IntersectLine(m_apWaypoint[i]->m_Pos, m_apWaypoint[j]->m_Pos, NULL, NULL, true))
 				{
 					if (m_apWaypoint[i]->Connect(m_apWaypoint[j]))
 						m_ConnectionCount++;
@@ -410,9 +410,15 @@ int CCollision::GetTile(int x, int y)
 	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
 }
 
-bool CCollision::IsTileSolid(int x, int y)
+bool CCollision::IsTileSolid(int x, int y, bool IncludeDeath)
 {
+	int t = GetTile(x, y);
+	if (IncludeDeath && GetTile(x, y)&COLFLAG_DEATH)
+		return true;
+	
 	return GetTile(x, y)&COLFLAG_SOLID;
+	
+	//return GetTile(x, y)&COLFLAG_SOLID;
 }
 
 
@@ -435,7 +441,7 @@ int CCollision::FastIntersectLine(vec2 Pos0, vec2 Pos1)
 
 
 // TODO: rewrite this smarter!
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, bool IncludeDeath)
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance+1);
@@ -445,7 +451,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		if(CheckPoint(Pos.x, Pos.y, IncludeDeath))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
