@@ -256,7 +256,7 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		75, // cost
 		6, // damage
 		0, // extra1
-		false, // autofire
+		true, // autofire
 		0.04f, // bullet spread
 		6, // shot spread
 		2, // clip size

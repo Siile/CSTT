@@ -252,7 +252,11 @@ void CGameControllerDOM::BaseTick()
 				
 				if (Team != m_apBase[i]->m_CaptureTeam)
 				{
-					GameServer()->SendBroadcast("Capturing the base", pPlayer->GetCID());
+					int p = (g_Config.m_SvBaseCaptureTreshold + m_apBase[i]->m_CapturePoints * (Team == TEAM_RED ? -1 : 1)) * 50 / g_Config.m_SvBaseCaptureTreshold;
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "Capturing the base! %d%%", p);
+					
+					GameServer()->SendBroadcast(aBuf, pPlayer->GetCID());
 					m_aCapturing[c] = i;
 				}
 				else
