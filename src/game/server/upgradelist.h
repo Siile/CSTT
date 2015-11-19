@@ -78,16 +78,20 @@ struct CWeapon
 
 enum CustomWeapons
 {
-	SWORD_KATANA,
-	SWORD_LIGHTNING,
 	HAMMER_BASIC,
 	HAMMER_THUNDER,
-	SHOTGUN_DOUBLEBARREL,
-	SHOTGUN_COMBAT,
+	SWORD_KATANA,
+	SWORD_LIGHTNING,
 	GUN_PISTOL,
 	GUN_UZI,
 	GUN_MAGNUM,
 	GUN_TASER,
+	SHOTGUN_DOUBLEBARREL,
+	SHOTGUN_COMBAT,
+	GRENADE_GRENADELAUNCHER,
+	GRENADE_DOOMLAUNCHER,
+	GRENADE_ELECTROLAUNCHER,
+	GRENADE_GRENADE,
 	RIFLE_ASSAULTRIFLE,
 	RIFLE_HEAVYRIFLE,
 	RIFLE_LIGHTNINGRIFLE,
@@ -95,9 +99,6 @@ enum CustomWeapons
 	RIFLE_LASERRIFLE,
 	RIFLE_ELECTRO,
 	RIFLE_DOOMRAY,
-	GRENADE_GRENADELAUNCHER,
-	GRENADE_DOOMLAUNCHER,
-	GRENADE_GRENADE,
 	NUM_CUSTOMWEAPONS
 };
 
@@ -108,12 +109,12 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	410, // SWORD_LIGHTNING,
 	120, // HAMMER_BASIC,
 	300, // HAMMER_THUNDER,
-	400, // SHOTGUN_DOUBLEBARREL,
-	400, // SHOTGUN_COMBAT,
 	750, // GUN_PISTOL,
 	750, // GUN_UZI,
 	750, // GUN_MAGNUM,
 	250, // GUN_TASER,
+	400, // SHOTGUN_DOUBLEBARREL,
+	400, // SHOTGUN_COMBAT,
 	780, // RIFLE_ASSAULTRIFLE,
 	780, // RIFLE_HEAVYRIFLE,
 	430, // RIFLE_LIGHTNINGRIFLE,
@@ -122,8 +123,8 @@ const int BotAttackRange[NUM_CUSTOMWEAPONS] =
 	500, // RIFLE_ELECTRO,
 	740, // RIFLE_DOOMRAY,
 	520, // GRENADE_GRENADELAUNCHER,
-	//500, // GRENADE_HEAVYLAUNCHER,
 	600, // GRENADE_DOOMLAUNCHER,
+	600, // GRENADE_ELECTROLAUNCHER,
 	500, // GRENADE_GRENADE
 };
 
@@ -157,51 +158,7 @@ enum WeaponExtraFeature
 
 
 const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
-{
-	CWeapon(
-		"Katana",
-		"/buy katana",
-		WEAPON_HAMMER,
-		PROJTYPE_SWORD,
-		SOUND_HAMMER_FIRE,
-		HAMMER_BASIC, // require
-		75, // cost
-		25, // damage
-		0, // extra1
-		false, // autofire
-		0, // bullet spread
-		1, // shot spread
-		0, // clip size
-		0, // powerup size
-		0, // max ammo
-		0.9f, // bullet life - vanilla ninja life * bulletlife
-		600, // bullet reload time
-		0, // clip reload time
-		0.0f, // knockback
-		0.0f // self knockback
-		),
-	CWeapon(
-		"Storm sword",
-		"/buy stormsword",
-		WEAPON_HAMMER,
-		PROJTYPE_SWORD,
-		SOUND_HAMMER_FIRE,
-		SWORD_KATANA, // require
-		100, // cost
-		25, // damage
-		ELECTRIC, // extra1
-		false, // autofire
-		0, // bullet spread
-		1, // shot spread
-		0, // clip size
-		0, // powerup size
-		0, // max ammo
-		0.85f, // bullet life - vanilla ninja life * bulletlife
-		550, // bullet reload time
-		0, // clip reload time
-		0.0f, // knockback
-		0.0f // self knockback
-		),
+{	
 	CWeapon(
 		"Hammer",
 		"/buy hammer",
@@ -247,48 +204,48 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		0.0f // self knockback
 		),
 	CWeapon(
-		"Double barrel shotgun",
-		"/buy double",
-		WEAPON_SHOTGUN,
-		PROJTYPE_PELLET,
-		SOUND_SHOTGUN_FIRE,
-		-1, // require
+		"Katana",
+		"/buy katana",
+		WEAPON_HAMMER,
+		PROJTYPE_SWORD,
+		SOUND_HAMMER_FIRE,
+		HAMMER_BASIC, // require
 		75, // cost
-		6, // damage
+		25, // damage
 		0, // extra1
-		true, // autofire
-		0.04f, // bullet spread
-		6, // shot spread
-		2, // clip size
-		6, // powerup size
-		20, // max ammo
-		0.17f, // bullet life
-		225, // bullet reload time
-		750, // clip reload time
-		5.0f, // bullet knockback
-		6.0f // self knockback
+		false, // autofire
+		0, // bullet spread
+		1, // shot spread
+		0, // clip size
+		0, // powerup size
+		0, // max ammo
+		0.9f, // bullet life - vanilla ninja life * bulletlife
+		600, // bullet reload time
+		0, // clip reload time
+		0.0f, // knockback
+		0.0f // self knockback
 		),
 	CWeapon(
-		"Combat shotgun",
-		"/upg combat",
-		WEAPON_SHOTGUN,
-		PROJTYPE_PELLET,
-		SOUND_SHOTGUN_FIRE,
-		SHOTGUN_DOUBLEBARREL, // require
-		110, // cost
-		7, // damage
-		0, // extra1
-		true, // autofire
-		0.03f, // bullet spread
-		5, // shot spread
-		10, // clip size
-		10, // powerup size
-		100, // max ammo
-		0.2f, // bullet life
-		215, // bullet reload time
-		1200, // clip reload time
-		5.0f, // bullet knockback
-		3.0f // self knockback
+		"Storm sword",
+		"/buy stormsword",
+		WEAPON_HAMMER,
+		PROJTYPE_SWORD,
+		SOUND_HAMMER_FIRE,
+		SWORD_KATANA, // require
+		100, // cost
+		25, // damage
+		ELECTRIC, // extra1
+		false, // autofire
+		0, // bullet spread
+		1, // shot spread
+		0, // clip size
+		0, // powerup size
+		0, // max ammo
+		0.85f, // bullet life - vanilla ninja life * bulletlife
+		550, // bullet reload time
+		0, // clip reload time
+		0.0f, // knockback
+		0.0f // self knockback
 		),
 	CWeapon(
 		"Pistol",
@@ -377,6 +334,116 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		700, // clip reload time
 		0.0f, // bullet knockback
 		0.0f // self knockback
+		),
+	CWeapon(
+		"Double barrel shotgun",
+		"/buy double",
+		WEAPON_SHOTGUN,
+		PROJTYPE_PELLET,
+		SOUND_SHOTGUN_FIRE,
+		-1, // require
+		75, // cost
+		6, // damage
+		0, // extra1
+		true, // autofire
+		0.04f, // bullet spread
+		6, // shot spread
+		2, // clip size
+		6, // powerup size
+		20, // max ammo
+		0.17f, // bullet life
+		225, // bullet reload time
+		750, // clip reload time
+		5.0f, // bullet knockback
+		6.0f // self knockback
+		),
+	CWeapon(
+		"Combat shotgun",
+		"/upg combat",
+		WEAPON_SHOTGUN,
+		PROJTYPE_PELLET,
+		SOUND_SHOTGUN_FIRE,
+		SHOTGUN_DOUBLEBARREL, // require
+		110, // cost
+		7, // damage
+		0, // extra1
+		true, // autofire
+		0.03f, // bullet spread
+		5, // shot spread
+		10, // clip size
+		10, // powerup size
+		100, // max ammo
+		0.2f, // bullet life
+		215, // bullet reload time
+		1200, // clip reload time
+		5.0f, // bullet knockback
+		3.0f // self knockback
+		),
+	CWeapon(
+		"Grenade launcher",
+		"/buy grenade",
+		WEAPON_GRENADE,
+		PROJTYPE_GRENADE,
+		SOUND_GRENADE_FIRE,
+		-1, // require
+		100, // cost
+		6, // damage
+		MEGAROCKETS, // extra1
+		true, // autofire
+		0, // bullet spread
+		1, // shot spread
+		6, // clip size
+		6, // powerup size
+		60, // max ammo
+		1.4f, // bullet life
+		300, // bullet reload time
+		800, // clip reload time
+		0.0f, // bullet knockback
+		3.0f // self knockback
+		),
+	CWeapon(
+		"Doom launcher",
+		"/upg doom",
+		WEAPON_GRENADE,
+		PROJTYPE_GRENADE,
+		SOUND_GRENADE_FIRE,
+		GRENADE_GRENADELAUNCHER, // require
+		120, // cost
+		9, // damage
+		DOOMROCKETS, // extra1
+		true, // autofire
+		0, // bullet spread
+		1, // shot spread
+		4, // clip size
+		4, // powerup size
+		40, // max ammo
+		1.5f, // bullet life
+		360, // bullet reload time
+		1200, // clip reload time
+		0.0f, // bullet knockback
+		4.0f // self knockback
+		),
+	CWeapon(
+		"Electro launcher",
+		"/buy electrogrenade",
+		WEAPON_GRENADE,
+		PROJTYPE_GRENADE,
+		SOUND_GRENADE_FIRE,
+		GRENADE_GRENADELAUNCHER, // require
+		100, // cost
+		6, // damage
+		ELECTRIC, // extra1
+		true, // autofire
+		0, // bullet spread
+		1, // shot spread
+		5, // clip size
+		5, // powerup size
+		50, // max ammo
+		1.4f, // bullet life
+		300, // bullet reload time
+		800, // clip reload time
+		0.0f, // bullet knockback
+		3.3f // self knockback
 		),
 	CWeapon(
 		"Assault rifle",
@@ -531,50 +598,6 @@ const CWeapon aCustomWeapon[NUM_CUSTOMWEAPONS] =
 		1200, // clip reload time
 		0.0f, // bullet knockback
 		0.0f // self knockback
-		),
-	CWeapon(
-		"Grenade launcher",
-		"/buy grenade",
-		WEAPON_GRENADE,
-		PROJTYPE_GRENADE,
-		SOUND_GRENADE_FIRE,
-		-1, // require
-		100, // cost
-		6, // damage
-		MEGAROCKETS, // extra1
-		true, // autofire
-		0, // bullet spread
-		1, // shot spread
-		6, // clip size
-		6, // powerup size
-		60, // max ammo
-		1.4f, // bullet life
-		300, // bullet reload time
-		800, // clip reload time
-		0.0f, // bullet knockback
-		3.0f // self knockback
-		),
-	CWeapon(
-		"Doom launcher",
-		"/upg doom",
-		WEAPON_GRENADE,
-		PROJTYPE_GRENADE,
-		SOUND_GRENADE_FIRE,
-		GRENADE_GRENADELAUNCHER, // require
-		120, // cost
-		9, // damage
-		DOOMROCKETS, // extra1
-		true, // autofire
-		0, // bullet spread
-		1, // shot spread
-		4, // clip size
-		4, // powerup size
-		40, // max ammo
-		1.5f, // bullet life
-		360, // bullet reload time
-		1200, // clip reload time
-		0.0f, // bullet knockback
-		4.0f // self knockback
 		),
 	CWeapon(
 		"Smoke grenade",

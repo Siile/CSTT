@@ -83,10 +83,10 @@ void CProjectile::Tick()
 
 
 	// grenade electricity
-	if(m_Explosive && OwnerChar && GameServer()->GotAbility(m_Owner, ELECTRO_GRENADES) && m_ElectroTimer++ > 2)
+	if(m_Explosive && OwnerChar && (GameServer()->GotAbility(m_Owner, ELECTRO_GRENADES) || m_ExtraInfo == ELECTRIC) && m_ElectroTimer++ > 3)
 	{
 		m_ElectroTimer = 0;
-		float Reach = 110.0f;
+		float Reach = 130.0f;
 		if (GameServer()->GotAbility(m_Owner, ELECTRO_REACH1))
 			Reach *= 1.33f;
 		vec2 Dir = normalize(vec2(frandom()-frandom(), frandom()-frandom()));
@@ -110,7 +110,7 @@ void CProjectile::Tick()
 				To = pHit->m_Pos;
 				pHit->ElectroShock();
 					
-				int Damage = 4;
+				int Damage = 6;
 				if (GameServer()->GotAbility(m_Owner, ELECTRO_DAMAGE1))
 					Damage++;
 					
