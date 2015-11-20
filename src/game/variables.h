@@ -75,6 +75,7 @@ MACRO_CONFIG_INT(SvHammerFight, sv_hammerfight, 0, 0, 1, CFGFLAG_SERVER, "Thunde
 MACRO_CONFIG_INT(SvNumRounds, sv_numrounds, 7, 1, 100, CFGFLAG_SERVER, "Number of rounds")
 
 MACRO_CONFIG_INT(SvStartMoney, sv_startmoney, 200, 0, 1000, CFGFLAG_SERVER, "Start money")
+MACRO_CONFIG_INT(SvMaxMoney, sv_maxmoney, 500, 0, 10000, CFGFLAG_SERVER, "Max money")
 MACRO_CONFIG_INT(SvKillMoney, sv_killmoney, 20, 0, 1000, CFGFLAG_SERVER, "Kill money")
 MACRO_CONFIG_INT(SvWinMoney, sv_winmoney, 100, 0, 1000, CFGFLAG_SERVER, "Win money")
 MACRO_CONFIG_INT(SvLoseMoney, sv_losemoney, 50, 0, 1000, CFGFLAG_SERVER, "Lose money")

@@ -212,7 +212,7 @@ int CGameControllerCSBB::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
 	{
 		pKiller->m_Score++;
-		pKiller->m_Money += g_Config.m_SvKillMoney;
+		pKiller->AddMoney(g_Config.m_SvKillMoney);
 		pKiller->m_InterestPoints += 60;
 	}
 		
@@ -465,9 +465,9 @@ void CGameControllerCSBB::RoundRewards(int WinningTeam)
 			continue;
 
 		if (pPlayer->GetTeam() == WinningTeam)
-			pPlayer->m_Money += g_Config.m_SvWinMoney;
+			pPlayer->AddMoney(g_Config.m_SvWinMoney);
 		else
-			pPlayer->m_Money += g_Config.m_SvLoseMoney;
+			pPlayer->AddMoney(g_Config.m_SvLoseMoney);
 	}
 	
 	//GameServer()->SwapTeams();

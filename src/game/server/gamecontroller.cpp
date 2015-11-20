@@ -781,6 +781,7 @@ void IGameController::Tick()
 		{
 			GameServer()->KickBots();
 			CycleMap();
+			GameServer()->SwapTeams();
 			StartRound();
 			m_RoundCount++;
 		}

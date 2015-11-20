@@ -142,7 +142,7 @@ int CGameControllerCSTT::OnCharacterDeath(class CCharacter *pVictim, class CPlay
 	if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
 	{
 		pKiller->m_Score++;
-		pKiller->m_Money += g_Config.m_SvKillMoney;
+		pKiller->AddMoney(g_Config.m_SvKillMoney);
 		pKiller->m_InterestPoints += 60;
 	}
 		
@@ -384,9 +384,9 @@ void CGameControllerCSTT::RoundRewards(int WinningTeam)
 		pPlayer->m_AbilityPoints++;
 		
 		if (pPlayer->GetTeam() == WinningTeam)
-			pPlayer->m_Money += g_Config.m_SvWinMoney;
+			pPlayer->AddMoney(g_Config.m_SvWinMoney);
 		else
-			pPlayer->m_Money += g_Config.m_SvLoseMoney;
+			pPlayer->AddMoney(g_Config.m_SvLoseMoney);
 	}
 	
 	//GameServer()->SwapTeams();
@@ -415,7 +415,6 @@ void CGameControllerCSTT::EndTheShit()
 	m_NewGame = true;
 	
 	// if no map change?
-	GameServer()->SwapTeams();
 }
 
 

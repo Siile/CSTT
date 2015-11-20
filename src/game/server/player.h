@@ -125,6 +125,8 @@ public:
 	int m_Money;
 	bool m_CanShop;
 	
+	bool AddMoney(int Amount);
+	
 	void DisableShopping();
 	void EnableShopping();
 	

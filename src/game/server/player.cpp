@@ -146,6 +146,26 @@ void CPlayer::DisableShopping()
 }
 	
 	
+bool CPlayer::AddMoney(int Amount)
+{
+	if (m_Money >= g_Config.m_SvMaxMoney)
+		return false;
+	
+	if (Amount < 0 && m_Money == 0)
+		return false;
+	
+	m_Money += Amount;
+	
+	if (m_Money < 0)
+		m_Money = 0;
+	
+	if (m_Money > g_Config.m_SvMaxMoney)
+		m_Money = g_Config.m_SvMaxMoney;
+		
+	return 0;
+}
+	
+	
 	
 void CPlayer::Tick()
 {
@@ -296,7 +316,7 @@ void CPlayer::Snap(int SnappingClient)
 		pPlayerInfo->m_Team = m_Team;
 	else
 	{
-		if (GetCharacter())
+		if (GetCharacter() || GameServer()->m_pController->IsGameOver())
 			pPlayerInfo->m_Team = m_Team;
 		else
 			pPlayerInfo->m_Team = TEAM_SPECTATORS;
