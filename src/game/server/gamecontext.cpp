@@ -946,7 +946,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// /help /weapon /smth
 			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
-				SendChatTarget(ClientID, "Engine version 1.53");
+				SendChatTarget(ClientID, "Engine version 1.54");
 				SendChatTarget(ClientID, "");
 				SendChatTarget(ClientID, "Use voting system to do shopping, /cmdlist for commands");
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
@@ -1320,6 +1320,14 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*1 > Server()->Tick()))
 				return;
 			
+			
+			pPlayer->m_LastSetTeam = Server()->Tick();
+			if(pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
+				m_VoteUpdate = true;
+			pPlayer->SetTeam(pMsg->m_Team);
+			pPlayer->m_TeamChangeTick = Server()->Tick();
+					
+			
 			//pPlayer->m_WantedTeam = pMsg->m_Team;
 			
 			/*
@@ -1335,6 +1343,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 			*/
 			
+			
+			/* 1.4 way
 			pPlayer->m_LastSetTeam = Server()->Tick();
 			if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
 			{
@@ -1346,7 +1356,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->SetTeam(pMsg->m_Team, true);
 				pPlayer->SetWantedTeam(pMsg->m_Team);
 			}
-			
+			*/
 			
 			/*
 			if(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams)

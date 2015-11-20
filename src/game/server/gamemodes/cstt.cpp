@@ -922,8 +922,14 @@ void CGameControllerCSTT::Tick()
 				
 				pPlayer->m_InterestPoints += 7;
 							
+				/*
 				if (pPlayer->m_ActionTimer++ == 0)
 					GameServer()->SendBroadcast("Defusing bomb", pPlayer->GetCID());
+				*/
+				
+				int p = ++pPlayer->m_ActionTimer*100 / (g_Config.m_SvBombDefuseTime*Server()->TickSpeed());
+				char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Defusing bomb... %d%%", p);
+				GameServer()->SendBroadcast(aBuf, pPlayer->GetCID());
 				
 				int Time = g_Config.m_SvBombDefuseTime*Server()->TickSpeed();
 				
@@ -1013,7 +1019,7 @@ void CGameControllerCSTT::Tick()
 						pPlayer->m_ActionTimer = 0;
 						B->m_Timer = 0;
 						
-						GameServer()->SendBroadcast("Planting bomb", pPlayer->GetCID());
+						//GameServer()->SendBroadcast("Planting bomb", pPlayer->GetCID());
 					}
 					else if (B->m_Status == BOMB_PLANTING)
 					{
@@ -1023,6 +1029,10 @@ void CGameControllerCSTT::Tick()
 							m_BombActionTimer = 0;
 							GameServer()->CreateSound(B->m_Pos, SOUND_BODY_LAND);
 						}
+						
+						int p = pPlayer->m_ActionTimer*100 / (g_Config.m_SvBombPlantTime*Server()->TickSpeed());
+						char aBuf[128]; str_format(aBuf, sizeof(aBuf), "Planting bomb... %d%%", p);
+						GameServer()->SendBroadcast(aBuf, pPlayer->GetCID());
 						
 						pPlayer->m_InterestPoints += 6;
 						
