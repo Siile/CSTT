@@ -1848,7 +1848,7 @@ void CServer::AddZombie()
 	char aName1[128];
 	char aName2[128];
 	
-	switch (rand() % 37)
+	switch (rand() % 40)
 	{
 		case 0: str_format(aName1, sizeof(aName1), "Ran"); break;
 		case 1: str_format(aName1, sizeof(aName1), "Dom"); break;
@@ -1886,10 +1886,13 @@ void CServer::AddZombie()
 		case 33: str_format(aName1, sizeof(aName1), "One"); break;
 		case 34: str_format(aName1, sizeof(aName1), "Jon"); break;
 		case 35: str_format(aName1, sizeof(aName1), "Hax"); break;
+		case 36: str_format(aName1, sizeof(aName1), "Nig"); break;
+		case 37: str_format(aName1, sizeof(aName1), "Ho"); break;
+		case 38: str_format(aName1, sizeof(aName1), "Ta"); break;
 		default: str_format(aName1, sizeof(aName1), "Lol"); break;
 	}
 	
-	switch (rand() % 38)
+	switch (rand() % 40)
 	{
 		case 0: str_format(aName2, sizeof(aName2), "dom"); break;
 		case 1: str_format(aName2, sizeof(aName2), "ina"); break;
@@ -1928,6 +1931,9 @@ void CServer::AddZombie()
 		case 34: str_format(aName2, sizeof(aName2), "pack"); break;
 		case 35: str_format(aName2, sizeof(aName2), "cent"); break;
 		case 36: str_format(aName2, sizeof(aName2), "hax"); break;
+		case 37: str_format(aName2, sizeof(aName2), "ger"); break;
+		case 38: str_format(aName2, sizeof(aName2), "mo"); break;
+		case 39: str_format(aName2, sizeof(aName2), "rd"); break;
 		default: str_format(aName2, sizeof(aName2), "uit"); break;
 	}
 	

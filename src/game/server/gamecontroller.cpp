@@ -911,7 +911,7 @@ int IGameController::GetAutoTeam(int NotThisID)
 	int aNumplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i] && i != NotThisID)
+		if(GameServer()->m_apPlayers[i] && i != NotThisID && !GameServer()->m_apPlayers[i]->m_IsBot)
 		{
 			//if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
 			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
