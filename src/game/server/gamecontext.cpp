@@ -10,7 +10,7 @@
 #include "gamecontext.h"
 #include <game/version.h>
 #include <game/collision.h>
-#include <game/gamecore.h> 
+#include <game/gamecore.h>
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
@@ -24,16 +24,11 @@
 #include <game/server/ai_protocol.h>
 #include <game/server/ai.h>
 
-
-
-
-const char *aClassName[NUM_CLASSES] = 
-{
-	"Soldier",
-	"Medic",
-	"Technician"
-};
-
+const char *aClassName[NUM_CLASSES] =
+	{
+		"Soldier",
+		"Medic",
+		"Technician"};
 
 enum
 {
@@ -46,25 +41,25 @@ void CGameContext::Construct(int Resetting)
 	m_Resetting = 0;
 	m_pServer = 0;
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 		m_apPlayers[i] = 0;
 
 	m_BroadcastLockTick = 0;
-	
+
 	m_pController = 0;
 	m_VoteCloseTime = 0;
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
 	m_LockTeams = 0;
-	
+
 	m_aMostInterestingPlayer[0] = -1;
 	m_aMostInterestingPlayer[1] = -1;
-	
+
 	m_ShowWaypoints = false;
 	m_FreezeCharacters = false;
 
-	if(Resetting==NO_RESET)
+	if (Resetting == NO_RESET)
 		m_pVoteOptionHeap = new CHeap();
 }
 
@@ -80,9 +75,9 @@ CGameContext::CGameContext()
 
 CGameContext::~CGameContext()
 {
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 		delete m_apPlayers[i];
-	if(!m_Resetting)
+	if (!m_Resetting)
 		delete m_pVoteOptionHeap;
 }
 
@@ -106,10 +101,9 @@ void CGameContext::Clear()
 	m_Tuning = Tuning;
 }
 
-
 class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 {
-	if(ClientID < 0 || ClientID >= MAX_CLIENTS || !m_apPlayers[ClientID])
+	if (ClientID < 0 || ClientID >= MAX_CLIENTS || !m_apPlayers[ClientID])
 		return 0;
 	return m_apPlayers[ClientID]->GetCharacter();
 }
@@ -119,15 +113,15 @@ void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
 	int a = Amount / 4;
 	if (a == 0)
 		a = 1;
-	
-	for(int i = 0; i < a; i++)
+
+	for (int i = 0; i < a; i++)
 	{
 		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd));
-		if(pEvent)
+		if (pEvent)
 		{
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
-			pEvent->m_Angle = (int)(Angle*256.0f + frandom()*200 - frandom()*200);
+			pEvent->m_Angle = (int)(Angle * 256.0f + frandom() * 200 - frandom() * 200);
 		}
 	}
 }
@@ -136,39 +130,34 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 {
 	// create the event
 	CNetEvent_HammerHit *pEvent = (CNetEvent_HammerHit *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(CNetEvent_HammerHit));
-	if(pEvent)
+	if (pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
 	}
 }
 
-
 void CGameContext::GenerateArrows()
 {
 	m_pArrow = new CArrow(&m_World);
 }
 
-
-
 bool CGameContext::GotAbility(int ClientID, int Ability)
 {
 	if (ClientID < 0 || ClientID >= MAX_CLIENTS)
 		return false;
-	
+
 	if (m_apPlayers[ClientID] && m_apPlayers[ClientID]->GotAbility(Ability))
 		return true;
-	
+
 	return false;
 }
-
-
 
 void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool Superdamage)
 {
 	// create the event
 	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
-	if(pEvent)
+	if (pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
@@ -180,31 +169,31 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 		CCharacter *apEnts[MAX_CLIENTS];
 		float Radius = 135.0f;
 		float InnerRadius = 48.0f;
-		int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
-		for(int i = 0; i < Num; i++)
+		int Num = m_World.FindEntities(Pos, Radius, (CEntity **)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		for (int i = 0; i < Num; i++)
 		{
 			vec2 Diff = apEnts[i]->m_Pos - Pos;
-			vec2 ForceDir(0,1);
+			vec2 ForceDir(0, 1);
 			float l = length(Diff);
-			if(l)
+			if (l)
 				ForceDir = normalize(Diff);
-			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
+			l = 1 - clamp((l - InnerRadius) / (Radius - InnerRadius), 0.0f, 1.0f);
 			float Dmg = 14 * l;
-			
+
 			if (Superdamage)
 				Dmg *= 5;
-			
+
 			if (apEnts[i]->GetPlayer()->GotAbility(ANTIEXPLOSIONARMOR))
 				Dmg -= 1.0f;
-			
+
 			if (Owner > 0 && Owner < MAX_CLIENTS)
 			{
 				if (m_apPlayers[Owner] && m_apPlayers[Owner]->GotAbility(EXPLOSION_DAMAGE1))
 					Dmg += 1.0f;
 			}
-			
-			if((int)Dmg && Dmg > 0.0f)
-				apEnts[i]->TakeDamage(ForceDir*Dmg*0.9f, (int)Dmg, Owner, Weapon);
+
+			if ((int)Dmg && Dmg > 0.0f)
+				apEnts[i]->TakeDamage(ForceDir * Dmg * 0.9f, (int)Dmg, Owner, Weapon);
 		}
 	}
 }
@@ -225,7 +214,7 @@ void CGameContext::CreatePlayerSpawn(vec2 Pos)
 {
 	// create the event
 	CNetEvent_Spawn *ev = (CNetEvent_Spawn *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
-	if(ev)
+	if (ev)
 	{
 		ev->m_X = (int)Pos.x;
 		ev->m_Y = (int)Pos.y;
@@ -236,7 +225,7 @@ void CGameContext::CreateDeath(vec2 Pos, int ClientID)
 {
 	// create the event
 	CNetEvent_Death *pEvent = (CNetEvent_Death *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(CNetEvent_Death));
-	if(pEvent)
+	if (pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
@@ -251,7 +240,7 @@ void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 
 	// create a sound
 	CNetEvent_SoundWorld *pEvent = (CNetEvent_SoundWorld *)m_Events.Create(NETEVENTTYPE_SOUNDWORLD, sizeof(CNetEvent_SoundWorld), Mask);
-	if(pEvent)
+	if (pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
@@ -266,30 +255,24 @@ void CGameContext::CreateSoundGlobal(int Sound, int Target)
 
 	CNetMsg_Sv_SoundGlobal Msg;
 	Msg.m_SoundID = Sound;
-	if(Target == -2)
+	if (Target == -2)
 		Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);
 	else
 	{
 		int Flag = MSGFLAG_VITAL;
-		if(Target != -1)
+		if (Target != -1)
 			Flag |= MSGFLAG_NORECORD;
 		Server()->SendPackMsg(&Msg, Flag, Target);
 	}
 }
 
-
-
-
-
 bool CGameContext::IsBot(int ClientID)
 {
-	if(m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
+	if (m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
 		return true;
-	
+
 	return false;
 }
-
-
 
 void CGameContext::SendChatTarget(int To, const char *pText)
 {
@@ -303,17 +286,16 @@ void CGameContext::SendChatTarget(int To, const char *pText)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
 }
 
-
 void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 {
 	char aBuf[256];
-	if(ChatterClientID >= 0 && ChatterClientID < MAX_CLIENTS)
+	if (ChatterClientID >= 0 && ChatterClientID < MAX_CLIENTS)
 		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientID, Team, Server()->ClientName(ChatterClientID), pText);
 	else
 		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
-	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, Team!=CHAT_ALL?"teamchat":"chat", aBuf);
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, Team != CHAT_ALL ? "teamchat" : "chat", aBuf);
 
-	if(Team == CHAT_ALL)
+	if (Team == CHAT_ALL)
 	{
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 0;
@@ -329,13 +311,13 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 		Msg.m_pMessage = pText;
 
 		// pack one for the recording only
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NOSEND, -1);
 
 		// send to the clients
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(m_apPlayers[i] && !IsBot(i) && m_apPlayers[i]->GetTeam() == Team)
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			if (m_apPlayers[i] && !IsBot(i) && m_apPlayers[i]->GetTeam() == Team)
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_NORECORD, i);
 		}
 	}
 }
@@ -355,28 +337,27 @@ void CGameContext::SendWeaponPickup(int ClientID, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
-
 void CGameContext::SendBroadcast(const char *pText, int ClientID, bool Lock)
 {
 	CNetMsg_Sv_Broadcast Msg;
 	Msg.m_pMessage = pText;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 	if (Lock)
-		m_BroadcastLockTick = Server()->Tick() + g_Config.m_SvBroadcastLock*Server()->TickSpeed();
+		m_BroadcastLockTick = Server()->Tick() + g_Config.m_SvBroadcastLock * Server()->TickSpeed();
 }
 
 //
 void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char *pReason)
 {
 	// check if a vote is already running
-	if(m_VoteCloseTime)
+	if (m_VoteCloseTime)
 		return;
-	
+
 	// reset votes
 	m_VoteEnforce = VOTE_ENFORCE_UNKNOWN;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_apPlayers[i])
+		if (m_apPlayers[i])
 		{
 			m_apPlayers[i]->m_Vote = 0;
 			m_apPlayers[i]->m_VotePos = 0;
@@ -384,14 +365,13 @@ void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char
 	}
 
 	// start vote
-	m_VoteCloseTime = time_get() + time_freq()*25;
+	m_VoteCloseTime = time_get() + time_freq() * 25;
 	str_copy(m_aVoteDescription, pDesc, sizeof(m_aVoteDescription));
 	str_copy(m_aVoteCommand, pCommand, sizeof(m_aVoteCommand));
 	str_copy(m_aVoteReason, pReason, sizeof(m_aVoteReason));
 	SendVoteSet(-1);
 	m_VoteUpdate = true;
 }
-
 
 void CGameContext::EndVote()
 {
@@ -402,9 +382,9 @@ void CGameContext::EndVote()
 void CGameContext::SendVoteSet(int ClientID)
 {
 	CNetMsg_Sv_VoteSet Msg;
-	if(m_VoteCloseTime)
+	if (m_VoteCloseTime)
 	{
-		Msg.m_Timeout = (m_VoteCloseTime-time_get())/time_freq();
+		Msg.m_Timeout = (m_VoteCloseTime - time_get()) / time_freq();
 		Msg.m_pDescription = m_aVoteDescription;
 		Msg.m_pReason = m_aVoteReason;
 	}
@@ -423,32 +403,30 @@ void CGameContext::SendVoteStatus(int ClientID, int Total, int Yes, int No)
 	Msg.m_Total = Total;
 	Msg.m_Yes = Yes;
 	Msg.m_No = No;
-	Msg.m_Pass = Total - (Yes+No);
+	Msg.m_Pass = Total - (Yes + No);
 
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
-
 }
 
 void CGameContext::AbortVoteKickOnDisconnect(int ClientID)
 {
-	if(m_VoteCloseTime && ((!str_comp_num(m_aVoteCommand, "kick ", 5) && str_toint(&m_aVoteCommand[5]) == ClientID) ||
-		(!str_comp_num(m_aVoteCommand, "set_team ", 9) && str_toint(&m_aVoteCommand[9]) == ClientID)))
+	if (m_VoteCloseTime && ((!str_comp_num(m_aVoteCommand, "kick ", 5) && str_toint(&m_aVoteCommand[5]) == ClientID) ||
+							(!str_comp_num(m_aVoteCommand, "set_team ", 9) && str_toint(&m_aVoteCommand[9]) == ClientID)))
 		m_VoteCloseTime = -1;
 }
-
 
 void CGameContext::CheckPureTuning()
 {
 	// might not be created yet during start up
-	if(!m_pController)
+	if (!m_pController)
 		return;
 
-	if(	str_comp(m_pController->m_pGameType, "DM")==0 ||
-		str_comp(m_pController->m_pGameType, "TDM")==0 ||
-		str_comp(m_pController->m_pGameType, "CTF")==0)
+	if (str_comp(m_pController->m_pGameType, "DM") == 0 ||
+		str_comp(m_pController->m_pGameType, "TDM") == 0 ||
+		str_comp(m_pController->m_pGameType, "CTF") == 0)
 	{
 		CTuningParams p;
-		if(mem_comp(&p, &m_Tuning, sizeof(p)) != 0)
+		if (mem_comp(&p, &m_Tuning, sizeof(p)) != 0)
 		{
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "resetting tuning due to pure server");
 			m_Tuning = p;
@@ -462,31 +440,30 @@ void CGameContext::SendTuningParams(int ClientID)
 
 	CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
 	int *pParams = (int *)&m_Tuning;
-	for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
+	for (unsigned i = 0; i < sizeof(m_Tuning) / sizeof(int); i++)
 		Msg.AddInt(pParams[i]);
 	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 void CGameContext::SwapTeams()
 {
-	if(!m_pController->IsTeamplay())
+	if (!m_pController->IsTeamplay())
 		return;
-	
+
 	SendChat(-1, CGameContext::CHAT_ALL, "Teams were swapped");
 
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	for (int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		/*
 		if(m_apPlayers[i] && m_apPlayers[i]->m_WantedTeam != TEAM_SPECTATORS)
 			m_apPlayers[i]->SetWantedTeam(m_apPlayers[i]->m_WantedTeam^1, false);
 			//m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
 			*/
-		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		if (m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 		{
-			int t = m_apPlayers[i]->GetTeam()^1;
+			int t = m_apPlayers[i]->GetTeam() ^ 1;
 			m_apPlayers[i]->SetTeam(t, false);
 			m_apPlayers[i]->SetWantedTeam(t, false);
-			
 		}
 	}
 
@@ -495,9 +472,9 @@ void CGameContext::SwapTeams()
 
 void CGameContext::UpdateSpectators()
 {
-		
+
 	bool Found[2] = {false, false};
-		
+
 	// check validity
 	for (int i = 0; i < 2; i++)
 	{
@@ -517,39 +494,36 @@ void CGameContext::UpdateSpectators()
 		}
 	}
 
-
 	// find the most interesting player of both teams
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
 		// player and character exists
 		if (m_apPlayers[i] && m_apPlayers[i]->m_EnableAutoSpectating && m_apPlayers[i]->GetCharacter() && m_apPlayers[i]->GetCharacter()->IsAlive())
 		{
 			int Team = m_apPlayers[i]->GetTeam();
-			
+
 			// team is correct
-			if(Team == TEAM_RED || Team == TEAM_BLUE)
+			if (Team == TEAM_RED || Team == TEAM_BLUE)
 			{
 				// most interesting player exists
-				
+
 				int Points = -1;
 				int Player = m_aMostInterestingPlayer[Team];
-				
+
 				if (Player >= 0)
 					if (m_apPlayers[Player] && m_apPlayers[Player]->GetCharacter())
 						Points = m_apPlayers[Player]->m_InterestPoints;
-					
-					
+
 				if (m_apPlayers[i]->m_InterestPoints > Points)
 				{
 					// works
-					//char aBuf[128]; str_format(aBuf, sizeof(aBuf), "i = %d, team = %d", i, Team);
-					//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", aBuf);
-					
+					// char aBuf[128]; str_format(aBuf, sizeof(aBuf), "i = %d, team = %d", i, Team);
+					// Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "cstt", aBuf);
+
 					m_aMostInterestingPlayer[Team] = i;
-					Found[Team] = true;				
+					Found[Team] = true;
 				}
-				
-				
+
 				/*
 				if (m_aMostInterestingPlayer[Team] >= 0)
 				{
@@ -571,40 +545,39 @@ void CGameContext::UpdateSpectators()
 		}
 	}
 
-
 	// update the spectator views
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		//if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && !m_apPlayers[i]->m_IsBot)
-		if(m_apPlayers[i] && (m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || !m_apPlayers[i]->GetCharacter()) && !m_apPlayers[i]->m_IsBot)
+		// if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && !m_apPlayers[i]->m_IsBot)
+		if (m_apPlayers[i] && (m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || !m_apPlayers[i]->GetCharacter()) && !m_apPlayers[i]->m_IsBot)
 		{
 			if (!m_apPlayers[i]->m_LastSetSpectatorMode)
-				m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick() - Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime;
+				m_apPlayers[i]->m_LastSetSpectatorMode = Server()->Tick() - Server()->TickSpeed() * g_Config.m_SvSpectatorUpdateTime;
 			else
 			{
-				if (m_apPlayers[i]->m_LastSetSpectatorMode+Server()->TickSpeed()*g_Config.m_SvSpectatorUpdateTime < Server()->Tick())	
+				if (m_apPlayers[i]->m_LastSetSpectatorMode + Server()->TickSpeed() * g_Config.m_SvSpectatorUpdateTime < Server()->Tick())
 				{
 					int WantedPlayer = -1;
-					
+
 					/*
 					if (!m_pController->IsTeamplay())
 					{
 						if (m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 						{
-							
-							
-							
+
+
+
 						}
 					}
 					else*/
 					{
 						int Team = m_apPlayers[i]->GetTeam();
-							
+
 						// get the correct player
 						if (Team == TEAM_RED || Team == TEAM_BLUE)
 						{
 							WantedPlayer = m_aMostInterestingPlayer[Team];
-								
+
 							// update the view
 							if (WantedPlayer >= 0 && m_apPlayers[i]->m_SpectatorID != WantedPlayer && Found[Team])
 							{
@@ -618,9 +591,7 @@ void CGameContext::UpdateSpectators()
 			}
 		}
 	}
-	
-	
-	
+
 	/*
 			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
 
@@ -636,10 +607,6 @@ void CGameContext::UpdateSpectators()
 	*/
 }
 
-
-
-
-
 void CGameContext::OnTick()
 {
 	// check tuning
@@ -649,12 +616,12 @@ void CGameContext::OnTick()
 	m_World.m_Core.m_Tuning = m_Tuning;
 	m_World.Tick();
 
-	//if(world.paused) // make sure that the game object always updates
+	// if(world.paused) // make sure that the game object always updates
 	m_pController->Tick();
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_apPlayers[i])
+		if (m_apPlayers[i])
 		{
 			m_apPlayers[i]->Tick();
 			m_apPlayers[i]->PostTick();
@@ -662,10 +629,10 @@ void CGameContext::OnTick()
 	}
 
 	// update voting
-	if(m_VoteCloseTime)
+	if (m_VoteCloseTime)
 	{
 		// abort the kick-vote on player-leave
-		if(m_VoteCloseTime == -1)
+		if (m_VoteCloseTime == -1)
 		{
 			SendChat(-1, CGameContext::CHAT_ALL, "Vote aborted");
 			EndVote();
@@ -673,30 +640,30 @@ void CGameContext::OnTick()
 		else
 		{
 			int Total = 0, Yes = 0, No = 0;
-			if(m_VoteUpdate)
+			if (m_VoteUpdate)
 			{
 				// count votes
 				char aaBuf[MAX_CLIENTS][NETADDR_MAXSTRSIZE] = {{0}};
-				for(int i = 0; i < MAX_CLIENTS; i++)
-					if(m_apPlayers[i] && !IsBot(i))
+				for (int i = 0; i < MAX_CLIENTS; i++)
+					if (m_apPlayers[i] && !IsBot(i))
 						Server()->GetClientAddr(i, aaBuf[i], NETADDR_MAXSTRSIZE);
 				bool aVoteChecked[MAX_CLIENTS] = {0};
-				for(int i = 0; i < MAX_CLIENTS; i++)
+				for (int i = 0; i < MAX_CLIENTS; i++)
 				{
-					if(!m_apPlayers[i] || IsBot(i) || m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || aVoteChecked[i])	// don't count in votes by spectators
+					if (!m_apPlayers[i] || IsBot(i) || m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || aVoteChecked[i]) // don't count in votes by spectators
 						continue;
 
 					int ActVote = m_apPlayers[i]->m_Vote;
 					int ActVotePos = m_apPlayers[i]->m_VotePos;
 
 					// check for more players with the same ip (only use the vote of the one who voted first)
-					for(int j = i+1; j < MAX_CLIENTS; ++j)
+					for (int j = i + 1; j < MAX_CLIENTS; ++j)
 					{
-						if(!m_apPlayers[j] ||  IsBot(i) || aVoteChecked[j] || str_comp(aaBuf[j], aaBuf[i]))
+						if (!m_apPlayers[j] || IsBot(i) || aVoteChecked[j] || str_comp(aaBuf[j], aaBuf[i]))
 							continue;
 
 						aVoteChecked[j] = true;
-						if(m_apPlayers[j]->m_Vote && (!ActVote || ActVotePos > m_apPlayers[j]->m_VotePos))
+						if (m_apPlayers[j]->m_Vote && (!ActVote || ActVotePos > m_apPlayers[j]->m_VotePos))
 						{
 							ActVote = m_apPlayers[j]->m_Vote;
 							ActVotePos = m_apPlayers[j]->m_VotePos;
@@ -704,19 +671,19 @@ void CGameContext::OnTick()
 					}
 
 					Total++;
-					if(ActVote > 0)
+					if (ActVote > 0)
 						Yes++;
-					else if(ActVote < 0)
+					else if (ActVote < 0)
 						No++;
 				}
 
-				if(Yes >= Total/2+1)
+				if (Yes >= Total / 2 + 1)
 					m_VoteEnforce = VOTE_ENFORCE_YES;
-				else if(No >= (Total+1)/2)
+				else if (No >= (Total + 1) / 2)
 					m_VoteEnforce = VOTE_ENFORCE_NO;
 			}
 
-			if(m_VoteEnforce == VOTE_ENFORCE_YES)
+			if (m_VoteEnforce == VOTE_ENFORCE_YES)
 			{
 				Server()->SetRconCID(IServer::RCON_CID_VOTE);
 				Console()->ExecuteLine(m_aVoteCommand);
@@ -724,15 +691,15 @@ void CGameContext::OnTick()
 				EndVote();
 				SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
 
-				if(m_apPlayers[m_VoteCreator])
+				if (m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_LastVoteCall = 0;
 			}
-			else if(m_VoteEnforce == VOTE_ENFORCE_NO || time_get() > m_VoteCloseTime)
+			else if (m_VoteEnforce == VOTE_ENFORCE_NO || time_get() > m_VoteCloseTime)
 			{
 				EndVote();
 				SendChat(-1, CGameContext::CHAT_ALL, "Vote failed");
 			}
-			else if(m_VoteUpdate)
+			else if (m_VoteUpdate)
 			{
 				m_VoteUpdate = false;
 				SendVoteStatus(-1, Total, Yes, No);
@@ -740,40 +707,35 @@ void CGameContext::OnTick()
 		}
 	}
 
-
 #ifdef CONF_DEBUG
-	if(g_Config.m_DbgDummies)
+	if (g_Config.m_DbgDummies)
 	{
-		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
+		for (int i = 0; i < g_Config.m_DbgDummies; i++)
 		{
 			CNetObj_PlayerInput Input = {0};
-			Input.m_Direction = (i&1)?-1:1;
-			m_apPlayers[MAX_CLIENTS-i-1]->OnPredictedInput(&Input);
+			Input.m_Direction = (i & 1) ? -1 : 1;
+			m_apPlayers[MAX_CLIENTS - i - 1]->OnPredictedInput(&Input);
 		}
 	}
 #endif
 }
 
-
-
 bool CGameContext::AIInputUpdateNeeded(int ClientID)
 {
-	if(m_apPlayers[ClientID])
+	if (m_apPlayers[ClientID])
 		return m_apPlayers[ClientID]->AIInputChanged();
-		
+
 	return false;
 }
 
-
 void CGameContext::UpdateAI()
 {
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_apPlayers[i] && IsBot(i))
+		if (m_apPlayers[i] && IsBot(i))
 			m_apPlayers[i]->AITick();
 	}
 }
-
 
 /*
 enum InputList
@@ -782,19 +744,16 @@ enum InputList
 	INPUT_SHOOT = 4,
 	INPUT_JUMP = 3,
 	INPUT_HOOK = 5
-	
+
 	//1 & 2 vectors for weapon direction
 };
 */
 
-
 void CGameContext::AIUpdateInput(int ClientID, int *Data)
 {
-	if(m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
+	if (m_apPlayers[ClientID] && m_apPlayers[ClientID]->m_pAI)
 		m_apPlayers[ClientID]->m_pAI->UpdateInput(Data);
 }
-
-
 
 // Server hooks
 void CGameContext::AddZombie()
@@ -802,22 +761,21 @@ void CGameContext::AddZombie()
 	Server()->AddZombie();
 }
 
-
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
-	if(!m_World.m_Paused)
+	if (!m_World.m_Paused)
 		m_apPlayers[ClientID]->OnDirectInput((CNetObj_PlayerInput *)pInput);
 }
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 {
-	if(!m_World.m_Paused)
+	if (!m_World.m_Paused)
 		m_apPlayers[ClientID]->OnPredictedInput((CNetObj_PlayerInput *)pInput);
 }
 
 void CGameContext::OnClientEnter(int ClientID)
 {
-	//world.insert_entity(&players[client_id]);
+	// world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->Respawn();
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "'%s' joined the fun", Server()->ClientName(ClientID));
@@ -834,24 +792,24 @@ void CGameContext::OnClientConnected(int ClientID, bool AI)
 	// Check which team the player should be on
 	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
 
-	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, StartTeam);
-	//players[client_id].init(client_id);
-	//players[client_id].client_id = client_id;
+	m_apPlayers[ClientID] = new (ClientID) CPlayer(this, ClientID, StartTeam);
+	// players[client_id].init(client_id);
+	// players[client_id].client_id = client_id;
 
 	m_apPlayers[ClientID]->m_IsBot = AI;
-	
+
 	(void)m_pController->CheckTeamBalance();
 
 #ifdef CONF_DEBUG
-	if(g_Config.m_DbgDummies)
+	if (g_Config.m_DbgDummies)
 	{
-		if(ClientID >= MAX_CLIENTS-g_Config.m_DbgDummies)
+		if (ClientID >= MAX_CLIENTS - g_Config.m_DbgDummies)
 			return;
 	}
 #endif
 
 	// send active vote
-	if(m_VoteCloseTime)
+	if (m_VoteCloseTime)
 		SendVoteSet(ClientID);
 
 	// send motd
@@ -873,9 +831,9 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 	m_VoteUpdate = true;
 
 	// update spectator modes
-	for(int i = 0; i < MAX_CLIENTS; ++i)
+	for (int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(m_apPlayers[i] && m_apPlayers[i]->m_SpectatorID == ClientID)
+		if (m_apPlayers[i] && m_apPlayers[i]->m_SpectatorID == ClientID)
 			m_apPlayers[i]->m_SpectatorID = SPEC_FREEVIEW;
 	}
 }
@@ -885,9 +843,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
 	CPlayer *pPlayer = m_apPlayers[ClientID];
 
-	if(!pRawMsg)
+	if (!pRawMsg)
 	{
-		if(g_Config.m_Debug)
+		if (g_Config.m_Debug)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgID), MsgID, m_NetObjHandler.FailedMsgOn());
@@ -896,55 +854,55 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		return;
 	}
 
-	if(Server()->ClientIngame(ClientID))
+	if (Server()->ClientIngame(ClientID))
 	{
-		if(MsgID == NETMSGTYPE_CL_SAY)
+		if (MsgID == NETMSGTYPE_CL_SAY)
 		{
-			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed() > Server()->Tick())
+			if (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat + Server()->TickSpeed() > Server()->Tick())
 				return;
 
 			CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
 			int Team = pMsg->m_Team ? pPlayer->GetTeam() : CGameContext::CHAT_ALL;
-			
+
 			// trim right and set maximum length to 128 utf8-characters
 			int Length = 0;
 			const char *p = pMsg->m_pMessage;
 			const char *pEnd = 0;
-			while(*p)
- 			{
+			while (*p)
+			{
 				const char *pStrOld = p;
 				int Code = str_utf8_decode(&p);
 
 				// check if unicode is not empty
-				if(Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
+				if (Code > 0x20 && Code != 0xA0 && Code != 0x034F && (Code < 0x2000 || Code > 0x200F) && (Code < 0x2028 || Code > 0x202F) &&
 					(Code < 0x205F || Code > 0x2064) && (Code < 0x206A || Code > 0x206F) && (Code < 0xFE00 || Code > 0xFE0F) &&
 					Code != 0xFEFF && (Code < 0xFFF9 || Code > 0xFFFC))
 				{
 					pEnd = 0;
 				}
-				else if(pEnd == 0)
+				else if (pEnd == 0)
 					pEnd = pStrOld;
 
-				if(++Length >= 127)
+				if (++Length >= 127)
 				{
 					*(const_cast<char *>(p)) = 0;
 					break;
 				}
- 			}
-			if(pEnd != 0)
+			}
+			if (pEnd != 0)
 				*(const_cast<char *>(pEnd)) = 0;
 
 			// drop empty and autocreated spam messages (more than 16 characters per second)
-			if(Length == 0 || (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat+Server()->TickSpeed()*((15+Length)/16) > Server()->Tick()))
+			if (Length == 0 || (g_Config.m_SvSpamprotection && pPlayer->m_LastChat && pPlayer->m_LastChat + Server()->TickSpeed() * ((15 + Length) / 16) > Server()->Tick()))
 				return;
 
 			bool SendToTeam = true;
 			bool SkipSending = false;
-			
+
 			pPlayer->m_LastChat = Server()->Tick();
 
 			// /help /weapon /smth
-			if ( strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
+			if (strcmp(pMsg->m_pMessage, "/help") == 0 || strcmp(pMsg->m_pMessage, "/info") == 0)
 			{
 				SendChatTarget(ClientID, "Engine version 1.54");
 				SendChatTarget(ClientID, "");
@@ -952,7 +910,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendChatTarget(ClientID, "For updates and more info check teeworlds.com/forum");
 				SkipSending = true;
 			}
-			
+
 			// /help /weapon /smth
 			if (strcmp(pMsg->m_pMessage, "/cmdlist") == 0 || strcmp(pMsg->m_pMessage, "/cmd") == 0 || strcmp(pMsg->m_pMessage, "/commands") == 0)
 			{
@@ -960,52 +918,51 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendChatTarget(ClientID, "/dwc - Disable / enable weapon chat (Using: ...)");
 				SendChatTarget(ClientID, "/dwb - Disable / enable weapon broadcast");
 				SendChatTarget(ClientID, "/das - Disable / enable auto spectating");
-				//SendChatTarget(ClientID, "/deg - Disable / enable throwing grenades with emoticons");
-				//SendChatTarget(ClientID, "/grenade - Throw a grenade");
+				// SendChatTarget(ClientID, "/deg - Disable / enable throwing grenades with emoticons");
+				// SendChatTarget(ClientID, "/grenade - Throw a grenade");
 				SkipSending = true;
 			}
-			
+
 			/*
 			if (strcmp(pMsg->m_pMessage, "/grenade") == 0)
 			{
 				if (pPlayer->GetCharacter())
 					pPlayer->GetCharacter()->ThrowGrenade();
-				
+
 				SkipSending = true;
 			}
 			*/
-			
+
 			if (strcmp(pMsg->m_pMessage, "/dwc") == 0)
 			{
 				if (pPlayer->m_EnableWeaponInfo == 1)
 					pPlayer->m_EnableWeaponInfo = 0;
 				else
 					pPlayer->m_EnableWeaponInfo = 1;
-				
+
 				if (pPlayer->m_EnableWeaponInfo)
 					SendChatTarget(ClientID, "Weapon chat info messages enabled");
 				else
 					SendChatTarget(ClientID, "Weapon chat info messages disabled");
-				
+
 				SkipSending = true;
 			}
-			
+
 			if (strcmp(pMsg->m_pMessage, "/dwb") == 0)
 			{
 				if (pPlayer->m_EnableWeaponInfo == 2)
 					pPlayer->m_EnableWeaponInfo = 0;
 				else
 					pPlayer->m_EnableWeaponInfo = 2;
-				
+
 				if (pPlayer->m_EnableWeaponInfo)
 					SendChatTarget(ClientID, "Weapon broadcast info messages enabled");
 				else
 					SendChatTarget(ClientID, "Weapon broadcast info messages disabled");
-				
+
 				SkipSending = true;
 			}
-			
-			
+
 			if (strcmp(pMsg->m_pMessage, "/deg") == 0)
 			{
 				pPlayer->m_EnableEmoticonGrenades = !pPlayer->m_EnableEmoticonGrenades;
@@ -1013,10 +970,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					SendChatTarget(ClientID, "Throwing grenades with emoticons enabled");
 				else
 					SendChatTarget(ClientID, "Throwing grenades with emoticons disabled");
-				
+
 				SkipSending = true;
 			}
-			
+
 			if (strcmp(pMsg->m_pMessage, "/das") == 0)
 			{
 				pPlayer->m_EnableAutoSpectating = !pPlayer->m_EnableAutoSpectating;
@@ -1024,44 +981,43 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					SendChatTarget(ClientID, "Auto spectating enabled");
 				else
 					SendChatTarget(ClientID, "Auto spectating disabled");
-				
+
 				SkipSending = true;
 			}
-			
-			if ( strcmp(pMsg->m_pMessage, "/showwaypoints") == 0 )
+
+			if (strcmp(pMsg->m_pMessage, "/showwaypoints") == 0)
 			{
 				m_ShowWaypoints = !m_ShowWaypoints;
 				SkipSending = true;
 			}
-				
-			if ( strcmp(pMsg->m_pMessage, "/addbot") == 0 )
+
+			if (strcmp(pMsg->m_pMessage, "/addbot") == 0)
 			{
 				SendChatTarget(ClientID, "Adding bot...");
 				AddBot();
-				
+
 				SkipSending = true;
-			}		
-			
+			}
+
 			/*
 			if ( strcmp(pMsg->m_pMessage, "/addbots") == 0 )
 			{
 				SendChatTarget(ClientID, "Adding bots...");
 				for (int i = 0; i < 16; i++)
 					AddBot();
-				
+
 				SkipSending = true;
-			}	
-			*/			
-			
-			if ( strcmp(pMsg->m_pMessage, "/kickbots") == 0 )
+			}
+			*/
+
+			if (strcmp(pMsg->m_pMessage, "/kickbots") == 0)
 			{
 				SendChatTarget(ClientID, "Kicking bots...");
 				KickBots();
-				
+
 				SkipSending = true;
 			}
-			
-			
+
 			/* disable shopping with chat commands
 			else
 			if ( strcmp(pMsg->m_pMessage, "/buy") == 0 || strcmp(pMsg->m_pMessage, "/shop") == 0 || strcmp(pMsg->m_pMessage, "/upg") == 0)
@@ -1069,7 +1025,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->ListBuyableWeapons();
 				//SendToTeam = false;
 			}
-			
+
 			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 			{
 				if ( strcmp(pMsg->m_pMessage, aCustomWeapon[i].m_BuyCmd) == 0)
@@ -1080,7 +1036,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 			}
 			*/
-			
+
 			if (!SkipSending)
 			{
 				if (SendToTeam)
@@ -1088,38 +1044,35 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				else
 					SendChatTarget(ClientID, pMsg->m_pMessage);
 			}
-			
+
 			/*
 
 			*/
-			
-			
-			
 		}
-		else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
+		else if (MsgID == NETMSGTYPE_CL_CALLVOTE)
 		{
-			if(g_Config.m_SvSpamprotection && pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry+Server()->TickSpeed()*1 > Server()->Tick())
+			if (g_Config.m_SvSpamprotection && pPlayer->m_LastVoteTry && pPlayer->m_LastVoteTry + Server()->TickSpeed() * 1 > Server()->Tick())
 				return;
 
 			int64 Now = Server()->Tick();
 			pPlayer->m_LastVoteTry = Now;
-			if(pPlayer->GetTeam() == TEAM_SPECTATORS)
+			if (pPlayer->GetTeam() == TEAM_SPECTATORS)
 			{
 				SendChatTarget(ClientID, "Spectators aren't allowed to start a vote.");
 				return;
 			}
 
-			if(m_VoteCloseTime)
+			if (m_VoteCloseTime)
 			{
 				SendChatTarget(ClientID, "Wait for current vote to end before calling a new one.");
 				return;
 			}
 
-			int Timeleft = pPlayer->m_LastVoteCall + Server()->TickSpeed()*60 - Now;
-			if(pPlayer->m_LastVoteCall && Timeleft > 0)
+			int Timeleft = pPlayer->m_LastVoteCall + Server()->TickSpeed() * 60 - Now;
+			if (pPlayer->m_LastVoteCall && Timeleft > 0)
 			{
 				char aChatmsg[512] = {0};
-				str_format(aChatmsg, sizeof(aChatmsg), "You must wait %d seconds before making another vote", (Timeleft/Server()->TickSpeed())+1);
+				str_format(aChatmsg, sizeof(aChatmsg), "You must wait %d seconds before making another vote", (Timeleft / Server()->TickSpeed()) + 1);
 				SendChatTarget(ClientID, aChatmsg);
 				return;
 			}
@@ -1130,16 +1083,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
 			const char *pReason = pMsg->m_Reason[0] ? pMsg->m_Reason : "No reason given";
 
-			if(str_comp_nocase(pMsg->m_Type, "option") == 0)
+			if (str_comp_nocase(pMsg->m_Type, "option") == 0)
 			{
 				CVoteOptionServer *pOption = m_pVoteOptionFirst;
-				
-				while(pOption)
+
+				while (pOption)
 				{
-					if(str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
+					if (str_comp_nocase(pMsg->m_Value, pOption->m_aDescription) == 0)
 					{
 						str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s' (%s)", Server()->ClientName(ClientID),
-									pOption->m_aDescription, pReason);
+								   pOption->m_aDescription, pReason);
 						str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
 						str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
 						break;
@@ -1148,33 +1101,33 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					pOption = pOption->m_pNext;
 				}
 
-				if(!pOption)
+				if (!pOption)
 				{
-					//str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
-					//str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
-						
+					// str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
+					// str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
+
 					str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
 					SendChatTarget(ClientID, aChatmsg);
-					
+
 					return;
 				}
 			}
-			else if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
+			else if (str_comp_nocase(pMsg->m_Type, "kick") == 0)
 			{
-				if(!g_Config.m_SvVoteKick)
+				if (!g_Config.m_SvVoteKick)
 				{
 					SendChatTarget(ClientID, "Server does not allow voting to kick players");
 					return;
 				}
 
-				if(g_Config.m_SvVoteKickMin)
+				if (g_Config.m_SvVoteKickMin)
 				{
 					int PlayerNum = 0;
-					for(int i = 0; i < MAX_CLIENTS; ++i)
-						if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+					for (int i = 0; i < MAX_CLIENTS; ++i)
+						if (m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 							++PlayerNum;
 
-					if(PlayerNum < g_Config.m_SvVoteKickMin)
+					if (PlayerNum < g_Config.m_SvVoteKickMin)
 					{
 						str_format(aChatmsg, sizeof(aChatmsg), "Kick voting requires %d players on the server", g_Config.m_SvVoteKickMin);
 						SendChatTarget(ClientID, aChatmsg);
@@ -1183,17 +1136,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 
 				int KickID = str_toint(pMsg->m_Value);
-				if(KickID < 0 || !m_apPlayers[KickID])
+				if (KickID < 0 || !m_apPlayers[KickID])
 				{
 					SendChatTarget(ClientID, "Invalid client id to kick");
 					return;
 				}
-				if(KickID == ClientID)
+				if (KickID == ClientID)
 				{
 					SendChatTarget(ClientID, "You can't kick yourself");
 					return;
 				}
-				if(Server()->IsAuthed(KickID))
+				if (Server()->IsAuthed(KickID))
 				{
 					SendChatTarget(ClientID, "You can't kick admins");
 					char aBufKick[128];
@@ -1213,21 +1166,21 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aAddrStr, g_Config.m_SvVoteKickBantime);
 				}
 			}
-			else if(str_comp_nocase(pMsg->m_Type, "spectate") == 0)
+			else if (str_comp_nocase(pMsg->m_Type, "spectate") == 0)
 			{
-				if(!g_Config.m_SvVoteSpectate)
+				if (!g_Config.m_SvVoteSpectate)
 				{
 					SendChatTarget(ClientID, "Server does not allow voting to move players to spectators");
 					return;
 				}
 
 				int SpectateID = str_toint(pMsg->m_Value);
-				if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+				if (SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
 				{
 					SendChatTarget(ClientID, "Invalid client id to move");
 					return;
 				}
-				if(SpectateID == ClientID)
+				if (SpectateID == ClientID)
 				{
 					SendChatTarget(ClientID, "You can't move yourself");
 					return;
@@ -1237,13 +1190,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				str_format(aDesc, sizeof(aDesc), "move '%s' to spectators", Server()->ClientName(SpectateID));
 				str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
 			}
-			
+
 			// do nothing
-			if(str_comp(aCmd, "null") == 0)
+			if (str_comp(aCmd, "null") == 0)
 			{
 				return;
 			}
-	
 
 			// class selecting
 			for (int i = 0; i < NUM_CLASSES; i++)
@@ -1263,18 +1215,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				if (str_comp(aCmd, aAbilities[i].m_aName) == 0)
 				{
 					if (m_apPlayers[ClientID]->SelectAbility(i))
-					//char aBuf[256];
-					//str_format(aBuf, sizeof(aBuf), "Not enough money for %s", aCustomWeapon[CustomWeapon].m_Name);
+						// char aBuf[256];
+						// str_format(aBuf, sizeof(aBuf), "Not enough money for %s", aCustomWeapon[CustomWeapon].m_Name);
 						SendChatTarget(ClientID, aAbilities[i].m_aChatMsg);
 					else
 						SendChatTarget(ClientID, "Not enough ability points.");
-						
+
 					ResetVotes();
 					return;
 				}
 			}
 
-			
 			// buying
 			for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 			{
@@ -1285,9 +1236,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					return;
 				}
 			}
-			
-			
-			if(aCmd[0])
+
+			if (aCmd[0])
 			{
 				SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
 				StartVote(aDesc, aCmd, pReason);
@@ -1297,15 +1247,15 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->m_LastVoteCall = Now;
 			}
 		}
-		else if(MsgID == NETMSGTYPE_CL_VOTE)
+		else if (MsgID == NETMSGTYPE_CL_VOTE)
 		{
-			if(!m_VoteCloseTime)
+			if (!m_VoteCloseTime)
 				return;
 
-			if(pPlayer->m_Vote == 0)
+			if (pPlayer->m_Vote == 0)
 			{
 				CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
-				if(!pMsg->m_Vote)
+				if (!pMsg->m_Vote)
 					return;
 
 				pPlayer->m_Vote = pMsg->m_Vote;
@@ -1317,19 +1267,17 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		{
 			CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
-			if(pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*1 > Server()->Tick()))
+			if (pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam + Server()->TickSpeed() * 1 > Server()->Tick()))
 				return;
-			
-			
+
 			pPlayer->m_LastSetTeam = Server()->Tick();
-			if(pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
+			if (pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
 				m_VoteUpdate = true;
 			pPlayer->SetTeam(pMsg->m_Team);
 			pPlayer->m_TeamChangeTick = Server()->Tick();
-					
-			
-			//pPlayer->m_WantedTeam = pMsg->m_Team;
-			
+
+			// pPlayer->m_WantedTeam = pMsg->m_Team;
+
 			/*
 			if(pMsg->m_Team != TEAM_SPECTATORS)
 			{
@@ -1342,8 +1290,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->m_WantedTeam = pMsg->m_Team;
 			}
 			*/
-			
-			
+
 			/* 1.4 way
 			pPlayer->m_LastSetTeam = Server()->Tick();
 			if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
@@ -1357,7 +1304,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pPlayer->SetWantedTeam(pMsg->m_Team);
 			}
 			*/
-			
+
 			/*
 			if(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams)
 			{
@@ -1377,7 +1324,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendBroadcast(aBuf, ClientID);
 				return;
 			}
-			
+
 
 			// Switch team on given client and kill/respawn him
 			if(m_pController->CanJoinTeam(pMsg->m_Team, ClientID))
@@ -1406,19 +1353,19 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		{
 			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
 
-			if(pPlayer->GetTeam() != TEAM_SPECTATORS || pPlayer->m_SpectatorID == pMsg->m_SpectatorID || ClientID == pMsg->m_SpectatorID ||
-				(g_Config.m_SvSpamprotection && pPlayer->m_LastSetSpectatorMode && pPlayer->m_LastSetSpectatorMode+Server()->TickSpeed()*1 > Server()->Tick()))
+			if (pPlayer->GetTeam() != TEAM_SPECTATORS || pPlayer->m_SpectatorID == pMsg->m_SpectatorID || ClientID == pMsg->m_SpectatorID ||
+				(g_Config.m_SvSpamprotection && pPlayer->m_LastSetSpectatorMode && pPlayer->m_LastSetSpectatorMode + Server()->TickSpeed() * 1 > Server()->Tick()))
 				return;
 
 			pPlayer->m_LastSetSpectatorMode = Server()->Tick();
-			if(pMsg->m_SpectatorID != SPEC_FREEVIEW && (!m_apPlayers[pMsg->m_SpectatorID] || m_apPlayers[pMsg->m_SpectatorID]->GetTeam() == TEAM_SPECTATORS))
+			if (pMsg->m_SpectatorID != SPEC_FREEVIEW && (!m_apPlayers[pMsg->m_SpectatorID] || m_apPlayers[pMsg->m_SpectatorID]->GetTeam() == TEAM_SPECTATORS))
 				SendChatTarget(ClientID, "Invalid spectator id used");
 			else
 				pPlayer->m_SpectatorID = pMsg->m_SpectatorID;
 		}
 		else if (MsgID == NETMSGTYPE_CL_CHANGEINFO)
 		{
-			if(g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
+			if (g_Config.m_SvSpamprotection && pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo + Server()->TickSpeed() * 5 > Server()->Tick())
 				return;
 
 			CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
@@ -1428,7 +1375,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			char aOldName[MAX_NAME_LENGTH];
 			str_copy(aOldName, Server()->ClientName(ClientID), sizeof(aOldName));
 			Server()->SetClientName(ClientID, pMsg->m_pName);
-			if(str_comp(aOldName, Server()->ClientName(ClientID)) != 0)
+			if (str_comp(aOldName, Server()->ClientName(ClientID)) != 0)
 			{
 				char aChatText[256];
 				str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientID));
@@ -1446,12 +1393,11 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		{
 			CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
-			if(g_Config.m_SvSpamprotection && pPlayer->m_LastEmote && pPlayer->m_LastEmote+Server()->TickSpeed()*1 > Server()->Tick())
+			if (g_Config.m_SvSpamprotection && pPlayer->m_LastEmote && pPlayer->m_LastEmote + Server()->TickSpeed() * 1 > Server()->Tick())
 				return;
 
 			pPlayer->m_LastEmote = Server()->Tick();
-			
-			
+
 			// throwing grenades
 			/*
 			//if (pMsg->m_Emoticon == EMOTICON_DEVILTEE)
@@ -1462,7 +1408,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 			}
 			*/
-			
+
 			if (pMsg->m_Emoticon == EMOTICON_HEARTS)
 			{
 				if (pPlayer->GetCharacter() && pPlayer->GotAbility(STORE_HEALTH))
@@ -1472,7 +1418,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					int Explode = 0;
 					if (pPlayer->GotAbility(EXPLOSIVE_HEARTS))
 						Explode = 1;
-					
+
 					switch (pPlayer->GetCharacter()->m_HealthStored)
 					{
 						case 1:
@@ -1488,7 +1434,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 							m_pController->DropPickup(pPlayer->GetCharacter()->m_Pos+vec2(0, -32), POWERUP_HEALTH, vec2(5, -10.0f), Explode, pPlayer->GetCID());
 							break;
 					};
-					
+
 					pPlayer->GetCharacter()->m_HealthStored = 0;
 					*/
 				}
@@ -1498,12 +1444,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		}
 		else if (MsgID == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 		{
-			if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*1 > Server()->Tick())
+			if (pPlayer->m_LastKill && pPlayer->m_LastKill + Server()->TickSpeed() * 1 > Server()->Tick())
 				return;
 
-			//pPlayer->m_LastKill = Server()->Tick();
-			//pPlayer->KillCharacter(WEAPON_SELF);
-			
+			// pPlayer->m_LastKill = Server()->Tick();
+			// pPlayer->KillCharacter(WEAPON_SELF);
+
 			// reload instead of self kill
 			if (pPlayer->GetCharacter())
 				pPlayer->GetCharacter()->DoReloading(true);
@@ -1511,9 +1457,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 	}
 	else
 	{
-		if(MsgID == NETMSGTYPE_CL_STARTINFO)
+		if (MsgID == NETMSGTYPE_CL_STARTINFO)
 		{
-			if(pPlayer->m_IsReady)
+			if (pPlayer->m_IsReady)
 				return;
 
 			CNetMsg_Cl_StartInfo *pMsg = (CNetMsg_Cl_StartInfo *)pRawMsg;
@@ -1551,50 +1497,78 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			OptionMsg.m_pDescription13 = "";
 			OptionMsg.m_pDescription14 = "";
 			CVoteOptionServer *pCurrent = m_pVoteOptionFirst;
-			while(pCurrent)
+			while (pCurrent)
 			{
-				switch(NumOptions++)
+				switch (NumOptions++)
 				{
-				case 0: OptionMsg.m_pDescription0 = pCurrent->m_aDescription; break;
-				case 1: OptionMsg.m_pDescription1 = pCurrent->m_aDescription; break;
-				case 2: OptionMsg.m_pDescription2 = pCurrent->m_aDescription; break;
-				case 3: OptionMsg.m_pDescription3 = pCurrent->m_aDescription; break;
-				case 4: OptionMsg.m_pDescription4 = pCurrent->m_aDescription; break;
-				case 5: OptionMsg.m_pDescription5 = pCurrent->m_aDescription; break;
-				case 6: OptionMsg.m_pDescription6 = pCurrent->m_aDescription; break;
-				case 7: OptionMsg.m_pDescription7 = pCurrent->m_aDescription; break;
-				case 8: OptionMsg.m_pDescription8 = pCurrent->m_aDescription; break;
-				case 9: OptionMsg.m_pDescription9 = pCurrent->m_aDescription; break;
-				case 10: OptionMsg.m_pDescription10 = pCurrent->m_aDescription; break;
-				case 11: OptionMsg.m_pDescription11 = pCurrent->m_aDescription; break;
-				case 12: OptionMsg.m_pDescription12 = pCurrent->m_aDescription; break;
-				case 13: OptionMsg.m_pDescription13 = pCurrent->m_aDescription; break;
+				case 0:
+					OptionMsg.m_pDescription0 = pCurrent->m_aDescription;
+					break;
+				case 1:
+					OptionMsg.m_pDescription1 = pCurrent->m_aDescription;
+					break;
+				case 2:
+					OptionMsg.m_pDescription2 = pCurrent->m_aDescription;
+					break;
+				case 3:
+					OptionMsg.m_pDescription3 = pCurrent->m_aDescription;
+					break;
+				case 4:
+					OptionMsg.m_pDescription4 = pCurrent->m_aDescription;
+					break;
+				case 5:
+					OptionMsg.m_pDescription5 = pCurrent->m_aDescription;
+					break;
+				case 6:
+					OptionMsg.m_pDescription6 = pCurrent->m_aDescription;
+					break;
+				case 7:
+					OptionMsg.m_pDescription7 = pCurrent->m_aDescription;
+					break;
+				case 8:
+					OptionMsg.m_pDescription8 = pCurrent->m_aDescription;
+					break;
+				case 9:
+					OptionMsg.m_pDescription9 = pCurrent->m_aDescription;
+					break;
+				case 10:
+					OptionMsg.m_pDescription10 = pCurrent->m_aDescription;
+					break;
+				case 11:
+					OptionMsg.m_pDescription11 = pCurrent->m_aDescription;
+					break;
+				case 12:
+					OptionMsg.m_pDescription12 = pCurrent->m_aDescription;
+					break;
+				case 13:
+					OptionMsg.m_pDescription13 = pCurrent->m_aDescription;
+					break;
 				case 14:
-					{
-						OptionMsg.m_pDescription14 = pCurrent->m_aDescription;
-						OptionMsg.m_NumOptions = NumOptions;
-						Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
-						OptionMsg = CNetMsg_Sv_VoteOptionListAdd();
-						NumOptions = 0;
-						OptionMsg.m_pDescription1 = "";
-						OptionMsg.m_pDescription2 = "";
-						OptionMsg.m_pDescription3 = "";
-						OptionMsg.m_pDescription4 = "";
-						OptionMsg.m_pDescription5 = "";
-						OptionMsg.m_pDescription6 = "";
-						OptionMsg.m_pDescription7 = "";
-						OptionMsg.m_pDescription8 = "";
-						OptionMsg.m_pDescription9 = "";
-						OptionMsg.m_pDescription10 = "";
-						OptionMsg.m_pDescription11 = "";
-						OptionMsg.m_pDescription12 = "";
-						OptionMsg.m_pDescription13 = "";
-						OptionMsg.m_pDescription14 = "";
-					}
+				{
+					OptionMsg.m_pDescription14 = pCurrent->m_aDescription;
+					OptionMsg.m_NumOptions = NumOptions;
+					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
+					OptionMsg = CNetMsg_Sv_VoteOptionListAdd();
+					NumOptions = 0;
+					OptionMsg.m_pDescription1 = "";
+					OptionMsg.m_pDescription2 = "";
+					OptionMsg.m_pDescription3 = "";
+					OptionMsg.m_pDescription4 = "";
+					OptionMsg.m_pDescription5 = "";
+					OptionMsg.m_pDescription6 = "";
+					OptionMsg.m_pDescription7 = "";
+					OptionMsg.m_pDescription8 = "";
+					OptionMsg.m_pDescription9 = "";
+					OptionMsg.m_pDescription10 = "";
+					OptionMsg.m_pDescription11 = "";
+					OptionMsg.m_pDescription12 = "";
+					OptionMsg.m_pDescription13 = "";
+					OptionMsg.m_pDescription14 = "";
+				}
 				}
 				pCurrent = pCurrent->m_pNext;
 			}
-			if(NumOptions > 0)
+			if (NumOptions > 0)
 			{
 				OptionMsg.m_NumOptions = NumOptions;
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
@@ -1606,7 +1580,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			// client is ready to enter
 			pPlayer->m_IsReady = true;
 			CNetMsg_Sv_ReadyToEnter m;
-			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+			Server()->SendPackMsg(&m, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientID);
 		}
 	}
 }
@@ -1617,7 +1591,7 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 	const char *pParamName = pResult->GetString(0);
 	float NewValue = pResult->GetFloat(1);
 
-	if(pSelf->Tuning()->Set(pParamName, NewValue))
+	if (pSelf->Tuning()->Set(pParamName, NewValue))
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
@@ -1641,7 +1615,7 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char aBuf[256];
-	for(int i = 0; i < pSelf->Tuning()->Num(); i++)
+	for (int i = 0; i < pSelf->Tuning()->Num(); i++)
 	{
 		float v;
 		pSelf->Tuning()->Get(i, &v);
@@ -1654,7 +1628,7 @@ void CGameContext::ConPause(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(pSelf->m_pController->IsGameOver())
+	if (pSelf->m_pController->IsGameOver())
 		return;
 
 	pSelf->m_World.m_Paused ^= 1;
@@ -1669,7 +1643,7 @@ void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(pResult->NumArguments())
+	if (pResult->NumArguments())
 		pSelf->m_pController->DoWarmup(pResult->GetInteger(0));
 	else
 		pSelf->m_pController->StartRound();
@@ -1690,17 +1664,17 @@ void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	int ClientID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	int ClientID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS - 1);
 	int Team = clamp(pResult->GetInteger(1), -1, 1);
-	int Delay = pResult->NumArguments()>2 ? pResult->GetInteger(2) : 0;
-	if(!pSelf->m_apPlayers[ClientID])
+	int Delay = pResult->NumArguments() > 2 ? pResult->GetInteger(2) : 0;
+	if (!pSelf->m_apPlayers[ClientID])
 		return;
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", ClientID, Team);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	pSelf->m_apPlayers[ClientID]->m_TeamChangeTick = pSelf->Server()->Tick()+pSelf->Server()->TickSpeed()*Delay*60;
+	pSelf->m_apPlayers[ClientID]->m_TeamChangeTick = pSelf->Server()->Tick() + pSelf->Server()->TickSpeed() * Delay * 60;
 	pSelf->m_apPlayers[ClientID]->SetTeam(Team);
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
@@ -1714,8 +1688,8 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 	str_format(aBuf, sizeof(aBuf), "All players were moved to the %s", pSelf->m_pController->GetTeamName(Team));
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-		if(pSelf->m_apPlayers[i])
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+		if (pSelf->m_apPlayers[i])
 			pSelf->m_apPlayers[i]->SetTeam(Team, false);
 
 	(void)pSelf->m_pController->CheckTeamBalance();
@@ -1730,45 +1704,16 @@ void CGameContext::ConSwapTeams(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->m_pController->IsTeamplay())
+	if (!pSelf->m_pController->IsTeamplay())
 		return;
 
-	int CounterRed = 0;
-	int CounterBlue = 0;
 	int PlayerTeam = 0;
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+		if (pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 			++PlayerTeam;
-	PlayerTeam = (PlayerTeam+1)/2;
-	
+	PlayerTeam = (PlayerTeam + 1) / 2;
+
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were shuffled");
-
-	/*
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-	{
-		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-		{
-			if(CounterRed == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
-			else if(CounterBlue == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
-			else
-			{	
-				if(rand() % 2)
-				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
-					++CounterBlue;
-				}
-				else
-				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
-					++CounterRed;
-				}
-			}
-		}
-	}
-	*/
-
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
@@ -1776,7 +1721,7 @@ void CGameContext::ConLockTeams(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->m_LockTeams ^= 1;
-	if(pSelf->m_LockTeams)
+	if (pSelf->m_LockTeams)
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were locked");
 	else
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were unlocked");
@@ -1788,23 +1733,23 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	const char *pDescription = pResult->GetString(0);
 	const char *pCommand = pResult->GetString(1);
 
-	if(pSelf->m_NumVoteOptions == MAX_VOTE_OPTIONS)
+	if (pSelf->m_NumVoteOptions == MAX_VOTE_OPTIONS)
 	{
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "maximum number of vote options reached");
 		return;
 	}
 
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pCommand) || str_length(pCommand) >= VOTE_CMD_LENGTH)
+	if (!pSelf->Console()->LineIsValid(pCommand) || str_length(pCommand) >= VOTE_CMD_LENGTH)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", pCommand);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
-	while(*pDescription && *pDescription == ' ')
+	while (*pDescription && *pDescription == ' ')
 		pDescription++;
-	if(str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
+	if (str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pDescription);
@@ -1814,9 +1759,9 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 
 	// check for duplicate entry
 	CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
-	while(pOption)
+	while (pOption)
 	{
-		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
+		if (str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", pDescription);
@@ -1833,14 +1778,14 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	pOption = (CVoteOptionServer *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 	pOption->m_pNext = 0;
 	pOption->m_pPrev = pSelf->m_pVoteOptionLast;
-	if(pOption->m_pPrev)
+	if (pOption->m_pPrev)
 		pOption->m_pPrev->m_pNext = pOption;
 	pSelf->m_pVoteOptionLast = pOption;
-	if(!pSelf->m_pVoteOptionFirst)
+	if (!pSelf->m_pVoteOptionFirst)
 		pSelf->m_pVoteOptionFirst = pOption;
 
 	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
-	mem_copy(pOption->m_aCommand, pCommand, Len+1);
+	mem_copy(pOption->m_aCommand, pCommand, Len + 1);
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
@@ -1858,13 +1803,13 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 
 	// check for valid option
 	CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
-	while(pOption)
+	while (pOption)
 	{
-		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
+		if (str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
 			break;
 		pOption = pOption->m_pNext;
 	}
-	if(!pOption)
+	if (!pOption)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "option '%s' does not exist", pDescription);
@@ -1888,9 +1833,9 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	CVoteOptionServer *pVoteOptionFirst = 0;
 	CVoteOptionServer *pVoteOptionLast = 0;
 	int NumVoteOptions = pSelf->m_NumVoteOptions;
-	for(CVoteOptionServer *pSrc = pSelf->m_pVoteOptionFirst; pSrc; pSrc = pSrc->m_pNext)
+	for (CVoteOptionServer *pSrc = pSelf->m_pVoteOptionFirst; pSrc; pSrc = pSrc->m_pNext)
 	{
-		if(pSrc == pOption)
+		if (pSrc == pOption)
 			continue;
 
 		// copy option
@@ -1898,14 +1843,14 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 		CVoteOptionServer *pDst = (CVoteOptionServer *)pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 		pDst->m_pNext = 0;
 		pDst->m_pPrev = pVoteOptionLast;
-		if(pDst->m_pPrev)
+		if (pDst->m_pPrev)
 			pDst->m_pPrev->m_pNext = pDst;
 		pVoteOptionLast = pDst;
-		if(!pVoteOptionFirst)
+		if (!pVoteOptionFirst)
 			pVoteOptionFirst = pDst;
 
 		str_copy(pDst->m_aDescription, pSrc->m_aDescription, sizeof(pDst->m_aDescription));
-		mem_copy(pDst->m_aCommand, pSrc->m_aCommand, Len+1);
+		mem_copy(pDst->m_aCommand, pSrc->m_aCommand, Len + 1);
 	}
 
 	// clean up
@@ -1924,12 +1869,12 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 	const char *pReason = pResult->NumArguments() > 2 && pResult->GetString(2)[0] ? pResult->GetString(2) : "No reason given";
 	char aBuf[128] = {0};
 
-	if(str_comp_nocase(pType, "option") == 0)
+	if (str_comp_nocase(pType, "option") == 0)
 	{
 		CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
-		while(pOption)
+		while (pOption)
 		{
-			if(str_comp_nocase(pValue, pOption->m_aDescription) == 0)
+			if (str_comp_nocase(pValue, pOption->m_aDescription) == 0)
 			{
 				str_format(aBuf, sizeof(aBuf), "admin forced server option '%s' (%s)", pValue, pReason);
 				pSelf->SendChatTarget(-1, aBuf);
@@ -1940,17 +1885,17 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 			pOption = pOption->m_pNext;
 		}
 
-		if(!pOption)
+		if (!pOption)
 		{
 			str_format(aBuf, sizeof(aBuf), "'%s' isn't an option on this server", pValue);
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 			return;
 		}
 	}
-	else if(str_comp_nocase(pType, "kick") == 0)
+	else if (str_comp_nocase(pType, "kick") == 0)
 	{
 		int KickID = str_toint(pValue);
-		if(KickID < 0 || KickID >= MAX_CLIENTS || !pSelf->m_apPlayers[KickID])
+		if (KickID < 0 || KickID >= MAX_CLIENTS || !pSelf->m_apPlayers[KickID])
 		{
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to kick");
 			return;
@@ -1969,10 +1914,10 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 			pSelf->Console()->ExecuteLine(aBuf);
 		}
 	}
-	else if(str_comp_nocase(pType, "spectate") == 0)
+	else if (str_comp_nocase(pType, "spectate") == 0)
 	{
 		int SpectateID = str_toint(pValue);
-		if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+		if (SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
 		{
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to move");
 			return;
@@ -2003,12 +1948,12 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
 	// check if there is a vote running
-	if(!pSelf->m_VoteCloseTime)
+	if (!pSelf->m_VoteCloseTime)
 		return;
 
-	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
+	if (str_comp_nocase(pResult->GetString(0), "yes") == 0)
 		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES;
-	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
+	else if (str_comp_nocase(pResult->GetString(0), "no") == 0)
 		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "admin forced vote %s", pResult->GetString(0));
@@ -2020,13 +1965,13 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
+	if (pResult->NumArguments())
 	{
 		CNetMsg_Sv_Motd Msg;
 		Msg.m_pMessage = g_Config.m_SvMotd;
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
-			if(pSelf->m_apPlayers[i] && !pSelf->IsBot(i))
+		for (int i = 0; i < MAX_CLIENTS; ++i)
+			if (pSelf->m_apPlayers[i] && !pSelf->IsBot(i))
 				pSelf->Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 	}
 }
@@ -2041,8 +1986,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Dump tuning");
 
 	Console()->Register("pause", "", CFGFLAG_SERVER, ConPause, this, "Pause/unpause game");
-	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
+	Console()->Register("change_map", "?r", CFGFLAG_SERVER | CFGFLAG_STORE, ConChangeMap, this, "Change map");
+	Console()->Register("restart", "?i", CFGFLAG_SERVER | CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Say in chat");
 	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, ConSetTeam, this, "Set team of player to team");
@@ -2067,45 +2012,42 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
 
-	//if(!data) // only load once
-		//data = load_data_from_memory(internal_data);
+	// if(!data) // only load once
+	// data = load_data_from_memory(internal_data);
 
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+	for (int i = 0; i < NUM_NETOBJTYPES; i++)
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
 	m_Collision.Init(&m_Layers);
 
 	// reset everything here
-	//world = new GAMEWORLD;
-	//players = new CPlayer[MAX_CLIENTS];
+	// world = new GAMEWORLD;
+	// players = new CPlayer[MAX_CLIENTS];
 
 	// select gametype
-	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
+	if (str_comp(g_Config.m_SvGametype, "mod") == 0)
 		m_pController = new CGameControllerMOD(this);
-	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
+	else if (str_comp(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
-	else if(str_comp(g_Config.m_SvGametype, "dom") == 0)
+	else if (str_comp(g_Config.m_SvGametype, "dom") == 0)
 		m_pController = new CGameControllerDOM(this);
-	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
+	else if (str_comp(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
-	else if(str_comp(g_Config.m_SvGametype, "cstt") == 0)
+	else if (str_comp(g_Config.m_SvGametype, "cstt") == 0)
 		m_pController = new CGameControllerCSTT(this);
-	else if(str_comp(g_Config.m_SvGametype, "csbb") == 0)
+	else if (str_comp(g_Config.m_SvGametype, "csbb") == 0)
 		m_pController = new CGameControllerCSBB(this);
 	else
 		m_pController = new CGameControllerDM(this);
 
 	// setup core world
-	//for(int i = 0; i < MAX_CLIENTS; i++)
+	// for(int i = 0; i < MAX_CLIENTS; i++)
 	//	game.players[i].core.world = &game.world.core;
 
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-
-
-
 
 	/*
 	num_spawn_points[0] = 0;
@@ -2113,29 +2055,28 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	num_spawn_points[2] = 0;
 	*/
 
-	for(int y = 0; y < pTileMap->m_Height; y++)
+	for (int y = 0; y < pTileMap->m_Height; y++)
 	{
-		for(int x = 0; x < pTileMap->m_Width; x++)
+		for (int x = 0; x < pTileMap->m_Width; x++)
 		{
-			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
+			int Index = pTiles[y * pTileMap->m_Width + x].m_Index;
 
-			if(Index >= ENTITY_OFFSET)
+			if (Index >= ENTITY_OFFSET)
 			{
-				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
+				vec2 Pos(x * 32.0f + 16.0f, y * 32.0f + 16.0f);
+				m_pController->OnEntity(Index - ENTITY_OFFSET, Pos);
 			}
 		}
 	}
-	
 
-	//game.world.insert_entity(game.Controller);
+	// game.world.insert_entity(game.Controller);
 
-	//SetupVotes(-1);
-	
+	// SetupVotes(-1);
+
 	/*
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
-	
+
 	m_pVoteOptionHeap->Reset();
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
@@ -2163,39 +2104,36 @@ enum VoteTypes
 	VOTE_ABILITYDESC,
 };
 
-
 void CGameContext::ResetVotes()
 {
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
-	
+
 	m_pVoteOptionHeap->Reset();
 	m_pVoteOptionFirst = 0;
 	m_pVoteOptionLast = 0;
 	m_NumVoteOptions = 0;
 
-
-	
 	if (g_Config.m_SvAbilities)
 	{
 		AddCustomVote("PICK A CLASS", "null", VOTE_CLASSDESC);
 		for (int i = 0; i < NUM_CLASSES; i++)
 			AddCustomVote(aClassName[i], aClassName[i], VOTE_CLASS, i);
 		AddCustomVote("", "null", VOTE_CLASSDESC);
-		
+
 		AddCustomVote("", "null", VOTE_ABILITYPOINTS); // Pick abilities - x point(s) left
 		for (int i = 0; i < NUM_ABILITIES; i++)
 			AddCustomVote(aAbilities[i].m_aName, aAbilities[i].m_aName, VOTE_ABILITY, i);
 		AddCustomVote("", "null", VOTE_ABILITYDESC);
 	}
-	
+
 	if (!g_Config.m_SvRandomWeapons)
 	{
 		AddCustomVote("", "null", VOTE_MONEY); // Money: x
-		//AddCustomVote("", "null", VOTE_WEAPONDESC);
-		
-		//AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
-		
+		// AddCustomVote("", "null", VOTE_WEAPONDESC);
+
+		// AddCustomVote("Buy & Upgrade:", "null", VOTE_WEAPONDESC);
+
 		for (int i = 0; i < NUM_CUSTOMWEAPONS; i++)
 		{
 			if (aCustomWeapon[i].m_Cost > 0)
@@ -2209,45 +2147,41 @@ void CGameContext::ResetVotes()
 	}
 }
 
-
-
 void CGameContext::ClearShopVotes(int ClientID)
 {
 	if (str_comp(g_Config.m_SvGametype, "csbb") == 0)
 		return;
-	
+
 	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
 	Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, ClientID);
-	
+
 	/*
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "Can't shop right now");
-				
+
 	CNetMsg_Sv_VoteOptionAdd OptionMsg;
 	OptionMsg.m_pDescription = aBuf;
 	Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
 	*/
 }
 
-
-
-void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, int WeaponIndex)
-{	
-	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
+void CGameContext::AddCustomVote(const char *Desc, const char *Cmd, int Type, int WeaponIndex)
+{
+	if (m_NumVoteOptions == MAX_VOTE_OPTIONS)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
 		return;
 	}
 
 	// check for valid option"
-	if(str_length(Cmd) >= VOTE_CMD_LENGTH)
+	if (str_length(Cmd) >= VOTE_CMD_LENGTH)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", Cmd);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
 		return;
 	}
-	while(*Desc && *Desc == ' ')
+	while (*Desc && *Desc == ' ')
 		Desc++;
 
 	CVoteOptionServer *pOption = m_pVoteOptionFirst;
@@ -2259,56 +2193,53 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 	pOption = (CVoteOptionServer *)this->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 	pOption->m_pNext = 0;
 	pOption->m_pPrev = m_pVoteOptionLast;
-	if(pOption->m_pPrev)
+	if (pOption->m_pPrev)
 		pOption->m_pPrev->m_pNext = pOption;
 	m_pVoteOptionLast = pOption;
-	if(!m_pVoteOptionFirst)
+	if (!m_pVoteOptionFirst)
 		m_pVoteOptionFirst = pOption;
 
 	str_copy(pOption->m_aDescription, Desc, sizeof(pOption->m_aDescription));
-	mem_copy(pOption->m_aCommand, Cmd, Len+1);
+	mem_copy(pOption->m_aCommand, Cmd, Len + 1);
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
-	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+	// Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
 
-	
-	
 	if (Type == VOTE_MONEY)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				char aBuf[256];
-				
+
 				if (m_apPlayers[i]->m_CanShop || str_comp(g_Config.m_SvGametype, "csbb") == 0)
 					str_format(aBuf, sizeof(aBuf), "WEAPON SHOP  -  money: ♪%d ", m_apPlayers[i]->m_Money);
 				else
 					str_format(aBuf, sizeof(aBuf), "Can't shop right now");
-				
+
 				str_copy(pOption->m_aDescription, aBuf, sizeof(pOption->m_aDescription));
-				
+
 				OptionMsg.m_pDescription = pOption->m_aDescription;
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
 		}
 	}
-	
-	
+
 	if (Type == VOTE_WEAPON)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
 		OptionMsg.m_pDescription = pOption->m_aDescription;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				if (!m_apPlayers[i]->m_CanShop && str_comp(g_Config.m_SvGametype, "cstt") == 0)
 					continue;
-				
+
 				if (m_apPlayers[i]->BuyableWeapon(WeaponIndex))
 				{
 					Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
@@ -2316,89 +2247,86 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 			}
 		}
 	}
-	
+
 	// buy & upgrade text
 	if (Type == VOTE_WEAPONDESC)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
 		OptionMsg.m_pDescription = pOption->m_aDescription;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				if (!m_apPlayers[i]->m_CanShop && str_comp(g_Config.m_SvGametype, "cstt") == 0)
 					continue;
-				
+
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
 		}
 	}
-		
 
 	if (Type == VOTE_CLASSDESC || Type == VOTE_CLASS)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
 		OptionMsg.m_pDescription = pOption->m_aDescription;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				if (m_apPlayers[i]->GetClass() != -1)
 					continue;
-				
+
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
 		}
 	}
 
-
 	if (Type == VOTE_ABILITYDESC)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
 		OptionMsg.m_pDescription = pOption->m_aDescription;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				if (m_apPlayers[i]->GetClass() == -1 || !m_apPlayers[i]->GetAbilityPoints())
 					continue;
-				
+
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
 		}
 	}
-	
-		
+
 	if (Type == VOTE_ABILITYPOINTS)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
 			{
 				int c = m_apPlayers[i]->GetClass();
-				
+
 				if (c == -1)
 					continue;
-				
+
 				int Points = m_apPlayers[i]->GetAbilityPoints();
-				
+
 				if (!Points)
 					continue;
-				
+
 				char aBuf[256];
-				
+
 				if (Points > 1)
 					str_format(aBuf, sizeof(aBuf), "PICK ABILITIES - %d skill points left", Points);
 				else
 					str_format(aBuf, sizeof(aBuf), "PICK ABILITIES - 1 skill point left");
-				
+
 				str_copy(pOption->m_aDescription, aBuf, sizeof(pOption->m_aDescription));
-				
+
 				OptionMsg.m_pDescription = pOption->m_aDescription;
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
@@ -2409,7 +2337,7 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
 		OptionMsg.m_pDescription = pOption->m_aDescription;
-		
+
 		for (int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if (m_apPlayers[i] && !IsBot(i))
@@ -2417,16 +2345,15 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 				int c = m_apPlayers[i]->GetClass();
 				if (c == -1)
 					continue;
-				
+
 				if (!m_apPlayers[i]->GetAbilityPoints() || !m_apPlayers[i]->AbilityAvailable(WeaponIndex))
 					continue;
-				
+
 				Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, i);
 			}
 		}
 	}
-	
-	
+
 	if (Type == VOTE_ALL)
 	{
 		CNetMsg_Sv_VoteOptionAdd OptionMsg;
@@ -2435,26 +2362,23 @@ void CGameContext::AddCustomVote(const char * Desc, const char * Cmd, int Type, 
 	}
 }
 
-
-
-
-void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)
+void CGameContext::AddVote(const char *Desc, const char *Cmd, int ClientID)
 {
-	if(m_NumVoteOptions == MAX_VOTE_OPTIONS)
+	if (m_NumVoteOptions == MAX_VOTE_OPTIONS)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", "ERROR - MAX_VOTE_OPTIONS REACHED! (did you really reach 128?)");
 		return;
 	}
 
 	// check for valid option"
-	if(/*!pSelf->Console()->LineIsValid(pCommand) ||  */str_length(Cmd) >= VOTE_CMD_LENGTH)
+	if (/*!pSelf->Console()->LineIsValid(pCommand) ||  */ str_length(Cmd) >= VOTE_CMD_LENGTH)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", Cmd);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
 		return;
 	}
-	while(*Desc && *Desc == ' ')
+	while (*Desc && *Desc == ' ')
 		Desc++;
 	/*if(str_length(Desc) >= VOTE_DESC_LENGTH || *Desc == 0)
 	{
@@ -2464,8 +2388,8 @@ void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)
 		return;
 	}*/
 
-	//Shall we keep this? -kiChris // no need - Kompl.exe
-	// check for duplicate entry
+	// Shall we keep this? -kiChris // no need - Kompl.exe
+	//  check for duplicate entry
 	CVoteOptionServer *pOption = m_pVoteOptionFirst;
 	/*while(pOption)
 	{
@@ -2486,30 +2410,25 @@ void CGameContext::AddVote(const char * Desc, const char * Cmd, int ClientID)
 	pOption = (CVoteOptionServer *)this->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 	pOption->m_pNext = 0;
 	pOption->m_pPrev = m_pVoteOptionLast;
-	if(pOption->m_pPrev)
+	if (pOption->m_pPrev)
 		pOption->m_pPrev->m_pNext = pOption;
 	m_pVoteOptionLast = pOption;
-	if(!m_pVoteOptionFirst)
+	if (!m_pVoteOptionFirst)
 		m_pVoteOptionFirst = pOption;
 
 	str_copy(pOption->m_aDescription, Desc, sizeof(pOption->m_aDescription));
-	mem_copy(pOption->m_aCommand, Cmd, Len+1);
+	mem_copy(pOption->m_aCommand, Cmd, Len + 1);
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "added option '%s' '%s'", pOption->m_aDescription, pOption->m_aCommand);
-	//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
+	// Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "pseudovote", aBuf);
 
-	if(ClientID == -2)
+	if (ClientID == -2)
 		return;
 	// inform clients about added option
 	CNetMsg_Sv_VoteOptionAdd OptionMsg;
 	OptionMsg.m_pDescription = pOption->m_aDescription;
 	Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, ClientID);
 }
-
-
-
-
-
 
 void CGameContext::OnShutdown()
 {
@@ -2523,22 +2442,22 @@ void CGameContext::OnSnap(int ClientID)
 {
 	// add tuning to demo
 	CTuningParams StandardTuning;
-	if(ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
+	if (ClientID == -1 && Server()->DemoRecorder_IsRecording() && mem_comp(&StandardTuning, &m_Tuning, sizeof(CTuningParams)) != 0)
 	{
 		CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
 		int *pParams = (int *)&m_Tuning;
-		for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
+		for (unsigned i = 0; i < sizeof(m_Tuning) / sizeof(int); i++)
 			Msg.AddInt(pParams[i]);
-		Server()->SendMsg(&Msg, MSGFLAG_RECORD|MSGFLAG_NOSEND, ClientID);
+		Server()->SendMsg(&Msg, MSGFLAG_RECORD | MSGFLAG_NOSEND, ClientID);
 	}
 
 	m_World.Snap(ClientID);
 	m_pController->Snap(ClientID);
 	m_Events.Snap(ClientID);
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(m_apPlayers[i])
+		if (m_apPlayers[i])
 			m_apPlayers[i]->Snap(ClientID);
 	}
 }
@@ -2564,27 +2483,22 @@ const char *CGameContext::NetVersion() { return GAME_NETVERSION; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
 
-
-
 void CGameContext::KickBots()
 {
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "engine", "Kicking bots...");
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(IsBot(i))
+		if (IsBot(i))
 			Server()->Kick(i, "");
 	}
 }
 
-
 void CGameContext::KickBot(int ClientID)
 {
-	if(IsBot(ClientID))
+	if (IsBot(ClientID))
 		Server()->Kick(ClientID, "");
 }
-
-
 
 void CGameContext::AddBot()
 {
